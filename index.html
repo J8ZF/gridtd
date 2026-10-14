@@ -37,7 +37,7 @@ html,body,body *,body *::before,body *::after{-webkit-user-select:none;user-sele
 .upgrade-name{display:block;font-size:12px;line-height:15px;font-weight:600;color:var(--text)}.upgrade-stats{display:block;font-size:10px;line-height:15px;color:var(--muted)}
 #hud-placement{flex:0 0 auto;font-variant-numeric:tabular-nums;color:var(--text);margin:0 7px}.wave-line #wave-caption{flex:1}.tower-heading .ability{max-width:132px;white-space:nowrap;font-size:11px}
 
-.codex-tabs{display:flex;gap:8px;padding:0 16px 12px;flex-shrink:0}.codex-tabs button{flex:1;min-width:0}.codex-tabs .active{border-color:var(--accent);color:var(--accent);background:#1c302b}.codex-grid{align-content:start;grid-auto-rows:max-content}.enemy-card{min-width:0;overflow-wrap:anywhere}.enemy-stats{flex-wrap:wrap;gap:4px 10px}.enemy-stats .shield-stat{color:#e8cf78}
+.codex-note{padding:0 16px 10px}.codex-tabs{display:flex;gap:8px;padding:0 16px 12px;flex-shrink:0}.codex-tabs button{flex:1;min-width:0}.codex-tabs .active{border-color:var(--accent);color:var(--accent);background:#1c302b}.codex-grid{align-content:start;grid-auto-rows:max-content}.enemy-card{min-width:0;overflow-wrap:anywhere}.enemy-stats{flex-wrap:wrap;gap:4px 10px}.enemy-stats .shield-stat{color:#e8cf78}
 .save-code{width:100%;min-height:120px;max-height:40dvh;margin:0 0 16px;padding:10px;resize:vertical;border:1px solid var(--line);border-radius:4px;background:var(--bg);color:var(--text);font:11px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;word-break:break-all;-webkit-user-select:text;user-select:text}
 
 /* The footer panel spans the full width (its grid had collapsed to content width). */
@@ -64,7 +64,7 @@ html,body,body *,body *::before,body *::after{-webkit-user-select:none;user-sele
 const modules={
 "app.js":function(require,exports){
 const {enemyMoveSpeed,CODEX_GROUPS,SCALE}=require("data.js");
-const {TOWERS,TOWER,ENEMIES,MAPS,TARGETS,DIFFICULTIES,COLS,ROWS,PLACEMENT_LIMIT,starterProfile,makePath,stat,normalizeCheats,canBuyTower,purchaseTower,dims}=require("data.js");
+const {TOWERS,TOWER,ENEMIES,MAPS,TARGETS,DIFFICULTIES,COLS,ROWS,PLACEMENT_LIMIT,starterProfile,makePath,stat,normalizeCheats,canBuyTower,purchaseTower,dims,maxLevel}=require("data.js");
 const {createBoard}=require("board.js");
 const {Game}=require("engine.js");
 const {encounterHTML,bossStatusHTML,bossWarnings}=require("encounter-view.js");
@@ -80,9 +80,9 @@ const seconds=s=>`${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')
 let profile=starterProfile(),savedRun=null,game=null,screen='home',previous='home',selected=null,placing=null,dragPointer=null,board=null,boardObserver=null,legacyRunDropped=false,chosenMap=MAPS[0],controlSignature='',skipDismissed=null,offerArmedAt=0,lastSave=0,lastUI=0,toastTimer,audioContext,lastSound=0,battleSettled=false,dialogKind='';
 let backNavigation,codexTab='normal';
 function sanitizeProfile(p){if(!p||p.version!==1||!Number.isSafeInteger(p.coins)||p.coins<0||p.coins>1e12||!Array.isArray(p.owned)||!Array.isArray(p.loadout))throw Error('지원하지 않는 저장 파일입니다.');const out=starterProfile();out.coins=p.coins;out.owned=[...new Set(p.owned.filter(k=>TOWER[k]))];out.loadout=Array(5).fill(null);const added=new Set();p.loadout.slice(0,5).forEach((k,i)=>{if(out.owned.includes(k)&&!added.has(k)){out.loadout[i]=k;added.add(k);}});out.seen=Object.fromEntries(Object.keys(p.seen??{}).filter(k=>ENEMIES[k]).map(k=>[k,true]));out.clears=Object.fromEntries(MAPS.flatMap(m=>['normal','hard'].map(d=>`${m.id}:${d}`)).filter(k=>p.clears?.[k]).map(k=>[k,true]));for(const k of ['sound','effects','vibration'])if(typeof p.settings?.[k]==='boolean')out.settings[k]=p.settings[k];out.stats={played:Math.max(0,Math.min(100000,Number(p.stats?.played)||0)),wins:Math.max(0,Math.min(100000,Number(p.stats?.wins)||0))};out.cheats=normalizeCheats(p.cheats);out.firstVisit=p.firstVisit!==false;return out;}
-function validateRun(r){if(!r)return null;if(r.version===1){legacyRunDropped=true;return null;}if(r.version!==2||!MAPS.some(m=>m.id===r.mapId)||!DIFFICULTIES[r.difficulty]||!Array.isArray(r.loadout)||r.loadout.some(k=>k!==null&&!TOWER[k]))throw Error('전투 데이터가 올바르지 않습니다.');for(const k of ['cash','health','time','wave','nextId','rewardCents','completed'])if(!Number.isFinite(r[k])||r[k]<0)throw Error('전투 데이터가 올바르지 않습니다.');if(r.waveEnemyVariant!==undefined&&!['base','hard-late'].includes(r.waveEnemyVariant))throw Error('적 능력치 데이터가 올바르지 않습니다.');if(r.wave>DIFFICULTIES[r.difficulty].count||r.completed>r.wave||r.cash>1e12||r.health>100)throw Error('전투 범위를 확인할 수 없습니다.');for(const [key,max,valid] of [['towers',150,t=>TOWER[t.kind]&&t.level>=1&&t.level<=5&&Number.isInteger(t.col)&&t.col>=0&&t.col<COLS&&Number.isInteger(t.row)&&t.row>=0&&t.row<ROWS&&[undefined,0,1,2,3].includes(t.r)],['enemies',5000,e=>ENEMIES[e.kind]&&Number.isFinite(e.hp)&&Number.isFinite(e.progress)&&(e.variant===undefined||['base','hard-late'].includes(e.variant))&&['shield','maxShield','abilityClock','hasteRemaining'].every(k=>e[k]===undefined||(Number.isFinite(e[k])&&e[k]>=0))&&(e.moveSpeed===undefined||(Number.isFinite(e.moveSpeed)&&e.moveSpeed>=0&&e.moveSpeed<=5*SCALE))&&(e.hasteMultiplier===undefined||(Number.isFinite(e.hasteMultiplier)&&e.hasteMultiplier>=1&&e.hasteMultiplier<=1.15))],['vehicles',1000,v=>['robot','spawner'].includes(v.kind)&&v.level>=1&&v.level<=5&&Number.isFinite(v.hp)&&(v.fireWindows===undefined||(Array.isArray(v.fireWindows)&&v.fireWindows.length<=150&&v.fireWindows.every(w=>w&&Number.isFinite(w.until)&&Number.isFinite(w.fire)&&w.fire>=1&&w.fire<=2.1)))]]){if(!Array.isArray(r[key])||r[key].length>max||!r[key].every(valid))throw Error('전투 데이터가 올바르지 않습니다.');}if(r.bombs!==undefined&&(!Array.isArray(r.bombs)||r.bombs.length>150||!r.bombs.every(b=>['x','y','x2','y2','damage','radius','remaining','duration'].every(k=>Number.isFinite(b[k]))&&b.damage>=0&&b.radius>0&&b.duration>0&&b.remaining>=0&&b.remaining<=b.duration)))throw Error('폭탄 데이터가 올바르지 않습니다.');return r.ended?null:r;}
+function validateRun(r){if(!r)return null;if(r.version===1||r.version===2){legacyRunDropped=true;return null;}if(r.version!==3||!MAPS.some(m=>m.id===r.mapId)||!DIFFICULTIES[r.difficulty]||!Array.isArray(r.loadout)||r.loadout.some(k=>k!==null&&!TOWER[k]))throw Error('전투 데이터가 올바르지 않습니다.');for(const k of ['cash','health','time','wave','nextId','rewardCents','completed'])if(!Number.isFinite(r[k])||r[k]<0)throw Error('전투 데이터가 올바르지 않습니다.');if(r.waveEnemyVariant!==undefined&&!['base','hard-late'].includes(r.waveEnemyVariant))throw Error('적 능력치 데이터가 올바르지 않습니다.');if(r.wave>DIFFICULTIES[r.difficulty].count||r.completed>r.wave||r.cash>1e12||r.health>100)throw Error('전투 범위를 확인할 수 없습니다.');for(const [key,max,valid] of [['towers',150,t=>TOWER[t.kind]&&t.level>=1&&t.level<=maxLevel(t.kind)&&Number.isInteger(t.col)&&t.col>=0&&t.col<COLS&&Number.isInteger(t.row)&&t.row>=0&&t.row<ROWS&&[undefined,0,1,2,3].includes(t.r)],['enemies',5000,e=>ENEMIES[e.kind]&&Number.isFinite(e.hp)&&Number.isFinite(e.progress)&&(e.variant===undefined||['base','hard-late'].includes(e.variant))&&['shield','maxShield','abilityClock','hasteRemaining'].every(k=>e[k]===undefined||(Number.isFinite(e[k])&&e[k]>=0))&&(e.moveSpeed===undefined||(Number.isFinite(e.moveSpeed)&&e.moveSpeed>=0&&e.moveSpeed<=5*SCALE))&&(e.hasteMultiplier===undefined||(Number.isFinite(e.hasteMultiplier)&&e.hasteMultiplier>=1&&e.hasteMultiplier<=1.15))],['vehicles',1000,v=>['robot','spawner'].includes(v.kind)&&v.level>=1&&v.level<=maxLevel(v.kind)&&Number.isFinite(v.hp)&&(v.fireWindows===undefined||(Array.isArray(v.fireWindows)&&v.fireWindows.length<=150&&v.fireWindows.every(w=>w&&Number.isFinite(w.until)&&Number.isFinite(w.fire)&&w.fire>=1&&w.fire<=2.1)))]]){if(!Array.isArray(r[key])||r[key].length>max||!r[key].every(valid))throw Error('전투 데이터가 올바르지 않습니다.');}if(r.bombs!==undefined&&(!Array.isArray(r.bombs)||r.bombs.length>150||!r.bombs.every(b=>['x','y','x2','y2','damage','radius','remaining','duration'].every(k=>Number.isFinite(b[k]))&&b.damage>=0&&b.radius>0&&b.duration>0&&b.remaining>=0&&b.remaining<=b.duration)))throw Error('폭탄 데이터가 올바르지 않습니다.');return r.ended?null:r;}
 try{const raw=localStorage.getItem(KEY);if(raw){const data=JSON.parse(raw);profile=sanitizeProfile(data.profile);savedRun=validateRun(data.run);}}catch{setTimeout(()=>toast('저장 데이터를 읽지 못했습니다. 저장 파일을 불러올 수 있습니다.'),100);}
-if(legacyRunDropped)setTimeout(()=>toast('2.0 보더랜드로 바뀌어 진행 중이던 전투는 이어할 수 없습니다.'),100);
+if(legacyRunDropped)setTimeout(()=>toast('3.0으로 바뀌어 진행 중이던 전투는 이어할 수 없습니다.'),100);
 function save(){try{const run=game&&!game.ended?game.snapshot():savedRun;localStorage.setItem(KEY,JSON.stringify({profile,run,updatedAt:Date.now()}));lastSave=performance.now();return true;}catch{toast('저장 공간을 확인해 주세요. 설정에서 저장 파일을 내보낼 수 있습니다.');return false;}}
 function toast(text){const el=$('#toast');el.textContent=text;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2400);}
 function sound(type='click'){if(!profile.settings.sound)return;try{audioContext??=new(window.AudioContext||window.webkitAudioContext)();if(audioContext.state==='suspended')audioContext.resume();const now=audioContext.currentTime;if(type==='shot'&&now-lastSound<.09)return;lastSound=now;const o=audioContext.createOscillator(),gain=audioContext.createGain();o.type=type==='shot'?'triangle':'sine';o.frequency.setValueAtTime(type==='wave'?570:type==='leak'?140:type==='shot'?220:650,now);o.frequency.exponentialRampToValueAtTime(type==='leak'?65:100,now+.08);gain.gain.setValueAtTime(type==='shot'?.015:.035,now);gain.gain.exponentialRampToValueAtTime(.001,now+.09);o.connect(gain);gain.connect(audioContext.destination);o.start(now);o.stop(now+.1);}catch{}}
@@ -110,7 +110,7 @@ function refreshInventory(){const scroll=$('.inventory .scroll'),top=scroll?.scr
 function unequip(id){const index=profile.loadout.indexOf(id);if(index===-1)return;profile.loadout[index]=null;refreshInventory();}
 function equip(id){if(!profile.owned.includes(id)||profile.loadout.includes(id))return;const empty=profile.loadout.indexOf(null);if(empty!==-1){profile.loadout[empty]=id;refreshInventory();return;}openDialog('교체할 타워 선택',`<div class="dialog-loadout">${profile.loadout.map((k,i)=>button('swap',towerIcon(k),'',`data-kind="${id}" data-slot="${i}" aria-label="${TOWER[k].name} 교체"`)).join('')}</div>`,button('close-dialog','취소','flat'));}
 
-function codex(tab=codexTab){codexTab=tab==='hard'?'hard':'normal';const ids=CODEX_GROUPS[codexTab],seen=ids.filter(k=>profile.seen[k]).length;setScreen('codex',header('적 도감','home',`<span class="muted small">${seen} / ${ids.length}</span>`)+`<nav class="codex-tabs" aria-label="도감 분류">${['normal','hard'].map(id=>button('codex-tab',id==='normal'?'일반':'어려움',id===codexTab?'active':'',`data-kind="${id}" aria-pressed="${id===codexTab}"`)).join('')}</nav><div class="scroll codex-grid">${ids.map(id=>{const e=ENEMIES[id];return profile.seen[id]?`<article class="enemy-card" data-enemy="${id}">${enemyIcon(id)}<h3>${e.name}</h3><div class="enemy-stats"><span>HP ${e.hp.toLocaleString()}</span>${e.shield?`<span class="shield-stat">보호막 ${e.shield.toLocaleString()}</span>`:''}<span>${enemyMoveSpeed(id)>0?enemyMoveSpeed(id).toFixed(3)+'칸/초':'이동 안 함'}</span></div><p>${e.desc}</p></article>`:`<article class="enemy-card locked">${icon('lock')}<span class="small">미발견</span></article>`;}).join('')}</div>`);}
+function codex(tab=codexTab){codexTab=tab==='hard'?'hard':'normal';const ids=CODEX_GROUPS[codexTab],seen=ids.filter(k=>profile.seen[k]).length;setScreen('codex',header('적 도감','home',`<span class="muted small">${seen} / ${ids.length}</span>`)+`${codexTab==='hard'?`<p class="codex-note muted small">어려움 모드에서는 모든 적의 체력과 보호막이 ${Math.round((DIFFICULTIES.hard.hpScale-1)*100)}% 많습니다.</p>`:''}<nav class="codex-tabs" aria-label="도감 분류">${['normal','hard'].map(id=>button('codex-tab',id==='normal'?'일반':'어려움',id===codexTab?'active':'',`data-kind="${id}" aria-pressed="${id===codexTab}"`)).join('')}</nav><div class="scroll codex-grid">${ids.map(id=>{const e=ENEMIES[id];return profile.seen[id]?`<article class="enemy-card" data-enemy="${id}">${enemyIcon(id)}<h3>${e.name}</h3><div class="enemy-stats"><span>HP ${e.hp.toLocaleString()}</span>${e.shield?`<span class="shield-stat">보호막 ${e.shield.toLocaleString()}</span>`:''}<span>${enemyMoveSpeed(id)>0?enemyMoveSpeed(id).toFixed(3)+'칸/초':'이동 안 함'}</span></div><p>${e.desc}</p></article>`:`<article class="enemy-card locked">${icon('lock')}<span class="small">미발견</span></article>`;}).join('')}</div>`);}
 
 function settings(from=screen){if(from!=='settings')previous=from;if(game&&!game.ended)game.paused=true;setScreen('settings',header('설정','back-settings','<span></span>')+`<div class="scroll">${[['sound','효과음'],['effects','공격 효과'],['vibration','진동']].map(([key,label])=>`<div class="setting-row"><span>${label}</span><button role="switch" aria-checked="${profile.settings[key]}" aria-label="${label}" data-action="toggle-setting" data-key="${key}" class="switch ${profile.settings[key]?'on':''}"></button></div>`).join('')}<div class="section-label"><span>개발 치트</span></div>${[['lives','무한 라이프'],['cash','무한 전투 자금'],['coins','무한 크레딧']].map(([key,label])=>`<div class="setting-row"><span>${label}</span><button role="switch" aria-checked="${profile.cheats[key]}" aria-label="${label}" data-action="toggle-cheat" data-key="${key}" class="switch ${profile.cheats[key]?'on':''}"></button></div>`).join('')}<p class="cheat-help">전투에도 즉시 적용됩니다. 끄면 기존 잔액을 사용합니다.</p><div class="setting-row"><span>타워·도감 전체 해금</span>${allUnlocked()?'<span class="muted small">해금 완료</span>':button('unlock-all','해금','')}</div><div class="setting-row"><div>자동 저장<p>현재 기기·브라우저에 저장됩니다.<br>기기를 옮길 때는 저장 파일을 사용하세요.</p></div>${icon('check')}</div><div class="setting-actions">${button('export',`${icon('download')} 내보내기`)}${button('import',`${icon('upload')} 불러오기`)}</div><div class="setting-row">${button('balance','밸런스 기준','flat')}</div><div class="setting-row">${button('guide',`${icon('info')} 조작 안내`,'flat')}</div><div class="setting-row"><span>클리어</span><span class="mono">${profile.stats.wins}</span></div></div>`);}
 // Cheat: own every tower and mark every enemy as seen.
@@ -124,10 +124,10 @@ function battleFooter(){return `<footer class="battle-footer"><div class="tower-
 function showBattle(){screen='battle';placing=null;dragPointer=null;setScreen('battle',`<header class="battle-hud">${button('pause',icon('menu'),'','id="pause-button" aria-label="일시정지 메뉴" aria-haspopup="dialog"')}<span class="hud-item">${icon('wave')}<b id="hud-wave">0/${game.config.count}</b></span><span class="hud-item health">${icon('heart')}<b id="hud-health">100</b></span><span class="hud-item money">${icon('cash')}<b id="hud-cash">${money(game.cash)}</b></span>${button('speed',`${game.started?game.playbackRate:game.speed}×`,'','id="speed-button" aria-label="배속 변경"')}</header><div class="wave-line"><span id="wave-caption">${game.map.name} · ${game.config.name}</span><span id="hud-placement" aria-label="배치한 타워 수">0/${PLACEMENT_LIMIT}</span><span id="wave-clock">준비</span><div class="progress" id="wave-progress"></div></div><div id="encounter-info" aria-label="남은 적"></div><div class="board-wrap"><div id="boss-info" aria-live="off"></div><div id="wave-offer" class="skip-offer" role="group" aria-label="웨이브 진행" hidden></div><canvas id="board" class="board" role="application" aria-label="전투 지도. 하단 타워를 끌어 지도에 놓고 설치합니다."></canvas><div class="board-tools">${button('zoom-in',icon('plus'),'icon','aria-label="지도 확대"')}${button('zoom-out',icon('minus'),'icon','aria-label="지도 축소"')}${button('zoom-fit',icon('fit'),'icon','aria-label="지도 전체 보기"')}</div></div>${battleFooter()}`);mountBoard();renderControls(true);updateBattleUI();drawBattle();}
 
 function towerStats(t){const d=TOWER[t.kind],s=stat(t),i=t.level-1;if(t.kind==='farm')return `수입 <b>${money(d.income[i]*100)}</b><span>주기 <b>${s.period}초</b></span><span>효율 <b>${Math.round(game.farmEfficiency()*100)}%</b></span><span>누적 <b>${money((t.produced??0)*100)}</b></span>`;if(t.kind==='flame')return `화상 <b>${d.burn[i]} / ${d.burnInterval}초</b><span>지속 <b>${d.burnDuration[i]}초</b></span><span>감속 <b>20%</b></span><span>사거리 <b>${(s.range*game.buffs(t).range).toFixed(1)}</b></span>`;if(t.kind==='commander')return `공속 <b>+${Math.round((d.boost[i]-1+(t.active>0?d.activeFire[i]-1:0))*100)}%</b><span>사거리 <b>+${Math.round((d.rangeBoost[i]-1+(t.active>0?d.activeRange[i]-1:0))*100)}%</b></span><span>범위 <b>${s.range}</b></span>`;if(d.hp)return `차량 HP <b>${d.hp[i].toLocaleString()}</b><span>출격 <b>${s.period}초</b></span><span>다음 <b id="launch-countdown">${Math.ceil(Math.max(0,t.cooldown))}초</b></span>`;const buff=game.buffs(t);return `<span>피해 <b>${t.kind==='shotgun'?`${s.damage}+${d.spreadDamage[i]}×${d.extra[i]}`:t.kind==='laser'?`${s.damage}→${Math.round(s.damage*d.cap[i])}`:s.damage+(d.burst?'×'+d.burst[i]:'')}</b></span><span>사거리 <b>${(s.range*buff.range).toFixed(1)}</b></span><span>${d.burst?'재장전':t.kind==='laser'?'틱':'주기'} <b>${(s.period/buff.fire).toFixed(2)}초</b></span>${(d.camoLevel??99)<=t.level?'<span style="color:var(--accent)">히든</span>':''}`;}
-function renderControls(force=false){if(screen!=='battle')return;const t=game.towers.find(t=>t.id===selected),key=[selected,t?.level,t?.target,t?.disabled>0,placing?.kind,placing?.mode,placing?.r,game.started,game.paused,game.phase,game.wave,game.ended].join(':');if(force||key!==controlSignature){controlSignature=key;if(t){const d=TOWER[t.kind],cost=t.level<5?d.upgrades[t.level-1]*100:0;$('#tower-controls').innerHTML=`<div class="tower-heading"><div><strong style="color:${d.color}">${d.name}</strong><span class="level">Lv.${t.level}</span></div><div>${t.kind==='commander'&&t.level>=3?button('ability','콜 투 암즈','ability',`id="ability-button"`):''}${button('deselect',icon('close'),'icon','aria-label="선택 해제"')}</div></div><div class="stats" id="selected-stats">${towerStats(t)}</div><div class="next-upgrade">${t.level<5?`<strong class="upgrade-name">${d.upgradeNames[t.level-1]}</strong><span class="upgrade-stats">Lv.${t.level+1} · ${d.notes[t.level-1]}</span>`:""}</div><div class="actions"><select id="target-select" aria-label="타겟 우선순위" ${['farm','commander','spawner','robot','gauss'].includes(t.kind)?'disabled':''}>${Object.entries(TARGETS).map(([id,label])=>`<option value="${id}" ${t.target===id?'selected':''}>${label}</option>`).join('')}</select>${button('upgrade',`${icon('upgrade')}<span>${t.level===5?'최대 레벨':t.disabled>0?'마비 중':money(cost)}</span>`,'primary',`id="upgrade-button" ${t.level===5||t.disabled>0||!game.canAfford(cost)?'disabled':''}`)}${button('sell',`${icon('sell')}<span class="button-value">${money(Math.floor(t.spent*70/100))}</span>`,'danger')}</div>`;}else{const d=TOWER[placing?.kind],[w,h]=d?dims(placing.kind,placing.r):[0,0];$('#tower-controls').innerHTML=d?`<div class="placement-controls"><div class="tower-heading"><strong style="color:${d.color}">${d.name}<span class="level">${w}×${h}</span></strong><span class="cash small">${money(d.cost*100)}</span></div><span class="small muted" id="placement-hint">${placementHint()}</span><div class="placement-actions">${button('deselect','취소')}${button('rotate',`${icon('restore')}<span>회전</span>`,'',`id="rotate-button" aria-label="90도 회전"`)}${button('confirm-place',`${icon('check')}<span>설치</span>`,'primary','id="confirm-place-button"')}</div></div>`:standbyHTML();}}
+function renderControls(force=false){if(screen!=='battle')return;const t=game.towers.find(t=>t.id===selected),key=[selected,t?.level,t?.target,t?.disabled>0,placing?.kind,placing?.mode,placing?.r,game.started,game.paused,game.phase,game.wave,game.ended].join(':');if(force||key!==controlSignature){controlSignature=key;if(t){const d=TOWER[t.kind],cost=t.level<maxLevel(t.kind)?d.upgrades[t.level-1]*100:0;$('#tower-controls').innerHTML=`<div class="tower-heading"><div><strong style="color:${d.color}">${d.name}</strong><span class="level">Lv.${t.level}</span></div><div>${t.kind==='commander'&&t.level>=3?button('ability','콜 투 암즈','ability',`id="ability-button"`):''}${button('deselect',icon('close'),'icon','aria-label="선택 해제"')}</div></div><div class="stats" id="selected-stats">${towerStats(t)}</div><div class="next-upgrade">${t.level<maxLevel(t.kind)?`<strong class="upgrade-name">${d.upgradeNames[t.level-1]}</strong><span class="upgrade-stats">Lv.${t.level+1} · ${d.notes[t.level-1]}</span>`:""}</div><div class="actions"><select id="target-select" aria-label="타겟 우선순위" ${['farm','commander','spawner','robot','gauss'].includes(t.kind)?'disabled':''}>${Object.entries(TARGETS).map(([id,label])=>`<option value="${id}" ${t.target===id?'selected':''}>${label}</option>`).join('')}</select>${button('upgrade',`${icon('upgrade')}<span>${t.level>=maxLevel(t.kind)?'최대 레벨':t.disabled>0?'마비 중':money(cost)}</span>`,'primary',`id="upgrade-button" ${t.level>=maxLevel(t.kind)||t.disabled>0||!game.canAfford(cost)?'disabled':''}`)}${button('sell',`${icon('sell')}<span class="button-value">${money(Math.floor(t.spent*70/100))}</span>`,'danger')}</div>`;}else{const d=TOWER[placing?.kind],[w,h]=d?dims(placing.kind,placing.r):[0,0];$('#tower-controls').innerHTML=d?`<div class="placement-controls"><div class="tower-heading"><strong style="color:${d.color}">${d.name}<span class="level">${w}×${h}</span></strong><span class="cash small">${money(d.cost*100)}</span></div><span class="small muted" id="placement-hint">${placementHint()}</span><div class="placement-actions">${button('deselect','취소')}${button('rotate',`${icon('restore')}<span>회전</span>`,'',`id="rotate-button" aria-label="90도 회전"`)}${button('confirm-place',`${icon('check')}<span>설치</span>`,'primary','id="confirm-place-button"')}</div></div>`:standbyHTML();}}
   const confirm=$('#confirm-place-button');if(confirm){const p=placing,pend=p?.mode==='pending';confirm.disabled=!pend||!p.ok||!game.canPlace(p.kind,p.x,p.y,p.r)||!game.canAfford(TOWER[p.kind].cost*100)||!game.canBuild(p.kind);$('#rotate-button').disabled=!pend||!TOWER[p.kind].turns;const hint=$('#placement-hint');if(hint)hint.textContent=placementHint();}
   const nextTime=$('#next-wave-time');if(nextTime)nextTime.textContent=waveStatus();
-  if(t){const stats=$('#selected-stats');if(stats)stats.innerHTML=towerStats(t);const launch=$('#launch-countdown');if(launch)launch.textContent=`${Math.ceil(Math.max(0,t.cooldown))}초`;const up=$('#upgrade-button');if(up)up.disabled=t.level===5||t.disabled>0||!game.canAfford(TOWER[t.kind].upgrades[t.level-1]*100);const ability=$('#ability-button');if(ability){ability.textContent=t.active>0?`콜 투 암즈 ${Math.ceil(t.active)}초`:t.abilityCooldown>0?`${Math.ceil(t.abilityCooldown)}초`:'콜 투 암즈';ability.disabled=t.abilityCooldown>0||game.paused||t.disabled>0;}}
+  if(t){const stats=$('#selected-stats');if(stats)stats.innerHTML=towerStats(t);const launch=$('#launch-countdown');if(launch)launch.textContent=`${Math.ceil(Math.max(0,t.cooldown))}초`;const up=$('#upgrade-button');if(up)up.disabled=t.level>=maxLevel(t.kind)||t.disabled>0||!game.canAfford(TOWER[t.kind].upgrades[t.level-1]*100);const ability=$('#ability-button');if(ability){ability.textContent=t.active>0?`콜 투 암즈 ${Math.ceil(t.active)}초`:t.abilityCooldown>0?`${Math.ceil(t.abilityCooldown)}초`:'콜 투 암즈';ability.disabled=t.abilityCooldown>0||game.paused||t.disabled>0;}}
 }
 // Idle footer: what the wave is doing and the button that starts or calls the next one.
 function waveStatus(){if(!game.started)return '';if(game.paused)return '일시정지';if(game.wave>=game.config.count&&game.phase==='wave')return `남은 적 ${game.enemies.length+game.queue.length-game.spawnIndex}`;return `다음 웨이브 ${Math.ceil(nextWaveIn())}초`;}
@@ -394,19 +394,19 @@ Object.defineProperty(exports,"planePosition",{enumerable:true,get:()=>planePosi
 },
 "balance-view.js":function(require,exports){
 const {TOWERS}=require("data.js");
-const {auditTower,compareUpgradeWithCopy,singleTargetReference}=require("balance.js");
 const number=n=>n.toLocaleString('en-US',{maximumFractionDigits:3});
-function balancePanel(){return `<div class="scroll balance-content">
- <p>누적 비용 = 배치 + 지금까지의 강화 비용<br>강화 효율 = 늘어난 출력 ÷ 이번 강화 비용<br>출력 효율 = 현재 출력 ÷ 누적 비용</p>
- <p>군인 Lv.1의 비용당 이론 DPS를 기준 1로 둡니다. 에이전트 Lv.1은 현재 <b>${number(singleTargetReference('agent',1))}배</b>이며, 추가 수입은 별도입니다. 이 값은 종합 점수가 아닙니다.</p>
- <p>같은 역할·맵·적·시간 조건에서 후반 티어의 종합 효율이 더 좋아지는 방향으로 가격과 능력치를 조정했습니다. 사거리, 히든, 광역, 지원, 수입, 소환 안정성을 일괄 DPS 배수로 바꾸지 않습니다.</p>
- <p>종합 효율의 기준은 ‘같은 방어 성과를 내는 기준 조합의 비용 ÷ 현재 누적 비용’입니다. 아직 같은 성과를 검증하지 않은 조합의 종합 지수는 미측정으로 둡니다.</p>
- <p class="muted">현재 수치의 진단표입니다. 서로 다른 출력 단위를 직접 비교하지 마세요. Δ/100은 추가 비용 100원당 늘어난 주 출력이며, 0이어도 사거리·기능 강화의 가치는 남습니다.</p>
- ${TOWERS.map(t=>{const rows=auditTower(t.id),a=rows[0];return `<details class="balance-tower"><summary><span>${t.name}</span><span class="muted small">T${t.tier} · ${a.role}</span></summary><p>${a.label} (${a.unit})<br>${a.caveat}</p>
- <div class="balance-table-wrap"><table><thead><tr><th>Lv.</th><th>누적 비용</th><th>추가 비용</th><th>주 출력</th><th>Δ/100</th></tr></thead><tbody>${rows.map(r=>`<tr><th>${r.level}</th><td>${number(r.cost)}</td><td>${number(r.incrementalCost)}</td><td>${number(r.value)}</td><td>${number(r.marginalPer100)}</td></tr>`).join('')}</tbody></table></div>
- ${rows.map(r=>`<div class="balance-note"><span><strong class="upgrade-name">Lv.${r.level} · ${r.upgradeName}</strong><span>${r.change}</span></span><span class="muted">${r.label} / 100원: ${number(r.per100)}${t.id==='farm'?` · 회수 ${number(r.extras.paybackSeconds)}초 / 강화 회수 ${number(r.extras.marginalPaybackSeconds)}초`:''}</span></div>`).join('')}
- ${t.hp?`<p>강화 1기 ↔ 현재 레벨 2기</p>${[1,2,3,4].map(level=>{const c=compareUpgradeWithCopy(t.id,level);return `<div class="balance-note"><span>Lv.${level+1} 1기 ${number(c.upgradedTotal)}원 ↔ Lv.${level} 2기 ${number(c.copiesTotal)}원</span><span class="muted">충돌 공급 ${number(c.upgradedOutput)} ↔ ${number(c.copiesOutput)} HP/초<br>출격 간격 ${number(c.launchGap.upgrade)}초 ↔ 균등 분산 시 ${number(c.launchGap.copiesEvenlyStaggered)}초</span></div>`;}).join('')}<p class="muted">2기를 동시에 출격시키면 공백은 줄지 않습니다. 잔여 체력 손실·실제 누수·배치 2칸을 함께 비교합니다. 총·폭발·로켓은 위 충돌 수치에서 제외됩니다.</p>`:''}
- </details>`;}).join('')}</div>`;}
+const MEASURED={"soldier":[1.02,0.87,1.19],"bomb":[0.83,0.99,1.18],"sniper":[1.21,1,1.07,1.1],"flame":[1.08,1,1.18],"tesla":[0.95,0.79,0.93,0.89],"minigun":[1.2,1.04,0.74,0.85],"shotgun":[0.76,1.13,1.28],"spawner":[0.79,0.9,0.91,0.99],"plane":[0.82,0.96,0.78,0.9],"gauss":[0.86,1.15,1.02],"laser":[0.8,0.72,0.79,1],"agent":[0.85,1.05,0.82],"robot":[1.05,0.85,0.74,0.83]};
+const ROLE={soldier:'초반형',bomb:'초반형',shotgun:'초반형',spawner:'초반형',sniper:'무난형',tesla:'무난형',flame:'무난형',agent:'무난형',plane:'무난형',minigun:'후반형',laser:'후반형',gauss:'후반형',robot:'후반형',commander:'지원형',farm:'지원형'};
+function balancePanel(){
+ return `<div class="scroll balance-content">
+ <p><b>효율</b> = 실전 제거량 ÷ 누적 가격<br><b>비율</b> = 효율 ÷ (같은 가격대 중앙값 × 역할 계수)</p>
+ <p>실전 제거량은 타워 하나를 보더랜드의 가장 좋은 자리에 두고, 가격대에 맞는 어려움 웨이브 3개를 흘렸을 때 깎아 낸 적 체력입니다. 사거리·순수 DPS·광역·히든 감지·과잉 피해가 모두 이 숫자에 들어갑니다.</p>
+ <p>역할 계수(가격대 1→5): 초반형 1.15·1.05·0.95·0.85·0.8 · 무난형 1 · 후반형 0.8·0.9·1·1.1·1.2. 비율 0.8~1.25가 적정입니다. 커맨더는 기준 군대 옆에서 더 깎은 양으로, 농장은 회수 시간으로 봅니다.</p>
+ <p class="muted">아래 비율은 3.0 수치로 잰 값입니다. 수치를 바꾸면 다시 재야 합니다.</p>
+ ${TOWERS.map(t=>{const m=MEASURED[t.id];let cost=t.cost;const rows=[t.cost,...t.upgrades].map((c,i)=>{if(i)cost+=c;return `<tr><th>${i+1}</th><td>${cost.toLocaleString('en-US')}</td><td>${m?m[i]?.toFixed(2)??'—':'—'}</td><td>${i?t.upgradeNames[i-1]:'배치'}</td></tr>`;}).join('');
+  return `<details class="balance-tower"><summary><span>${t.name}</span><span class="muted small">T${t.tier} · ${ROLE[t.id]} · 최대 Lv.${t.upgrades.length+1}</span></summary><div class="balance-table-wrap"><table><thead><tr><th>Lv.</th><th>누적 가격</th><th>비율</th><th>강화</th></tr></thead><tbody>${rows}</tbody></table></div>${t.id==='commander'?'<p class="muted small">Lv.2: 같은 돈으로 군대를 늘리는 것의 1.18배 · Lv.3 가치는 콜 투 암즈</p>':t.id==='farm'?`<p class="muted small">회수 시간 ${[t.cost,...t.upgrades].map((c,i,a)=>Math.round(a.slice(0,i+1).reduce((x,y)=>x+y,0)/(t.income[i]/t.period[i]))).join(' · ')}초</p>`:''}</details>`;}).join('')}
+ </div>`;
+}
 
 Object.defineProperty(exports,"balancePanel",{enumerable:true,get:()=>balancePanel});
 },
@@ -433,7 +433,7 @@ const roles={
  robot:['소환','충돌 공급량/초','HP/초','충돌 공급량에 총 DPS를 바로 더하지 않습니다. 차량별 실제 사격 시간·로켓·생존 시간을 측정합니다.']
 };
 function cumulativeCost(id,level){
- const t=TOWER[id];if(!t||!Number.isInteger(level)||level<1||level>5)throw new RangeError('타워·레벨을 확인해 주세요.');
+ const t=TOWER[id];if(!t||!Number.isInteger(level)||level<1||level>t.upgrades.length+1)throw new RangeError('타워·레벨을 확인해 주세요.');
  return t.cost+t.upgrades.slice(0,level-1).reduce((a,b)=>a+b,0);
 }
 function cycleSeconds(id,level){const t=TOWER[id],i=level-1;return t.period[i]+(t.burst?(t.burst[i]-1)*(Array.isArray(t.shot)?t.shot[i]:t.shot):0);}
@@ -463,12 +463,12 @@ function auditLevel(id,level){
  if(t.hp)Object.assign(extras,{vehicleHp:t.hp[level-1],speed:t.vehicleSpeed[level-1],gunRange:t.gunRange[level-1],spawnSeconds:t.period[level-1],gunDps:t.gun[level-1]/t.gunPeriod[level-1],explosion:t.explosion?.[level-1]??0,rocket:t.rocket?.[level-1]??0});
  return {id,name:t.name,tier:t.tier,level,role,label,unit,caveat,cost,incrementalCost,value,incrementalValue:value-prior,per100:value/cost*100,marginalPer100:(value-prior)/incrementalCost*100,extras,upgradeName:level===1?'배치':t.upgradeNames[level-2],change:level===1?'배치':t.notes[level-2]};
 }
-const auditTower=id=>Array.from({length:5},(_,i)=>auditLevel(id,i+1));
+const auditTower=id=>Array.from({length:TOWER[id].upgrades.length+1},(_,i)=>auditLevel(id,i+1));
 const auditAll=()=>TOWERS.flatMap(t=>auditTower(t.id));
 // Only a raw single-target reference. It is not a composite tower rating.
 function singleTargetReference(id,level){if(roles[id]?.[0]!=='지속 단일')return null;return auditLevel(id,level).per100/auditLevel('soldier',1).per100;}
 function compareUpgradeWithCopy(id,level){
- if(level<1||level>=5)throw new RangeError('비교는 Lv.1~4에서 가능합니다.');
+ if(level<1||level>TOWER[id].upgrades.length)throw new RangeError('비교할 수 없는 레벨입니다.');
  const a=auditLevel(id,level),b=auditLevel(id,level+1),t=TOWER[id];
  return {existingCost:a.cost,upgradeExtra:b.incrementalCost,copyExtra:a.cost,upgradedTotal:b.cost,copiesTotal:2*a.cost,costSaving:2*a.cost-b.cost,upgradedOutput:b.value,copiesOutput:2*a.value,outputUnit:a.unit,upgradedSlots:1,copiesSlots:2,
   // Scheduled launch gaps only. Two synchronized spawners have the SAME gap as one.
@@ -543,7 +543,7 @@ const MAPS=[
 // Rebalance: 1 cell = 1 stud. Soldier, bomb (Fragger), farm, flamethrower, minigun (Commando),
 // shotgun, spawner (Patrol), plane (Aviator), commander and laser (Phaser) use Tower Battles
 // wiki values; sniper, tesla, gauss, agent and robot sit on the same price-to-output curve.
-const TOWERS=[{"id": "soldier", "name": "군인", "tier": 1, "color": "#7ce4be", "unlock": 0, "cost": 450, "upgrades": [160, 240, 1050, 3400], "damage": [1, 1, 1, 2, 7], "range": [14, 16, 17, 17, 18], "period": [1.36, 1.36, 1.36, 1.36, 1.36], "burst": [3, 3, 3, 6, 7], "shot": 0.133, "camoLevel": 3, "desc": "3발 버스트 · 1.36초 재장전", "detail": "짧은 연사 후 1.36초 재장전합니다. Lv.3부터 히든을 감지합니다.", "notes": ["사거리 14 → 16", "히든 감지 · 사거리 17", "6발 버스트 · 피해 2", "7발 버스트 · 피해 7 · 사거리 18"], "upgradeNames": ["정밀 조준", "야간 작전", "확장 탄창", "돌격 분대"]}, {"id": "bomb", "name": "폭탄", "tier": 1, "color": "#ec9a66", "unlock": 0, "cost": 350, "upgrades": [140, 250, 650, 2200], "damage": [2, 2, 2, 4, 12], "range": [7, 7, 9, 9, 11], "period": [2.75, 2.75, 2.75, 2.5, 2], "splash": [3, 4, 4, 4.5, 5.5], "centerLevel": 5, "camoLevel": 3, "desc": "근거리 투척 · 광역 폭발", "detail": "폭발 범위 안의 모든 적에게 피해를 줍니다. Lv.3부터 히든을 노리고, Lv.5는 폭발 중심에 가까울수록 최대 75% 추가 피해를 줍니다.", "notes": ["폭발 범위 3 → 4", "히든 감지 · 사거리 9", "피해 4 · 주기 2.5초 · 폭발 범위 4.5", "피해 12 · 주기 2초 · 사거리 11 · 중심부 추가 피해"], "upgradeNames": ["대형 화약", "야간 고글", "중무장", "폭파 전문가"]}, {"id": "sniper", "name": "스나이퍼", "tier": 1, "color": "#89b6f7", "unlock": 0, "cost": 400, "upgrades": [150, 300, 1300, 4800], "damage": [4, 4, 7, 20, 70], "range": [26, 30, 30, 32, 36], "period": [2.5, 2.5, 2.5, 2.2, 2.0], "camoLevel": 2, "desc": "긴 사거리 · 강한 단발", "detail": "느리지만 멀리 쏘는 단발 사격. Lv.2부터 히든을 감지합니다.", "notes": ["히든 감지 · 사거리 30", "피해 7", "피해 20 · 주기 2.2초 · 사거리 32", "피해 70 · 주기 2초 · 사거리 36"], "upgradeNames": ["장거리 조준경", "강화 탄환", "대물 소총", "결정타"]}, {"id": "farm", "name": "농장", "tier": 1, "color": "#b4d871", "unlock": 0, "cost": 300, "upgrades": [250, 550, 1200, 4800], "damage": [0, 0, 0, 0, 0], "range": [0, 0, 0, 0, 0], "period": [9, 9, 9, 9, 9], "income": [10, 20, 40, 100, 300], "placementLimit": 5, "desc": "9초마다 전투 자금 생산", "detail": "진행 시간에 따라 수입을 얻습니다. 한 웨이브를 기준 시간보다 오래 끌면 그 웨이브 동안 생산이 점점 느려집니다. 일시정지 중에는 생산하지 않습니다.", "notes": ["생산량 10 → 20", "생산량 40", "생산량 100", "생산량 300"], "upgradeNames": ["비료", "농원", "과수원", "미래의 열매"]}, {"id": "flame", "name": "화염방사기", "tier": 2, "color": "#f17459", "unlock": 400, "cost": 750, "upgrades": [400, 800, 1600, 8500], "damage": [0, 0, 0, 0, 0], "range": [6, 9.5, 9.5, 10.5, 13.5], "period": [0.5, 0.5, 0.5, 0.5, 0.5], "burn": [1, 1, 1, 4, 8], "burnDuration": [3, 3, 5, 7, 9], "burnInterval": 1, "burnSlow": 0.4, "cone": [0.6, 0.6, 0.8, 0.8, 1], "desc": "지속 화상 · 이동 속도 40% 감소", "detail": "직격 피해 없이 1초마다 화상 피해를 줍니다. 불이 없는 적을 우선하며, 화상 중 이동 속도 40% 감소. 최종 보스·가디언·용암병은 감속 면역. 화상은 중첩되지 않고 공속 지원으로 빨라지지 않습니다. 히든을 직접 노리지는 못하지만 분사 범위에 들어오면 불이 붙습니다.", "notes": ["사거리 6 → 9.5", "화상 3 → 5초 · 분사 각도 확대", "화상 피해 4 · 7초 지속 · 사거리 10.5", "화상 피해 8 · 9초 지속 · 사거리 13.5 · 넓은 분사"], "upgradeNames": ["연료 증량", "큰 불길", "방화광", "불타는 세상"]}, {"id": "tesla", "name": "테슬라", "tier": 2, "color": "#c095f5", "unlock": 550, "cost": 800, "upgrades": [250, 450, 1600, 7000], "damage": [8, 8, 12, 30, 90], "range": [12, 14, 14, 14, 16], "period": [2.4, 2.2, 2.2, 2, 1.6], "chain": [3, 3, 3, 5, 8], "camoLevel": 3, "desc": "전이 공격 · 피해 무작위 분배", "detail": "총 피해를 연결된 적들이 나눠 받습니다. 6칸 안의 적으로 전이되고, 피해가 충분하면 순간 정지. Lv.3부터 히든을 감지합니다.", "notes": ["사거리 14 · 주기 2.2초", "히든 감지 · 총 피해 12", "5명 전이 · 총 피해 30 · 주기 2초", "8명 전이 · 총 피해 90 · 사거리 16 · 주기 1.6초"], "upgradeNames": ["고전압 코일", "전파 탐지", "연쇄 방전", "뇌전 폭풍"]}, {"id": "minigun", "name": "미니건", "tier": 2, "color": "#ebd175", "unlock": 800, "cost": 1850, "upgrades": [950, 990, 3300, 12000], "damage": [1, 1, 1, 1, 4], "range": [22, 25, 30, 30, 31], "period": [0.133, 0.116, 0.116, 0.05, 0.05], "camoLevel": 3, "desc": "재장전 없는 지속 연사 · 긴 사거리", "detail": "비싼 대신 사거리가 길고 지속 화력이 높습니다. Lv.3부터 히든을 감지합니다.", "notes": ["사거리 25 · 발사 주기 0.116초", "히든 감지 · 사거리 30", "쌍열 · 발사 주기 0.05초", "피해 4 · 사거리 31"], "upgradeNames": ["손놀림", "야간 고글", "쌍열 기관포", "레이저 탄두"]}, {"id": "shotgun", "name": "샷건", "tier": 2, "color": "#db99ba", "unlock": 300, "cost": 300, "upgrades": [300, 820, 1400, 4200], "damage": [4, 4, 6, 12, 18], "spreadDamage": [2, 2, 3, 6, 9], "extra": [1, 1, 1, 2, 3], "cone": 1.22, "range": [6.25, 8.5, 8.5, 8.5, 10.5], "period": [2, 2, 1.05, 1.05, 0.9], "desc": "근거리 직격 · 주변 적 확산 피해", "detail": "노린 적에게 직격, 70° 안의 가까운 다른 적에게 확산 피해를 줍니다. 히든은 감지하지 못합니다(비행기 Lv.3의 히든 해제 범위에서는 공격).", "notes": ["사거리 8.5", "직격 6 · 확산 3 · 주기 1.05초", "직격 12 · 확산 6 · 2명 추가", "직격 18 · 확산 9 · 3명 추가 · 사거리 10.5 · 주기 0.9초"], "upgradeNames": ["연장 총열", "속사 개조", "중산탄", "근접 제압"]}, {"id": "spawner", "name": "스포너", "tier": 2, "color": "#84c5bd", "unlock": 750, "cost": 400, "upgrades": [380, 420, 1200, 7250], "damage": [0, 0, 0, 0, 0], "range": [0, 0, 0, 0, 0], "period": [46, 46, 46, 46, 46], "hp": [30, 70, 70, 90, 800], "gun": [0, 0, 0, 4, 10], "gunPeriod": [0.133, 0.133, 0.133, 0.133, 0.5], "gunRange": [18, 18, 18, 18, 22], "explosion": [0, 0, 20, 20, 120], "explosionRadius": 7, "vehicleSpeed": [9.6, 9.6, 9.6, 9.6, 6], "desc": "역주행 차량 · 충돌 피해", "detail": "46초마다 기지에서 차량이 출격해 길을 거꾸로 달리며, 남은 체력만큼 적과 충돌합니다. Lv.2 가시 범퍼, Lv.3 파괴 시 폭발, Lv.4 기관총, Lv.5 전차. 충돌은 히든에도 유효합니다.", "notes": ["체력 30 → 70", "파괴 시 폭발 20 · 반경 7", "기관총 4 · 체력 90", "전차 · 체력 800 · 포 10 · 폭발 120"], "upgradeNames": ["가시 범퍼", "자폭 임무", "탑재 기관총", "전차"]}, {"id": "plane", "name": "비행기", "tier": 3, "color": "#88c5ef", "unlock": 1400, "cost": 850, "upgrades": [600, 1100, 4000, 17500], "damage": [1, 2, 2, 4, 4], "range": [12, 12, 13, 13, 13], "period": [0.133, 0.133, 0.133, 0.1, 0.066], "gunRange": [6, 6, 7, 7, 7], "cone": 3.15, "orbitSpeed": [0.571, 0.571, 0.571, 0.571, 0.571], "bomb": [0, 5, 5, 8, 30], "bombCount": [0, 1, 1, 3, 2], "bombPeriod": 4, "bombRadius": [0, 2.5, 2.5, 3.5, 6.1], "missile": [0, 0, 0, 0, 15], "missileCount": 2, "missilePeriod": 2, "missileRadius": 3.5, "camoLevel": 3, "revealLevel": 3, "bombScatter": 4, "bombFallSeconds": 0.35, "desc": "원형 비행 · 범위 내 히든 해제", "detail": "활주로에서 이륙해 반경 12칸을 돕니다(11초에 한 바퀴). 비행기 아래 6칸 안의 적을 기관포로 공격합니다. Lv.2부터 4초마다 폭탄, Lv.3 히든 감지·해제, Lv.4 폭탄 3발, Lv.5 대형 폭탄·미사일.", "notes": ["피해 2 · 4초마다 폭탄 5", "히든 감지·해제 · 비행 반경 13", "기관포 4 · 주기 0.1초 · 폭탄 8×3", "폭탄 30×2 · 미사일 15×2 · 주기 0.066초"], "upgradeNames": ["폭격 장치", "스파이 플레인", "쌍열 기관포", "미사일 편대"]}, {"id": "commander", "name": "커맨더", "tier": 3, "color": "#f4d69b", "unlock": 1600, "cost": 700, "upgrades": [1000, 2400, 5000, 12000], "damage": [0, 0, 0, 0, 0], "range": [14, 14, 14, 14, 16], "period": [1, 1, 1, 1, 1], "boost": [1, 1.25, 1.25, 1.25, 1.25], "rangeBoost": [1.25, 1.25, 1.25, 1.25, 1.25], "activeDuration": [0, 0, 8, 10, 12], "activeCooldown": 30, "activeFire": [1, 1, 1.5, 1.5, 1.5], "activeRange": [1, 1, 1, 1, 1], "desc": "사거리·공격 속도 지원", "detail": "반경 14칸(Lv.5 16칸) 안의 타워 사거리 +25%, Lv.2부터 공속 +25%. 콜 투 암즈: 8~12초간 공속 추가 +50%p, 재사용 30초. 중첩되지 않으며 커맨더는 지원하지 않습니다.", "notes": ["공속 지원 +25%", "8초간 공속 추가 +50%p · 재사용 30초", "콜 투 암즈 지속 10초", "콜 투 암즈 지속 12초 · 지원 범위 16칸"], "upgradeNames": ["전투 훈련", "콜 투 암즈", "조직된 민병대", "총력전"]}, {"id": "gauss", "name": "가우스", "tier": 3, "color": "#ae9ded", "unlock": 1900, "cost": 1150, "upgrades": [250, 400, 2000, 7000], "damage": [3, 3, 4, 12, 36], "range": [9, 10, 10, 11, 13], "period": [2.6, 2.6, 2.4, 2.2, 1.8], "stun": [0.12, 0.12, 0.16, 0.2, 0.24], "milestoneDamage": 750, "milestoneIncome": 90, "desc": "주변 전체 타격 · 피해 수입", "detail": "주변 적에게 피해와 짧은 정지. 실제 피해 750마다 전투 자금 90을 추가로 얻습니다.", "notes": ["충격파 범위 10", "피해 4 · 주기 2.4초 · 정지 0.16초", "피해 12 · 범위 11 · 정지 0.2초", "피해 36 · 범위 13 · 주기 1.8초"], "upgradeNames": ["확장 진동판", "고출력 드릴", "대형 천공기", "산업용 진동로"]}, {"id": "laser", "name": "레이저", "tier": 3, "color": "#f184a3", "unlock": 2600, "cost": 3200, "upgrades": [700, 2600, 4900, 16600], "damage": [4, 4, 4, 10, 15], "cap": [5, 5, 5, 5.1, 6.73], "ramp": [0.5, 0.5, 0.25, 0.5, 1], "cooldown": [2.43, 2.43, 2.43, 2.43, 2.4], "range": [23, 31.5, 31.5, 31.5, 37], "period": [0.5, 0.5, 0.25, 0.25, 0.25], "camoLevel": 1, "desc": "지속 광선 · 같은 적을 오래 쏠수록 강해짐", "detail": "한 적을 잠그고 계속 쏘며 피해가 점점 오릅니다(Lv.1은 4에서 20까지). 대상이 죽거나 사거리를 벗어나면 2.4초 뒤 다음 적을 잠급니다. 히든을 감지합니다.", "notes": ["사거리 31.5", "틱 0.25초 · 2배 빠른 연사", "피해 10 → 51", "피해 15 → 101 · 사거리 37"], "upgradeNames": ["손놀림", "과출력 축전지", "죽음의 광선", "섬멸"]}, {"id": "agent", "name": "에이전트", "tier": 3, "color": "#b0c7d9", "unlock": 1800, "cost": 600, "upgrades": [140, 260, 1500, 5000], "damage": [3, 3, 5, 12, 30], "range": [14, 16, 16, 17, 19], "period": [1.2, 1.1, 1.1, 0.85, 0.65], "camoLevel": 2, "incomeBonus": 0.2, "desc": "단발 사격 · 추가 수입", "detail": "공격으로 얻는 전투 자금이 20% 증가합니다. Lv.2부터 히든을 감지합니다.", "notes": ["히든 감지 · 사거리 16 · 주기 1.1초", "피해 5", "피해 12 · 사거리 17 · 주기 0.85초", "피해 30 · 사거리 19 · 주기 0.65초"], "upgradeNames": ["야간 장비", "특수 탄환", "전술 사격", "정예 요원"]}, {"id": "robot", "name": "로봇", "tier": 4, "color": "#f5a59b", "unlock": 9000, "cost": 7200, "upgrades": [3200, 4400, 16000, 44000], "damage": [0, 0, 0, 0, 0], "range": [0, 0, 0, 0, 0], "period": [60, 60, 60, 60, 60], "hp": [950, 1850, 2100, 5200, 16000], "gun": [6, 6, 6, 18, 48], "rocket": [0, 0, 40, 130, 450], "gunPeriod": [0.12, 0.12, 0.12, 0.09, 0.08], "gunRange": [18, 18, 20, 22, 24], "vehicleSpeed": [3.2, 3.2, 3.2, 3.2, 3.2], "rocketPeriod": 3, "rocketRadius": 6, "placementLimit": 4, "desc": "저속 중무장 병기 · 긴 출격 간격", "detail": "60초마다 기지에서 출격합니다. 자동차보다 느리게 이동하며 원거리 화력을 쏟아붓습니다. Lv.3 로켓 해금. 파괴되어도 재출격이 앞당겨지지 않습니다.", "notes": ["체력 950 → 1,850", "로켓 해금 · 체력 2,100 · 사거리 20", "체력 5,200 · 사거리 22", "체력 16,000 · 사거리 24 · 강화 로켓"], "upgradeNames": ["강화 장갑", "로켓 포드", "중무장 기체", "최종 병기"]}];
+const TOWERS=[{"id": "soldier", "name": "군인", "tier": 1, "color": "#7ce4be", "unlock": 0, "cost": 200, "upgrades": [125, 1175], "damage": [1, 1, 3], "range": [12, 13, 14], "period": [1.3, 1.2, 1.1], "burst": [3, 4, 6], "shot": 0.13, "camoLevel": 2, "desc": "3발 버스트 · 무난한 기본 화력", "detail": "짧게 연사한 뒤 재장전합니다. Lv.2부터 히든을 감지합니다.", "notes": ["히든 감지 · 4발 버스트 · 사거리 13", "피해 3 · 6발 버스트 · 사거리 14"], "upgradeNames": ["야간 작전", "돌격 분대"]}, {"id": "bomb", "name": "폭탄", "tier": 1, "color": "#ec9a66", "unlock": 0, "cost": 250, "upgrades": [200, 1750], "damage": [3, 4, 10], "range": [8, 8, 9], "period": [2.5, 2.2, 2], "splash": [3, 3.5, 4.5], "centerLevel": 3, "camoLevel": 2, "desc": "근거리 투척 · 광역 폭발", "detail": "폭발 범위 안의 모든 적에게 피해를 줍니다. Lv.2부터 히든을 노리고, Lv.3은 폭발 중심에 가까울수록 최대 75% 추가 피해를 줍니다.", "notes": ["히든 감지 · 피해 4 · 폭발 범위 3.5", "피해 10 · 폭발 범위 4.5 · 중심부 추가 피해"], "upgradeNames": ["야간 고글", "폭파 전문가"]}, {"id": "sniper", "name": "스나이퍼", "tier": 1, "color": "#89b6f7", "unlock": 0, "cost": 275, "upgrades": [175, 450, 2600], "damage": [5, 5, 10, 50], "range": [18, 20, 20, 22], "period": [2.5, 2.5, 2.2, 2], "camoLevel": 2, "desc": "긴 사거리 · 강한 단발", "detail": "느리지만 멀리 쏘는 단발 사격. Lv.2부터 히든을 감지합니다.", "notes": ["히든 감지 · 사거리 20", "피해 10 · 주기 2.2초", "피해 50 · 주기 2초 · 사거리 22"], "upgradeNames": ["장거리 조준경", "강화 탄환", "대물 소총"]}, {"id": "farm", "name": "농장", "tier": 1, "color": "#b4d871", "unlock": 0, "cost": 225, "upgrades": [300, 750], "damage": [0, 0, 0], "range": [0, 0, 0], "period": [8, 8, 8], "income": [8, 20, 50], "placementLimit": 5, "desc": "8초마다 전투 자금 생산", "detail": "게임 시간 8초마다 전투 자금을 만듭니다. 한 웨이브를 기준 시간보다 오래 끌면 생산이 점점 느려집니다. 최대 5개까지 배치합니다.", "notes": ["생산량 8 → 20", "생산량 50"], "upgradeNames": ["비료", "과수원"]}, {"id": "flame", "name": "화염방사기", "tier": 2, "color": "#f17459", "unlock": 500, "cost": 450, "upgrades": [450, 2100], "damage": [0, 0, 0], "range": [6, 7, 8], "period": [0.5, 0.5, 0.5], "burn": [1, 1, 5], "burnDuration": [2, 3, 4], "burnInterval": 1, "burnSlow": 0.4, "cone": [0.7, 0.8, 0.9], "desc": "지속 화상 · 이동 속도 40% 감소", "detail": "직접 피해 없이 1초마다 화상 피해를 주고, 화상 중에는 이동 속도가 40% 줄어듭니다. 화상은 겹치지 않고 시간만 갱신됩니다. 최종 보스·가디언·용암병은 감속 면역이고, 히든은 감지하지 못합니다.", "notes": ["화상 지속 3초 · 사거리 7 · 분사각 넓게", "화상 5 · 4초 · 사거리 8"], "upgradeNames": ["연료 증량", "방화광"]}, {"id": "tesla", "name": "테슬라", "tier": 2, "color": "#c095f5", "unlock": 600, "cost": 450, "upgrades": [175, 550, 2800], "damage": [6, 6, 13, 45], "range": [10, 11, 11, 12], "period": [2, 1.8, 1.8, 1.6], "chain": [3, 4, 4, 6], "camoLevel": 3, "desc": "전이 공격 · 피해 무작위 분배", "detail": "한 번의 총 피해를 이어진 적들에게 무작위로 나눕니다. 큰 몫을 맞은 적은 잠깐 멈춥니다. Lv.3부터 히든을 감지합니다.", "notes": ["4명 전이 · 사거리 11 · 주기 1.8초", "히든 감지 · 총 피해 13", "6명 전이 · 총 피해 45 · 사거리 12 · 주기 1.6초"], "upgradeNames": ["고전압 코일", "전파 탐지", "뇌전 폭풍"]}, {"id": "minigun", "name": "미니건", "tier": 2, "color": "#ebd175", "unlock": 900, "cost": 850, "upgrades": [400, 600, 3650], "damage": [1, 1, 1, 3], "range": [14, 15, 16, 16], "period": [0.15, 0.12, 0.09, 0.06], "camoLevel": 3, "desc": "재장전 없는 지속 연사 · 긴 사거리", "detail": "쉬지 않고 연사합니다. Lv.3부터 히든을 감지합니다.", "notes": ["발사 주기 0.12초 · 사거리 15", "히든 감지 · 발사 주기 0.09초 · 사거리 16", "피해 3 · 발사 주기 0.06초"], "upgradeNames": ["손놀림", "야간 고글", "쌍열 기관포"]}, {"id": "shotgun", "name": "샷건", "tier": 2, "color": "#db99ba", "unlock": 400, "cost": 250, "upgrades": [350, 1400], "damage": [4, 6, 16], "spreadDamage": [2, 3, 8], "extra": [1, 1, 2], "cone": 1.22, "range": [6.5, 8, 9], "period": [1.6, 1.3, 1.1], "desc": "근거리 직격 · 주변 적 확산 피해", "detail": "노린 적에게 직격하고, 앞쪽 70° 안의 다른 적에게 확산 피해를 줍니다. 히든은 감지하지 못합니다.", "notes": ["직격 6 · 확산 3 · 사거리 8 · 주기 1.3초", "직격 16 · 확산 8 · 2명 추가 · 사거리 9 · 주기 1.1초"], "upgradeNames": ["속사 개조", "근접 제압"]}, {"id": "spawner", "name": "스포너", "tier": 2, "color": "#84c5bd", "unlock": 700, "cost": 350, "upgrades": [325, 450, 1600], "damage": [0, 0, 0, 0], "range": [0, 0, 0, 0], "period": [40, 40, 40, 40], "hp": [25, 55, 60, 180], "gun": [0, 0, 0, 4], "gunPeriod": [0.15, 0.15, 0.15, 0.15], "gunRange": [16, 16, 16, 16], "explosion": [0, 0, 18, 40], "explosionRadius": 7, "vehicleSpeed": [9.6, 9.6, 9.6, 8], "desc": "기지에서 출격하는 돌격 차량", "detail": "40초마다 기지에서 차량이 나와 길을 거꾸로 달리며, 남은 체력만큼 적과 충돌합니다. Lv.2 가시 범퍼, Lv.3 파괴 시 폭발, Lv.4 기관총 장갑차. 충돌은 히든에도 통합니다.", "notes": ["체력 25 → 55", "파괴 시 폭발 18 · 반경 7", "체력 180 · 기관총 4 · 폭발 40"], "upgradeNames": ["가시 범퍼", "자폭 임무", "장갑 기관총"]}, {"id": "plane", "name": "비행기", "tier": 3, "color": "#88c5ef", "unlock": 1600, "cost": 600, "upgrades": [500, 450, 4450], "damage": [1, 2, 2, 4], "range": [12, 12, 13, 13], "period": [0.133, 0.133, 0.133, 0.1], "gunRange": [6, 6, 7, 7], "cone": 3.15, "orbitSpeed": [0.571, 0.571, 0.571, 0.571], "bomb": [0, 5, 5, 16], "bombCount": [0, 1, 1, 1], "bombPeriod": 4, "bombRadius": [0, 2.5, 2.5, 4], "missile": [0, 0, 0, 20], "missileCount": 2, "missilePeriod": 2.5, "missileRadius": 3.5, "camoLevel": 3, "revealLevel": 3, "bombScatter": 4, "bombFallSeconds": 0.35, "desc": "궤도 비행 · 기관포와 폭탄", "detail": "활주로에서 이륙해 궤도를 돌며 앞쪽 적을 기관포로 공격합니다. Lv.2부터 4초마다 폭탄, Lv.3 히든 감지·해제, Lv.4 미사일. 보스의 마비 공격에 면역입니다.", "notes": ["기관포 2 · 4초마다 폭탄 5", "히든 감지·해제 · 비행 반경 13", "기관포 4 · 폭탄 16 · 미사일 20×2"], "upgradeNames": ["폭격 장치", "스파이 플레인", "미사일 편대"]}, {"id": "commander", "name": "커맨더", "tier": 3, "color": "#f4d69b", "unlock": 2000, "cost": 600, "upgrades": [1500, 2500], "damage": [0, 0, 0], "range": [10, 10, 11], "period": [1, 1, 1], "boost": [1, 1.2, 1.2], "rangeBoost": [1.2, 1.2, 1.2], "activeDuration": [0, 0, 10], "activeCooldown": 30, "activeFire": [1, 1, 1.5], "activeRange": [1, 1, 1], "desc": "사거리·공격 속도 지원", "detail": "반경 10칸(Lv.3 11칸) 안의 타워 사거리 +20%, Lv.2부터 공속 +20%. Lv.3 콜 투 암즈: 10초간 공속 추가 +50%p, 재사용 30초. 중첩되지 않으며 커맨더는 지원하지 않습니다.", "notes": ["공속 지원 +20%", "10초간 공속 추가 +50%p · 재사용 30초 · 지원 범위 11칸"], "upgradeNames": ["전투 훈련", "콜 투 암즈"]}, {"id": "gauss", "name": "가우스", "tier": 3, "color": "#ae9ded", "unlock": 2200, "cost": 900, "upgrades": [500, 4600], "damage": [6, 8, 28], "range": [7, 8, 9], "period": [2.4, 2.2, 1.8], "stun": [0.12, 0.16, 0.22], "milestoneDamage": 500, "milestoneIncome": 40, "desc": "주변 충격파 · 피해 수입", "detail": "주변의 앞선 적 여러 명에게 피해와 짧은 정지를 줍니다. Lv.2부터 히든도 맞힙니다. 실제 피해 500마다 전투 자금 40을 추가로 얻습니다.", "notes": ["히든 타격 · 피해 8 · 범위 8 · 5명", "피해 28 · 범위 9 · 7명 · 주기 1.8초"], "upgradeNames": ["확장 진동판", "산업용 진동로"], "targets": [4, 5, 7], "camoLevel": 2}, {"id": "laser", "name": "레이저", "tier": 3, "color": "#f184a3", "unlock": 3000, "cost": 2200, "upgrades": [450, 2000, 6500], "damage": [2, 2, 5, 7], "cap": [1.8, 1.8, 2.2, 4], "ramp": [0.04, 0.04, 0.05, 0.08], "range": [16, 18, 18, 21], "period": [2.4, 2.4, 2.4, 2.2], "camoLevel": 1, "desc": "버스트 광선 · 같은 적을 맞힐수록 강해짐", "detail": "여러 발을 빠르게 쏜 뒤 재충전합니다. 같은 적을 연속으로 맞힐 때마다 피해가 오르고, 대상이 바뀌거나 재충전하면 처음부터 다시 오릅니다. 대상은 다른 타워처럼 우선순위로 고르며, 히든을 감지합니다.", "notes": ["28발 버스트 · 사거리 18", "피해 5 · 최대 2.2배", "피해 7 · 36발 · 최대 4배 · 사거리 21"], "upgradeNames": ["과출력 축전지", "집속 렌즈", "죽음의 광선"], "burst": [20, 28, 28, 36], "shot": [0.1, 0.1, 0.1, 0.065]}, {"id": "agent", "name": "에이전트", "tier": 3, "color": "#b0c7d9", "unlock": 1500, "cost": 450, "upgrades": [250, 4300], "damage": [3, 5, 30], "range": [12, 13, 14], "period": [1.2, 1.1, 0.8], "camoLevel": 2, "incomeBonus": 0.2, "desc": "단발 사격 · 추가 수입", "detail": "공격으로 얻는 전투 자금이 20% 늘어납니다. Lv.2부터 히든을 감지합니다.", "notes": ["히든 감지 · 피해 5 · 사거리 13", "피해 30 · 주기 0.8초 · 사거리 14"], "upgradeNames": ["야간 장비", "정예 요원"]}, {"id": "robot", "name": "로봇", "tier": 4, "color": "#f5a59b", "unlock": 10000, "cost": 3500, "upgrades": [1800, 5000, 12000], "damage": [0, 0, 0, 0], "range": [0, 0, 0, 0], "period": [60, 60, 60, 60], "hp": [600, 1200, 1500, 4000], "gun": [5, 5, 6, 16], "rocket": [0, 0, 30, 100], "gunPeriod": [0.12, 0.12, 0.1, 0.09], "gunRange": [18, 18, 20, 22], "vehicleSpeed": [3.2, 3.2, 3.2, 3.2], "rocketPeriod": 3, "rocketRadius": 6, "placementLimit": 4, "desc": "저속 중무장 병기 · 긴 출격 간격", "detail": "60초마다 기지에서 출격합니다. 자동차보다 느리게 이동하며 원거리 화력을 쏟아붓습니다. Lv.3 로켓 해금. 파괴되어도 재출격이 앞당겨지지 않습니다.", "notes": ["체력 600 → 1,200", "로켓 해금 · 체력 1,500 · 사거리 20", "체력 4,000 · 사거리 22 · 강화 로켓"], "upgradeNames": ["강화 장갑", "로켓 포드", "최종 병기"]}];
 const TOWER=Object.fromEntries(TOWERS.map(t=>[t.id,t]));
 // Footprint in cells at rotation 0 ([width, height]); `turns` = rotating changes the shape or the front.
 const FOOTPRINT={soldier:[2,2],bomb:[2,2],sniper:[2,2],farm:[4,3],flame:[2,2],tesla:[3,3],minigun:[2,2],shotgun:[2,2],spawner:[3,5],plane:[3,6],commander:[2,2],gauss:[3,3],laser:[3,3],agent:[2,2],robot:[7,7]};
@@ -556,7 +556,7 @@ function scaleText(text){return text.replace(/(사거리|범위|반경)( ?)(\+?)
 
 const {ENEMIES}=require("enemies.js");
 const {LEGACY_ENEMIES,LEGACY_LATE_STATS}=require("legacy-enemies.js");
-const DIFFICULTIES={normal:{name:'일반',count:30,reward:500,duration:1440,finalDuration:150},hard:{name:'어려움',count:40,reward:1200,duration:2100,finalDuration:300}};
+const DIFFICULTIES={normal:{name:'일반',count:25,reward:700,duration:1200,finalDuration:150},hard:{name:'어려움',count:30,reward:2000,duration:1800,finalDuration:300,hpScale:1.2}};
 const TARGETS={first:'선두',last:'후미',strong:'강한 적',weak:'약한 적',near:'가까운 적'};
 const starterProfile=()=>({version:VERSION,coins:0,owned:['soldier','bomb','sniper','farm'],loadout:['soldier','bomb','sniper','farm',null],seen:{},clears:{},settings:{sound:true,effects:true,vibration:false},cheats:{lives:false,cash:false,coins:false},stats:{played:0,wins:0},firstVisit:true});
 // Cell map: 0 open ground, 1 cave rock, 2 feature (wall, rock, water, building), 3 road.
@@ -568,6 +568,8 @@ function terrainGrid(map){let g=GRIDS.get(map);if(g)return g;g=new Uint8Array(CO
  GRIDS.set(map,g);return g;}
 function buildable(map,x,y){return Number.isInteger(x)&&Number.isInteger(y)&&x>=0&&x<COLS&&y>=0&&y<ROWS&&terrainGrid(map)[y*COLS+x]===0;}
 function makePath(points){const p=[];for(let i=0;i<points.length-1;i++){let[x,y]=points[i];const[a,b]=points[i+1],dx=Math.sign(a-x),dy=Math.sign(b-y);if(dx&&dy)throw Error('경로는 직각이어야 합니다.');while(x!==a||y!==b){p.push([x,y]);x+=dx;y+=dy;}}p.push(points.at(-1));return p;}
+// Placement is Lv.1; each tower has 2 or 3 upgrades.
+const maxLevel=kind=>(TOWER[kind]?.upgrades.length??0)+1;
 function stat(t){const d=TOWER[t.kind],i=t.level-1;return{...d,damage:d.damage[i],range:d.range[i],period:d.period[i],level:t.level};}
 
 
@@ -607,6 +609,7 @@ Object.defineProperty(exports,"buildable",{enumerable:true,get:()=>buildable});
 Object.defineProperty(exports,"SCALE",{enumerable:true,get:()=>SCALE});
 Object.defineProperty(exports,"terrainGrid",{enumerable:true,get:()=>terrainGrid});
 Object.defineProperty(exports,"dims",{enumerable:true,get:()=>dims});
+Object.defineProperty(exports,"maxLevel",{enumerable:true,get:()=>maxLevel});
 Object.defineProperty(exports,"burnSlowMultiplier",{enumerable:true,get:()=>burnSlowMultiplier});
 Object.defineProperty(exports,"canBuyTower",{enumerable:true,get:()=>canBuyTower});
 Object.defineProperty(exports,"enemyMoveSpeed",{enumerable:true,get:()=>enemyMoveSpeed});
@@ -621,8 +624,8 @@ Object.defineProperty(exports,"stat",{enumerable:true,get:()=>stat});
 // Battle cash (whole currency units here; the engine stores integer cents).
 // Starting cash, damage cash and the five-second intermission are user requirements.
 // Wave reward amounts are tuning defaults.
-// Wave clear rewards follow the Tower Battles Survival solo table (213, 260, 284, 320 … +35.5 a wave).
-const ECONOMY=Object.freeze({startingCash:650,damageCash:1,waveBase:178,waveStep:35.5,intermissionSeconds:5});
+// 3.0: wave reward 90 + 18 per wave (108, 126 … ).
+const ECONOMY=Object.freeze({startingCash:350,damageCash:1,waveBase:90,waveStep:18,intermissionSeconds:5});
 const waveCash=wave=>Math.round(ECONOMY.waveBase+wave*ECONOMY.waveStep);
 
 Object.defineProperty(exports,"ECONOMY",{enumerable:true,get:()=>ECONOMY});
@@ -683,7 +686,7 @@ const ENEMIES={
  "slow": {
   "id": "slow",
   "name": "느린 적",
-  "hp": 16,
+  "hp": 12,
   "speed": 0.6,
   "color": "#a0a6ae",
   "desc": "높은 체력, 느린 이동.",
@@ -693,7 +696,7 @@ const ENEMIES={
  "boss1": {
   "id": "boss1",
   "name": "1차 보스",
-  "hp": 180,
+  "hp": 100,
   "speed": 0.8,
   "color": "#367347",
   "boss": true,
@@ -704,7 +707,7 @@ const ENEMIES={
  "camo": {
   "id": "camo",
   "name": "히든",
-  "hp": 10,
+  "hp": 8,
   "speed": 1.25,
   "color": "#b19ddc",
   "camo": true,
@@ -715,7 +718,7 @@ const ENEMIES={
  "mystery": {
   "id": "mystery",
   "name": "미스터리",
-  "hp": 10,
+  "hp": 8,
   "speed": 1.05,
   "color": "#168cff",
   "desc": "사망하면 초반 적 한 마리로 변합니다.",
@@ -731,7 +734,7 @@ const ENEMIES={
  "necro": {
   "id": "necro",
   "name": "소환사",
-  "hp": 200,
+  "hp": 100,
   "speed": 0.7,
   "color": "#93b8a1",
   "desc": "6초마다 소환체 2마리를 생성합니다.",
@@ -746,7 +749,7 @@ const ENEMIES={
  "boss2": {
   "id": "boss2",
   "name": "2차 보스",
-  "hp": 1600,
+  "hp": 700,
   "speed": 0.55,
   "color": "#ab819b",
   "boss": true,
@@ -757,7 +760,7 @@ const ENEMIES={
  "runner": {
   "id": "runner",
   "name": "돌진병",
-  "hp": 120,
+  "hp": 50,
   "speed": 2.1,
   "color": "#e8b98a",
   "desc": "번개처럼 빠른 적. 일반 적의 두 배가 넘는 속도로 달립니다.",
@@ -767,7 +770,7 @@ const ENEMIES={
  "hiddenboss": {
   "id": "hiddenboss",
   "name": "히든 보스",
-  "hp": 800,
+  "hp": 350,
   "speed": 1.1,
   "color": "#9682d1",
   "boss": true,
@@ -779,7 +782,7 @@ const ENEMIES={
  "slime": {
   "id": "slime",
   "name": "분열체",
-  "hp": 560,
+  "hp": 250,
   "speed": 0.75,
   "color": "#89bd94",
   "desc": "사망하면 작은 분열체 3마리로 갈라집니다.",
@@ -793,7 +796,7 @@ const ENEMIES={
  "guardian": {
   "id": "guardian",
   "name": "가디언",
-  "hp": 60000,
+  "hp": 12000,
   "speed": 0.3,
   "color": "#a99acb",
   "boss": true,
@@ -805,7 +808,7 @@ const ENEMIES={
  "siege": {
   "id": "siege",
   "name": "공성 보스",
-  "hp": 24000,
+  "hp": 6000,
   "speed": 0.28,
   "color": "#d8799e",
   "boss": true,
@@ -818,7 +821,7 @@ const ENEMIES={
  "giant": {
   "id": "giant",
   "name": "거대 보스",
-  "hp": 7400,
+  "hp": 2500,
   "speed": 1.0,
   "color": "#d88386",
   "boss": true,
@@ -829,7 +832,7 @@ const ENEMIES={
  "lava": {
   "id": "lava",
   "name": "용암병",
-  "hp": 120,
+  "hp": 60,
   "speed": 0.7,
   "color": "#e98962",
   "hard": true,
@@ -861,7 +864,7 @@ const ENEMIES={
  "charger": {
   "id": "charger",
   "name": "돌격 보스",
-  "hp": 3000,
+  "hp": 1200,
   "speed": 1.6,
   "color": "#c9a08c",
   "hard": true,
@@ -873,27 +876,34 @@ const ENEMIES={
  "overlord": {
   "id": "overlord",
   "name": "군주",
-  "hp": 500000,
+  "hp": 45000,
   "speed": 0.24,
   "color": "#ea7f90",
   "hard": true,
   "boss": true,
   "finalBoss": true,
   "stunImmune": true,
-  "desc": "가디언 2기 뒤에 등장합니다. 등장 충격파와 최대 4회의 마비 공격으로 지상 타워를 7초 멈춥니다(비행기는 면역). 20초마다 소환물 1~4 중 한 종류를 3~4기 불러냅니다. 정지·화상 감속에 면역입니다.",
+  "desc": "가디언 2기 뒤에 등장합니다. 등장 충격파와 최대 4회의 마비 공격으로 지상 타워를 7초 멈춥니다(비행기는 면역). 28초마다 소환물 1~4 중 한 종류를 3~4기 불러내며, 도로의 65%를 지나면 소환을 멈춥니다. 정지·화상 감속에 면역입니다.",
   "codex": "hard",
   "shape": "final",
   "summons": {
-   "pool": ["voidspawn1","voidspawn2","voidspawn3","voidspawn4"],
+   "pool": [
+    "voidspawn1",
+    "voidspawn2",
+    "voidspawn3",
+    "voidspawn4"
+   ],
    "count": 3,
    "extra": 1,
-   "period": 20
+   "period": 28,
+   "stopAt": 0.65,
+   "back": 1.5
   }
  },
  "summon": {
   "id": "summon",
   "name": "소환체",
-  "hp": 7,
+  "hp": 5,
   "speed": 1.15,
   "color": "#769586",
   "child": true,
@@ -904,7 +914,7 @@ const ENEMIES={
  "goo": {
   "id": "goo",
   "name": "작은 분열체",
-  "hp": 120,
+  "hp": 60,
   "speed": 1.2,
   "color": "#b0d17c",
   "child": true,
@@ -915,18 +925,18 @@ const ENEMIES={
  "shell": {
   "id": "shell",
   "name": "방패병",
-  "hp": 280,
+  "hp": 120,
   "speed": 0.72,
   "color": "#b7a57c",
   "codex": "normal",
   "shape": "shield",
-  "shield": 120,
-  "desc": "보호막 120. 보호막이 남아 있는 동안 정지·화상 감속에 면역입니다."
+  "shield": 50,
+  "desc": "보호막 50. 보호막이 남아 있는 동안 정지·화상 감속에 면역입니다."
  },
  "conductor": {
   "id": "conductor",
   "name": "전령",
-  "hp": 500,
+  "hp": 250,
   "speed": 0.75,
   "color": "#e8d185",
   "codex": "normal",
@@ -1070,7 +1080,7 @@ const ENEMIES={
  "mystery2": {
   "id": "mystery2",
   "name": "미스터리 2",
-  "hp": 100,
+  "hp": 50,
   "speed": 1.0,
   "color": "#3f6fd8",
   "codex": "hard",
@@ -1087,7 +1097,7 @@ const ENEMIES={
  "necroboss": {
   "id": "necroboss",
   "name": "네크로맨서 보스",
-  "hp": 15000,
+  "hp": 4000,
   "speed": 0.5,
   "color": "#5f8f78",
   "boss": true,
@@ -1096,14 +1106,15 @@ const ENEMIES={
   "summons": {
    "kind": "firespirit",
    "count": 1,
-   "period": 8
+   "period": 8,
+   "stopAt": 0.85
   },
-  "desc": "8초마다 불의 정령을 소환하는 보스."
+  "desc": "8초마다 불의 정령을 소환하는 보스. 도로의 85%를 지나면 소환을 멈춥니다."
  },
  "firespirit": {
   "id": "firespirit",
   "name": "불의 정령",
-  "hp": 700,
+  "hp": 250,
   "speed": 1.1,
   "color": "#ff9a5c",
   "child": true,
@@ -1114,7 +1125,7 @@ const ENEMIES={
  "petrified": {
   "id": "petrified",
   "name": "석화체",
-  "hp": 60,
+  "hp": 30,
   "speed": 0,
   "color": "#8d7f74",
   "child": true,
@@ -1127,7 +1138,7 @@ const ENEMIES={
  "voidspawn1": {
   "id": "voidspawn1",
   "name": "소환물 1",
-  "hp": 1400,
+  "hp": 500,
   "speed": 0.8,
   "color": "#e58a9a",
   "child": true,
@@ -1138,7 +1149,7 @@ const ENEMIES={
  "voidspawn2": {
   "id": "voidspawn2",
   "name": "소환물 2",
-  "hp": 900,
+  "hp": 300,
   "speed": 1.3,
   "color": "#f2b0bb",
   "child": true,
@@ -1149,7 +1160,7 @@ const ENEMIES={
  "voidspawn3": {
   "id": "voidspawn3",
   "name": "소환물 3",
-  "hp": 1400,
+  "hp": 500,
   "speed": 1.0,
   "color": "#d06d82",
   "child": true,
@@ -1160,7 +1171,7 @@ const ENEMIES={
  "voidspawn4": {
   "id": "voidspawn4",
   "name": "소환물 4",
-  "hp": 2600,
+  "hp": 900,
   "speed": 0.6,
   "color": "#b35468",
   "child": true,
@@ -1172,312 +1183,62 @@ const ENEMIES={
 // Waves are written by hand, group by group: [kind, count, seconds between members, pause before
 // the group]. `hold` = how far along the path every group walks before an uncleared wave rolls over.
 // A final wave lists absolute start times instead of pauses and never rolls over.
-const WAVE_SCRIPTS={"normal":[{"hold":0.5,"g":[["normal",5,1.6,0]]},
- {"hold":0.5,"g":[["normal",4,1.2,0],
- ["normal",4,1.2,7]]},
- {"hold":0.5,"g":[["fast",6,0.8,0]]},
- {"hold":0.5,"g":[["normal",6,1.2,0],
- ["fast",4,0.7,4],
- ["fast",4,0.7,5]]},
- {"hold":0.55,"g":[["slow",6,2.4,0]]},
- {"hold":0.5,"g":[["normal",6,1,0],
- ["fast",4,0.6,4],
- ["normal",6,1,5]]},
- {"hold":0.55,"g":[["slow",3,2,0],
- ["normal",4,1,3],
- ["slow",3,2,4],
- ["fast",4,0.6,4]]},
- {"hold":0.75,"g":[["normal",4,1,0],
- ["fast",5,0.6,4],
- ["slow",4,1.8,4],
- ["boss1",1,0,9]]},
- {"hold":0.6,"g":[["slow",7,1.6,0],
- ["slow",7,1.6,8]]},
- {"hold":0.55,"g":[["camo",6,0.5,0]]},
- {"hold":0.75,"g":[["slow",6,1.6,0],
- ["boss1",1,0,9]]},
- {"hold":0.55,"g":[["camo",4,0.5,0],
- ["camo",4,0.5,7]]},
- {"hold":0.55,"g":[["mystery",8,1.1,0]]},
- {"hold":0.75,"g":[["slow",5,1.5,0],
- ["fast",6,0.6,4],
- ["boss1",2,4,8]]},
- {"hold":0.65,"g":[["mystery",7,0.9,0],
- ["necro",1,0,6],
- ["mystery",7,0.9,6]]},
- {"hold":0.65,"g":[["slow",8,1.3,0],
- ["shell",2,3,5],
- ["slow",8,1.3,5]]},
- {"hold":0.7,"g":[["normal",2,1,0],
- ["fast",2,0.7,2],
- ["slow",2,1.5,2],
- ["camo",2,0.6,3],
- ["mystery",6,0.9,4],
- ["necro",1,0,4],
- ["boss1",2,4,5],
- ["boss2",1,0,10]]},
- {"hold":0.75,"g":[["shell",2,3,0],
- ["boss1",5,3,6]]},
- {"hold":0.7,"g":[["mystery",6,0.9,0],
- ["slow",8,1.3,4],
- ["camo",4,0.5,5],
- ["boss1",2,4,7]]},
- {"hold":0.7,"g":[["lava",4,1.4,0],
- ["lava",4,1.4,6],
- ["boss1",1,0,8]]},
- {"hold":0.7,"g":[["camo",6,0.5,0],
- ["lava",5,1.3,5],
- ["mystery",8,0.9,5],
- ["boss1",4,3,6],
- ["boss2",1,0,10]]},
- {"hold":0.7,"g":[["lava",5,1.2,0],
- ["conductor",1,0,3],
- ["lava",5,1.2,3],
- ["camo",6,0.5,6],
- ["hiddenboss",1,0,7],
- ["boss2",1,0,9]]},
- {"hold":0.7,"g":[["shell",2,3,0],
- ["runner",4,0.5,4],
- ["shell",2,3,5],
- ["runner",4,0.5,4],
- ["necro",1,0,5],
- ["boss2",1,0,9]]},
- {"hold":0.75,"g":[["boss1",3,3,0],
- ["conductor",1,0,4],
- ["boss1",3,3,4],
- ["hiddenboss",2,4,8]]},
- {"hold":0.75,"g":[["lava",6,1.1,0],
- ["runner",4,0.5,4],
- ["necro",1,0,5],
- ["lava",6,1.1,5],
- ["boss1",3,3,5],
- ["runner",4,0.5,5],
- ["necro",1,0,5],
- ["boss2",2,5,8]]},
- {"hold":0.7,"g":[["shell",2,3,0],
- ["slime",3,2.5,4],
- ["runner",8,0.45,6],
- ["shell",2,3,5],
- ["hiddenboss",2,4,7]]},
- {"hold":0.75,"g":[["camo",5,0.45,0],
- ["slime",2,2.5,5],
- ["conductor",1,0,3],
- ["slime",2,2.5,3],
- ["camo",5,0.45,6],
- ["boss2",3,5,9]]},
- {"hold":0.75,"g":[["lava",5,1.1,0],
- ["runner",6,0.45,4],
- ["boss1",4,3,5],
- ["lava",5,1.1,5],
- ["runner",6,0.45,4],
- ["hiddenboss",4,3,8]]},
- {"hold":0.75,"g":[["shell",3,2.5,0],
- ["slime",3,2.2,4],
- ["necro",1,0,4],
- ["shell",3,2.5,5],
- ["slime",3,2.2,4],
- ["necro",1,0,4],
- ["boss2",4,5,9]]},
- {"final":true,"g":[["runner",6,0.5,0],
- ["hiddenboss",2,4,4],
- ["siege",1,0,10],
- ["necro",2,6,16],
- ["slime",4,2,24],
- ["boss2",2,8,32],
- ["shell",4,1.5,44],
- ["runner",6,0.5,54],
- ["boss2",2,8,62],
- ["hiddenboss",2,4,76]]}],"hard":[{"hold":0.5,"g":[["normal",6,1.4,0]]},
- {"hold":0.5,"g":[["normal",5,1.1,0],
- ["normal",4,1.1,6]]},
- {"hold":0.5,"g":[["fast",8,0.7,0]]},
- {"hold":0.5,"g":[["normal",6,1,0],
- ["fast",6,0.55,4],
- ["fast",6,0.55,5]]},
- {"hold":0.55,"g":[["slow",4,2,0],
- ["slow",4,2,6]]},
- {"hold":0.5,"g":[["normal",8,0.9,0],
- ["fast",5,0.55,4],
- ["normal",7,0.9,4]]},
- {"hold":0.55,"g":[["slow",4,1.8,0],
- ["normal",5,0.9,3],
- ["slow",4,1.8,4],
- ["fast",5,0.55,4]]},
- {"hold":0.75,"g":[["normal",5,0.9,0],
- ["fast",6,0.55,4],
- ["slow",5,1.6,4],
- ["boss1",1,0,9]]},
- {"hold":0.6,"g":[["slow",10,1.3,0],
- ["slow",10,1.3,8]]},
- {"hold":0.55,"g":[["camo",8,0.5,0]]},
- {"hold":0.75,"g":[["slow",8,1.4,0],
- ["boss1",2,4,9]]},
- {"hold":0.55,"g":[["camo",5,0.5,0],
- ["camo",5,0.5,7]]},
- {"hold":0.55,"g":[["mystery",10,1,0]]},
- {"hold":0.75,"g":[["slow",5,1.5,0],
- ["boss1",2,4,5],
- ["fast",8,0.55,5],
- ["necro",1,0,7]]},
- {"hold":0.6,"g":[["mystery",10,0.8,0],
- ["mystery",10,0.8,7]]},
- {"hold":0.6,"g":[["slow",7,1.2,0],
- ["slow",7,1.2,5],
- ["slow",6,1.2,5]]},
- {"hold":0.75,"g":[["normal",2,1,0],
- ["fast",2,0.7,2],
- ["slow",2,1.5,2],
- ["camo",2,0.6,3],
- ["mystery",6,0.9,4],
- ["necro",1,0,4],
- ["boss1",2,4,5],
- ["boss2",1,0,10]]},
- {"hold":0.75,"g":[["boss1",4,3,0],
- ["boss1",3,3,7]]},
- {"hold":0.7,"g":[["mystery",6,0.8,0],
- ["slow",8,1.2,4],
- ["camo",4,0.5,5],
- ["boss1",2,4,7]]},
- {"hold":0.7,"g":[["lava",5,1.2,0],
- ["lava",5,1.2,6],
- ["boss1",1,0,8]]},
- {"hold":0.75,"g":[["camo",6,0.5,0],
- ["lava",5,1.2,5],
- ["mystery",8,0.8,5],
- ["boss1",4,2.5,6],
- ["boss1",4,2.5,6],
- ["boss2",1,0,10]]},
- {"hold":0.75,"g":[["camo",6,0.5,0],
- ["lava",6,1.1,5],
- ["hiddenboss",1,0,6],
- ["lava",6,1.1,5],
- ["boss2",1,0,10]]},
- {"hold":0.75,"g":[["lava",6,1.1,0],
- ["boss1",2,3,4],
- ["lava",4,1.1,4],
- ["boss2",1,0,6],
- ["mystery",4,0.8,5],
- ["hiddenboss",2,4,5],
- ["necro",1,0,5]]},
- {"hold":0.75,"g":[["boss1",8,2.5,0],
- ["hiddenboss",1,0,6],
- ["boss1",1,0,4],
- ["hiddenboss",2,4,6]]},
- {"hold":0.75,"g":[["lava",8,1,0],
- ["boss1",3,3,5],
- ["lava",7,1,5],
- ["boss2",2,5,6],
- ["necro",2,5,5],
- ["runner",12,0.45,6]]},
- {"hold":0.75,"g":[["lava",5,1,0],
- ["slime",2,2.5,4],
- ["runner",8,0.45,5],
- ["lava",5,1,5],
- ["slime",2,2.5,4],
- ["hiddenboss",2,4,7]]},
- {"hold":0.75,"g":[["camo",6,0.45,0],
- ["slime",3,2.2,5],
- ["necro",1,0,4],
- ["camo",6,0.45,5],
- ["slime",3,2.2,4],
- ["necro",1,0,4],
- ["boss2",3,5,9]]},
- {"hold":0.75,"g":[["runner",8,0.45,0],
- ["lava",6,1,5],
- ["boss1",3,3,5],
- ["runner",8,0.45,5],
- ["lava",6,1,4],
- ["boss1",3,3,5],
- ["hiddenboss",3,4,8]]},
- {"hold":0.75,"g":[["slow",10,1,0],
- ["mystery2",4,1.2,4],
- ["slime",3,2.2,4],
- ["slow",10,1,5],
- ["mystery2",4,1.2,4],
- ["slime",3,2.2,4],
- ["boss2",2,5,8]]},
- {"hold":0.75,"g":[["mystery",6,0.8,0],
- ["runner",8,0.45,4],
- ["hiddenboss",2,4,5],
- ["mystery",6,0.8,5],
- ["runner",8,0.45,4],
- ["hiddenboss",2,4,5],
- ["boss2",4,5,9]]},
- {"hold":0.8,"g":[["lava",8,1,0],
- ["slime",4,2,4],
- ["necro",1,0,4],
- ["lava",8,1,5],
- ["slime",4,2,4],
- ["necro",1,0,4],
- ["charger",1,0,10]]},
- {"hold":0.75,"g":[["runner",10,0.4,0],
- ["mystery2",6,1.1,4],
- ["hiddenboss",3,3.5,5],
- ["runner",10,0.4,5],
- ["mystery2",6,1.1,4],
- ["hiddenboss",2,3.5,5],
- ["boss2",3,5,8]]},
- {"hold":0.8,"g":[["mystery",8,0.7,0],
- ["lava",8,0.9,4],
- ["slime",5,2,5],
- ["mystery",8,0.7,5],
- ["lava",8,0.9,4],
- ["slime",5,2,5],
- ["charger",2,4,10]]},
- {"hold":0.8,"g":[["runner",10,0.4,0],
- ["boss2",3,4,5],
- ["hiddenboss",3,3,5],
- ["runner",10,0.4,5],
- ["boss2",3,4,5],
- ["hiddenboss",3,3,5],
- ["charger",2,4,10]]},
- {"hold":0.8,"g":[["mystery2",7,1,0],
- ["slime",5,2,4],
- ["necro",2,4,5],
- ["mystery2",7,1,5],
- ["slime",5,2,4],
- ["necro",1,0,5],
- ["giant",1,0,12]]},
- {"hold":0.8,"g":[["lava",12,0.8,0],
- ["runner",12,0.4,4],
- ["hiddenboss",4,3,5],
- ["lava",12,0.8,5],
- ["runner",12,0.4,4],
- ["hiddenboss",4,3,5],
- ["charger",4,3.5,9]]},
- {"hold":0.8,"g":[["mystery2",8,0.9,0],
- ["boss2",3,4,5],
- ["mystery2",8,0.9,5],
- ["boss2",3,4,5],
- ["giant",1,0,9],
- ["necroboss",1,0,12]]},
- {"hold":0.8,"g":[["slime",7,1.8,0],
- ["hiddenboss",4,3,5],
- ["charger",2,4,6],
- ["slime",7,1.8,5],
- ["hiddenboss",4,3,5],
- ["charger",2,4,6],
- ["giant",2,8,10]]},
- {"hold":0.8,"g":[["runner",15,0.35,0],
- ["mystery2",10,0.8,4],
- ["charger",2,4,5],
- ["giant",1,0,7],
- ["runner",15,0.35,6],
- ["mystery2",10,0.8,4],
- ["charger",2,4,5],
- ["giant",1,0,7],
- ["necroboss",3,8,10]]},
- {"final":true,"g":[["runner",10,0.4,0],
- ["guardian",2,4,4],
- ["mystery2",8,0.8,10],
- ["overlord",1,0,16],
- ["hiddenboss",4,3,22],
- ["giant",2,6,30],
- ["charger",3,3,42],
- ["necroboss",3,8,52],
- ["runner",10,0.4,72],
- ["mystery2",8,0.8,78],
- ["giant",2,6,88]]}]};
+const WAVE_SCRIPTS={"normal":[
+{"hold":0.5,"g":[["normal",5,1.6,0]]},
+{"hold":0.5,"g":[["normal",4,1.2,0],["normal",4,1.2,7]]},
+{"hold":0.5,"g":[["fast",6,0.8,0]]},
+{"hold":0.5,"g":[["normal",6,1.2,0],["fast",4,0.7,4],["fast",4,0.7,5]]},
+{"hold":0.55,"g":[["slow",6,2.4,0]]},
+{"hold":0.55,"g":[["slow",3,2,0],["normal",4,1,3],["slow",3,2,4],["fast",4,0.6,4]]},
+{"hold":0.75,"g":[["normal",4,1,0],["fast",5,0.6,4],["slow",4,1.8,4],["boss1",1,0,9]]},
+{"hold":0.55,"g":[["camo",6,0.5,0]]},
+{"hold":0.75,"g":[["slow",6,1.6,0],["boss1",1,0,9]]},
+{"hold":0.55,"g":[["mystery",8,1.1,0]]},
+{"hold":0.75,"g":[["slow",5,1.5,0],["fast",6,0.6,4],["boss1",2,4,8]]},
+{"hold":0.65,"g":[["mystery",7,0.9,0],["necro",1,0,6],["mystery",7,0.9,6]]},
+{"hold":0.65,"g":[["slow",8,1.3,0],["shell",2,3,5],["camo",4,0.5,5],["slow",8,1.3,5]]},
+{"hold":0.7,"g":[["normal",2,1,0],["fast",2,0.7,2],["slow",2,1.5,2],["camo",2,0.6,3],["mystery",6,0.9,4],["necro",1,0,4],["boss1",2,4,5],["boss2",1,0,10]]},
+{"hold":0.75,"g":[["shell",2,3,0],["boss1",5,3,6]]},
+{"hold":0.7,"g":[["lava",4,1.4,0],["lava",4,1.4,6],["boss1",1,0,8]]},
+{"hold":0.7,"g":[["camo",6,0.5,0],["lava",5,1.3,5],["mystery",8,0.9,5],["boss1",4,3,6],["boss2",1,0,10]]},
+{"hold":0.7,"g":[["lava",5,1.2,0],["conductor",1,0,3],["lava",5,1.2,3],["camo",6,0.5,6],["hiddenboss",1,0,7],["boss2",1,0,9]]},
+{"hold":0.7,"g":[["shell",2,3,0],["runner",4,0.5,4],["shell",2,3,5],["runner",4,0.5,4],["necro",1,0,5],["boss2",1,0,9]]},
+{"hold":0.75,"g":[["boss1",3,3,0],["conductor",1,0,4],["boss1",3,3,4],["hiddenboss",2,4,8]]},
+{"hold":0.75,"g":[["lava",6,1.1,0],["runner",4,0.5,4],["necro",1,0,5],["lava",6,1.1,5],["boss1",3,3,5],["runner",4,0.5,5],["boss2",2,5,8]]},
+{"hold":0.7,"g":[["shell",2,3,0],["slime",3,2.5,4],["runner",8,0.45,6],["shell",2,3,5],["hiddenboss",2,4,7]]},
+{"hold":0.75,"g":[["camo",5,0.45,0],["slime",2,2.5,5],["conductor",1,0,3],["slime",2,2.5,3],["camo",5,0.45,6],["boss2",3,5,9]]},
+{"hold":0.75,"g":[["shell",3,2.5,0],["slime",3,2.2,4],["necro",1,0,4],["lava",5,1.1,5],["runner",6,0.45,4],["hiddenboss",3,4,6],["boss2",3,5,8]]},
+{"final":true,"g":[["runner",6,0.5,0],["hiddenboss",2,4,4],["siege",1,0,10],["necro",2,6,16],["slime",4,2,24],["boss2",2,8,32],["shell",4,1.5,44],["runner",6,0.5,54],["boss2",2,8,62],["hiddenboss",2,4,76]]}],"hard":[
+{"hold":0.5,"g":[["normal",6,1.4,0]]},
+{"hold":0.5,"g":[["normal",5,1.1,0],["normal",4,1.1,6]]},
+{"hold":0.5,"g":[["fast",8,0.7,0]]},
+{"hold":0.5,"g":[["normal",6,1,0],["fast",6,0.55,4],["fast",6,0.55,5]]},
+{"hold":0.55,"g":[["slow",4,2,0],["slow",4,2,6]]},
+{"hold":0.55,"g":[["slow",4,1.8,0],["normal",5,0.9,3],["slow",4,1.8,4],["fast",5,0.55,4]]},
+{"hold":0.75,"g":[["normal",5,0.9,0],["fast",6,0.55,4],["slow",5,1.6,4],["boss1",1,0,9]]},
+{"hold":0.55,"g":[["camo",8,0.5,0]]},
+{"hold":0.75,"g":[["slow",8,1.4,0],["boss1",2,4,9]]},
+{"hold":0.55,"g":[["mystery",10,1,0]]},
+{"hold":0.75,"g":[["slow",5,1.5,0],["boss1",2,4,5],["fast",8,0.55,5],["necro",1,0,7]]},
+{"hold":0.6,"g":[["mystery",10,0.8,0],["camo",5,0.5,5],["mystery",10,0.8,5]]},
+{"hold":0.75,"g":[["normal",2,1,0],["fast",2,0.7,2],["slow",2,1.5,2],["camo",2,0.6,3],["mystery",6,0.9,4],["necro",1,0,4],["boss1",2,4,5],["boss2",1,0,10]]},
+{"hold":0.75,"g":[["boss1",4,3,0],["boss1",3,3,7]]},
+{"hold":0.7,"g":[["lava",5,1.2,0],["lava",5,1.2,6],["boss1",1,0,8]]},
+{"hold":0.75,"g":[["camo",6,0.5,0],["lava",5,1.2,5],["mystery",8,0.8,5],["boss1",4,2.5,6],["boss2",1,0,10]]},
+{"hold":0.75,"g":[["lava",6,1.1,0],["boss1",2,3,4],["lava",4,1.1,4],["boss2",1,0,6],["mystery",4,0.8,5],["hiddenboss",2,4,5],["necro",1,0,5]]},
+{"hold":0.75,"g":[["boss1",8,2.5,0],["hiddenboss",1,0,6],["boss1",1,0,4],["hiddenboss",2,4,6]]},
+{"hold":0.75,"g":[["lava",8,1,0],["boss1",3,3,5],["lava",7,1,5],["boss2",2,5,6],["necro",2,5,5],["runner",12,0.45,6]]},
+{"hold":0.75,"g":[["lava",5,1,0],["slime",2,2.5,4],["runner",8,0.45,5],["lava",5,1,5],["slime",2,2.5,4],["hiddenboss",2,4,7]]},
+{"hold":0.75,"g":[["camo",6,0.45,0],["slime",3,2.2,5],["necro",1,0,4],["camo",6,0.45,5],["slime",3,2.2,4],["necro",1,0,4],["boss2",3,5,9]]},
+{"hold":0.75,"g":[["slow",10,1,0],["mystery2",4,1.2,4],["slime",3,2.2,4],["slow",10,1,5],["mystery2",4,1.2,4],["slime",3,2.2,4],["boss2",2,5,8]]},
+{"hold":0.8,"g":[["lava",8,1,0],["slime",4,2,4],["necro",1,0,4],["lava",8,1,5],["slime",4,2,4],["necro",1,0,4],["charger",1,0,10]]},
+{"hold":0.75,"g":[["runner",10,0.4,0],["mystery2",6,1.1,4],["hiddenboss",3,3.5,5],["runner",10,0.4,5],["mystery2",6,1.1,4],["hiddenboss",2,3.5,5],["boss2",3,5,8]]},
+{"hold":0.8,"g":[["runner",10,0.4,0],["boss2",3,4,5],["hiddenboss",3,3,5],["runner",10,0.4,5],["boss2",3,4,5],["hiddenboss",3,3,5],["charger",2,4,10]]},
+{"hold":0.8,"g":[["mystery2",7,1,0],["slime",5,2,4],["necro",2,4,5],["mystery2",7,1,5],["slime",5,2,4],["necro",1,0,5],["giant",1,0,12]]},
+{"hold":0.8,"g":[["lava",12,0.8,0],["runner",12,0.4,4],["hiddenboss",4,3,5],["lava",12,0.8,5],["runner",12,0.4,4],["hiddenboss",4,3,5],["charger",4,3.5,9]]},
+{"hold":0.8,"g":[["mystery2",8,0.9,0],["boss2",3,4,5],["mystery2",8,0.9,5],["boss2",3,4,5],["giant",1,0,9],["necroboss",1,0,12]]},
+{"hold":0.8,"g":[["runner",15,0.35,0],["mystery2",10,0.8,4],["charger",2,4,5],["giant",1,0,7],["runner",15,0.35,6],["mystery2",10,0.8,4],["charger",2,4,5],["giant",1,0,7],["necroboss",3,8,10]]},
+{"final":true,"g":[["runner",10,0.4,0],["guardian",2,4,4],["mystery2",8,0.8,10],["overlord",1,0,16],["hiddenboss",4,3,22],["giant",2,6,30],["charger",3,3,42],["necroboss",3,8,52],["runner",10,0.4,72],["mystery2",8,0.8,78]]}]};
 // Rosters (kind and count per wave) follow from the scripts.
 const WAVES=Object.fromEntries(Object.entries(WAVE_SCRIPTS).map(([mode,list])=>[mode,list.map(w=>{const out=new Map();for(const[k,n]of w.g)out.set(k,(out.get(k)??0)+n);return[...out];})]));
 // Display identities in encounter order, including each parent's children.
@@ -1494,7 +1255,7 @@ Object.defineProperty(exports,"WAVES",{enumerable:true,get:()=>WAVES});
 Object.defineProperty(exports,"WAVE_SCRIPTS",{enumerable:true,get:()=>WAVE_SCRIPTS});
 },
 "engine.js":function(require,exports){
-const {TOWER,ENEMIES,MAPS,WAVES,DIFFICULTIES,COLS,ROWS,makePath,stat,normalizeCheats,PLACEMENT_LIMIT,SPAWN_CLOCK_VERSION,ENEMY_RULES_VERSION,SCALE,terrainGrid,dims}=require("data.js");
+const {TOWER,ENEMIES,MAPS,WAVES,DIFFICULTIES,COLS,ROWS,makePath,stat,normalizeCheats,PLACEMENT_LIMIT,SPAWN_CLOCK_VERSION,ENEMY_RULES_VERSION,SCALE,terrainGrid,dims,maxLevel}=require("data.js");
 // Enemies walk on one of seven lanes across the 3-cell road. FX scales the
 // small effect rings drawn around units. A plane needs TAKEOFF seconds on its runway.
 const LANES=[-.6,-.4,-.2,0,.2,.4,.6],MID_LANE=3,FX=4,TAKEOFF=2.2;
@@ -1546,16 +1307,16 @@ class Game{
  placementBlock(kind){if(!TOWER[kind]||!this.loadout.includes(kind))return '장착되지 않은 타워입니다.';if(this.ended)return '전투가 종료되었습니다.';if(this.placementCount()>=PLACEMENT_LIMIT)return `전체 배치 한도 ${PLACEMENT_LIMIT}개`;const cap=TOWER[kind].placementLimit;if(cap&&this.placementCount(kind)>=cap)return `${TOWER[kind].name} 배치 한도 ${cap}개`;return '';}
  canBuild(kind){return !this.placementBlock(kind);}
  place(kind,x,y,r=0){const d=TOWER[kind];r=d?.turns?((r%4)+4)%4:0;if(!this.canBuild(kind)||!this.canPlace(kind,x,y,r)||!this.canAfford(d.cost*100))return null;this.spend(d.cost*100);const[w,h]=dims(kind,r);const t={id:this.nextId++,kind,col:x,row:y,r,w,h,x:x+w/2,y:y+h/2,flight:0,level:1,angle:-Math.PI/2,cooldown:0,ammo:d.burst?.[0]??0,spent:this.cheats.cash?0:d.cost*100,target:'first',ramp:1,lastTarget:null,charge:0,orbit:0,disabled:0,stunGrace:0,active:0,abilityCooldown:0,bombCooldown:0,incomeClock:0,damage:0};this.towers.push(t);this.mark(t,t.id);this.notify('change');return t;}
- upgrade(id){const t=this.towers.find(t=>t.id===id);if(!t||t.level>=5||this.ended||t.disabled>0)return false;const cost=TOWER[t.kind].upgrades[t.level-1]*100;if(!this.spend(cost))return false;t.spent+=this.cheats.cash?0:cost;t.level++;t.ammo=TOWER[t.kind].burst?.[t.level-1]??0;t.ramp=1;t.lastTarget=null;this.fx('pulse',t,{r:.6*FX,color:TOWER[t.kind].color,life:.4});this.notify('change');return true;}
+ upgrade(id){const t=this.towers.find(t=>t.id===id);if(!t||t.level>=maxLevel(t.kind)||this.ended||t.disabled>0)return false;const cost=TOWER[t.kind].upgrades[t.level-1]*100;if(!this.spend(cost))return false;t.spent+=this.cheats.cash?0:cost;t.level++;t.ammo=TOWER[t.kind].burst?.[t.level-1]??0;t.ramp=1;t.lastTarget=null;this.fx('pulse',t,{r:.6*FX,color:TOWER[t.kind].color,life:.4});this.notify('change');return true;}
  sell(id){const t=this.towers.find(t=>t.id===id);if(!t||this.ended)return false;this.addCash(Math.floor(t.spent*70/100));this.mark(t,0);this.towers=this.towers.filter(a=>a!==t);this.notify('change');return true;}
  setTarget(id,mode){const t=this.towers.find(t=>t.id===id);if(t&&['first','last','strong','weak','near'].includes(mode)){t.target=mode;t.lastTarget=null;t.ramp=1;return true;}return false;}
  ability(id){const t=this.towers.find(t=>t.id===id);if(!t||t.kind!=='commander'||t.level<3||t.abilityCooldown>0||t.disabled>0||this.paused||!this.started||this.ended)return false;t.active=TOWER.commander.activeDuration[t.level-1];t.abilityCooldown=TOWER.commander.activeCooldown;this.fx('pulse',t,{r:stat(t).range,color:'#f4d69b',life:.6});this.notify('change');return true;}
  enemyData(e){return (e.legacy?LEGACY_ENEMIES[e.kind]:null)??ENEMIES[e.kind];}
  durability(e){return Math.max(0,e.hp)+Math.max(0,e.shield??0);}
- spawn(kind,progress=0,paid=true,variant=this.waveEnemyVariant,legacy=this.legacyWave,lane=null){if(!ENEMIES[kind])return;const ln=lane??Math.floor(this.random()*LANES.length),d=enemyStats(kind,variant,legacy),p=this.position(progress,ln);const e={id:this.nextId++,kind,variant,legacy,lane:ln,moveSpeed:enemyMoveSpeed(kind,variant,legacy),progress,...p,hp:d.hp,maxHp:d.hp,shield:d.shield,maxShield:d.shield,stun:0,burn:0,burnDamage:0,burnTick:0,burnSource:0,summonClock:0,abilityClock:0,hasteRemaining:0,hasteMultiplier:1,revealed:false,paid,threshold:0,dead:false};if(BOSS_ATTACKS[kind])e.boss={entryDone:!BOSS_ATTACKS[kind].entryStun,cooldown:BOSS_ATTACKS[kind].entryDelay,repeats:0,cast:null};this.enemies.push(e);if(!this.discovered[kind]){this.discovered[kind]=true;this.notify('discover',kind);}return e;}
+ spawn(kind,progress=0,paid=true,variant=this.waveEnemyVariant,legacy=this.legacyWave,lane=null){if(!ENEMIES[kind])return;const ln=lane??Math.floor(this.random()*LANES.length),d=enemyStats(kind,variant,legacy),p=this.position(progress,ln);const e={id:this.nextId++,kind,variant,legacy,lane:ln,moveSpeed:enemyMoveSpeed(kind,variant,legacy),progress,...p,hp:d.hp*(this.config.hpScale??1),maxHp:d.hp*(this.config.hpScale??1),shield:d.shield*(this.config.hpScale??1),maxShield:d.shield*(this.config.hpScale??1),stun:0,burn:0,burnDamage:0,burnTick:0,burnSource:0,summonClock:0,abilityClock:0,hasteRemaining:0,hasteMultiplier:1,revealed:false,paid,threshold:0,dead:false};if(BOSS_ATTACKS[kind])e.boss={entryDone:!BOSS_ATTACKS[kind].entryStun,cooldown:BOSS_ATTACKS[kind].entryDelay,repeats:0,cast:null};this.enemies.push(e);if(!this.discovered[kind]){this.discovered[kind]=true;this.notify('discover',kind);}return e;}
  updateEnemyAbility(e,dt){
   const d=this.enemyData(e);if(e.stun>0)return;
-  if(d.summons){const s=d.summons;e.summonClock+=dt;if(e.summonClock>=s.period){e.summonClock-=s.period;const kind=s.pool?s.pool[Math.floor(this.random()*s.pool.length)]:s.kind,n=s.count+(s.extra?Math.floor(this.random()*(s.extra+1)):0);for(let i=0;i<n;i++)this.spawn(kind,Math.max(0,e.progress-i*.16*SCALE),false,e.variant,e.legacy);}}
+  if(d.summons&&!(d.summons.stopAt&&e.progress>this.length*d.summons.stopAt)){const s=d.summons;e.summonClock+=dt;if(e.summonClock>=s.period){e.summonClock-=s.period;const kind=s.pool?s.pool[Math.floor(this.random()*s.pool.length)]:s.kind,n=s.count+(s.extra?Math.floor(this.random()*(s.extra+1)):0);for(let i=0;i<n;i++)this.spawn(kind,Math.max(0,e.progress-(s.back??0)*SCALE-i*.16*SCALE),false,e.variant,e.legacy);}}
   if(d.haste){e.abilityClock=(e.abilityClock??0)+dt;if(e.abilityClock>=d.haste.period){e.abilityClock-=d.haste.period;for(const ally of this.enemies){if(ally.dead||ally===e||this.enemyData(ally).boss||this.enemyData(ally).haste||distance(e,ally)>d.haste.radius)continue;ally.hasteRemaining=Math.max(ally.hasteRemaining??0,d.haste.duration);ally.hasteMultiplier=Math.max(ally.hasteMultiplier??1,d.haste.multiplier);}this.fx('pulse',e,{r:d.haste.radius,color:d.color,life:.5});}}
  }
 
@@ -1607,8 +1368,8 @@ class Game{
  splash(point,damage,radius,source,center=false){for(const e of [...this.enemies])if(!e.dead){const r=distance(e,point);if(r<=radius)this.hit(e,damage*(center?1+.75*(1-r/radius):1),source);}this.fx('blast',point,{r:radius,color:TOWER[source?.kind]?.color??'#edbf86',life:.32});}
  attack(t,s,buff){const i=t.level-1,d=TOWER[t.kind];let origin=t,range=s.range*buff.range,cone=null;
   if(t.kind==='plane'){origin={x:t.x+Math.cos(t.orbit)*s.range,y:t.y+Math.sin(t.orbit)*s.range,angle:t.orbit+Math.PI/2};range=d.gunRange[i]*buff.range;cone=d.cone;}
-  if(t.kind==='gauss'){const victims=this.enemies.filter(e=>!e.dead&&distance(t,e)<=range);if(!victims.length)return false;for(const e of victims){this.hit(e,s.damage,t);this.stunEnemy(e,d.stun[i]);}this.fx('pulse',t,{r:range,color:d.color,life:.35});t.cooldown+=s.period;return true;}
-  const e=(t.kind==='laser'?this.lockedTarget(t,range):null)??this.select(t,origin,range,cone,true,t.kind==='flame'?e=>e.burn<=d.burnInterval||e.burnDamage<d.burn[i]*(this.enemyData(e).burnResist??1):()=>true);if(!e)return false;t.angle=Math.atan2(e.y-origin.y,e.x-origin.x);
+  if(t.kind==='gauss'){const victims=this.enemies.filter(e=>!e.dead&&distance(t,e)<=range&&this.visible(e,t)).sort((a,b)=>b.progress-a.progress).slice(0,d.targets?.[i]??99);if(!victims.length)return false;for(const e of victims){this.hit(e,s.damage,t);this.stunEnemy(e,d.stun[i]);}this.fx('pulse',t,{r:range,color:d.color,life:.35});t.cooldown+=s.period;return true;}
+  const e=this.select(t,origin,range,cone,true,t.kind==='flame'?e=>e.burn<=d.burnInterval||e.burnDamage<d.burn[i]*(this.enemyData(e).burnResist??1):()=>true);if(!e)return false;t.angle=Math.atan2(e.y-origin.y,e.x-origin.x);
   if(t.kind==='bomb'){this.fx('shot',t,{x2:e.x,y2:e.y,color:d.color,life:.2,heavy:true});this.splash(e,s.damage,d.splash[i],t,t.level>=d.centerLevel);}
   else if(t.kind==='flame'){for(const victim of [...this.enemies])if(!victim.dead&&distance(t,victim)<=range&&Math.abs(angleDiff(Math.atan2(victim.y-t.y,victim.x-t.x),t.angle))<d.cone[i])this.ignite(victim,t);this.fx('flame',t,{angle:t.angle,cone:d.cone[i],r:range,color:d.color,life:.3});}
   else if(t.kind==='tesla'){const chain=[e];while(chain.length<d.chain[i]){const last=chain.at(-1);const next=this.enemies.filter(a=>!a.dead&&!chain.includes(a)&&this.visible(a,t)&&distance(a,last)<=TESLA_JUMP).sort((a,b)=>distance(a,last)-distance(b,last))[0];if(!next)break;chain.push(next);}const weights=chain.map(()=>.1+this.random()),sum=weights.reduce((a,b)=>a+b,0);chain.forEach((victim,j)=>{const share=s.damage*weights[j]/sum;this.hit(victim,share,t);if(share/(victim.maxHp+(victim.maxShield??0))>=.04)this.stunEnemy(victim,.1+t.level*.025);const p=j?chain[j-1]:t;this.fx('arc',p,{x2:victim.x,y2:victim.y,color:d.color,life:.2});});}
@@ -1662,7 +1423,7 @@ class Game{
    // Support improves a launched unit's weapons, never its factory's spawn gap.
    if(t.kind==='spawner'||t.kind==='robot'){t.cooldown-=dt;if(t.cooldown<=0){this.spawnVehicle(t);t.cooldown+=s.period;}continue;}
    t.cooldown-=dt*(t.kind==='flame'?1:buff.fire);
-   if(t.kind==='laser'&&t.lastTarget!=null&&!this.lockedTarget(t,s.range*buff.range)){t.lastTarget=null;t.ramp=1;t.cooldown=Math.max(t.cooldown,d.cooldown[i]);}
+   
    if(t.kind!=='plane'&&t.kind!=='gauss'){const aim=this.select(t,t,s.range*buff.range);if(aim)t.angle=Math.atan2(aim.y-t.y,aim.x-t.x);}
    if(t.cooldown<=0){for(let attempts=0;attempts<8&&t.cooldown<=0;attempts++)if(!this.attack(t,s,buff)){t.cooldown=0;break;}}
   }
@@ -1680,8 +1441,8 @@ class Game{
    else if(allSpawned&&(clear||this.waveTime>=this.waveDuration))this.beginIntermission();
   }
  }
- snapshot(){const result={version:2,mapId:this.map.id,difficulty:this.difficulty,loadout:this.loadout};for(const k of ['enemyRulesVersion','legacyWave','waveEnemyVariant','spawnClockVersion','pacingVersion','phase','intermissionTime','lastWaveCash','cheats','damageCashRemainder','layoutVersion','cash','health','maxHealth','time','wave','waveTime','waveDuration','wavePar','skipOffered','queue','spawnIndex','towers','enemies','vehicles','bombs','nextId','started','ended','won','rewardCents','completed','kills','damage','rng','discovered','speed'])result[k]=structuredClone(this[k]);return result;}
- static restore(snapshot,hooks={}){if(!snapshot||snapshot.version!==2||!MAPS.some(m=>m.id===snapshot.mapId)||!DIFFICULTIES[snapshot.difficulty])throw Error('저장된 전투를 읽을 수 없습니다.');const g=new Game(snapshot.mapId,snapshot.difficulty,snapshot.loadout,hooks);for(const k of ['enemyRulesVersion','legacyWave','waveEnemyVariant','spawnClockVersion','pacingVersion','phase','intermissionTime','lastWaveCash','cheats','damageCashRemainder','layoutVersion','cash','health','maxHealth','time','wave','waveTime','waveDuration','wavePar','skipOffered','queue','spawnIndex','towers','enemies','vehicles','bombs','nextId','started','ended','won','rewardCents','completed','kills','damage','rng','discovered','speed'])if(snapshot[k]!==undefined)g[k]=structuredClone(snapshot[k]);if(!['preparation','wave','intermission','ended'].includes(snapshot.phase))g.phase=g.ended?'ended':g.started?'wave':'preparation';g.intermissionTime=Math.max(0,Math.min(ECONOMY.intermissionSeconds,Number(g.intermissionTime)||0));if((snapshot.spawnClockVersion??1)<SPAWN_CLOCK_VERSION)for(const t of g.towers)if(t.kind==='robot'&&t.cooldown>0)t.cooldown=Math.min(60,t.cooldown+10);g.spawnClockVersion=SPAWN_CLOCK_VERSION;g.setLayout(snapshot.layoutVersion??1);g.setCheats(snapshot.cheats);for(const t of g.towers){if(TOWER[t.kind].burst)t.ammo=Math.max(1,Math.min(t.ammo,TOWER[t.kind].burst[t.level-1]));}g.pacingVersion=PACING_VERSION;if(!g.wavePar&&g.wave)g.wavePar=wavePar(g.difficulty,Math.min(g.wave,g.config.count),g.length);const oldEnemyRules=(snapshot.enemyRulesVersion??1)<ENEMY_RULES_VERSION;if(oldEnemyRules)g.legacyWave=true;g.enemyRulesVersion=ENEMY_RULES_VERSION;for(const e of g.enemies){if(oldEnemyRules)e.legacy=true;e.moveSpeed=Number.isFinite(e.moveSpeed)?e.moveSpeed:enemyMoveSpeed(e.kind,e.variant??'base',e.legacy);e.shield=Math.max(0,e.shield??0);e.maxShield=Math.max(e.shield,e.maxShield??0);e.abilityClock=Math.max(0,e.abilityClock??0);e.hasteRemaining=Math.max(0,e.hasteRemaining??0);e.hasteMultiplier=Math.max(1,e.hasteMultiplier??1);e.variant=e.variant==='hard-late'?'hard-late':'base';if(e.kind==='overlord'&&e.maxHp===300000){e.hp*=ENEMIES.overlord.hp/e.maxHp;e.maxHp=ENEMIES.overlord.hp;}if(e.kind==='lava'&&e.maxHp===180){e.hp*=ENEMIES.lava.hp/e.maxHp;e.maxHp=ENEMIES.lava.hp;}if(BOSS_ATTACKS[e.kind]&&!e.boss)e.boss={entryDone:true,cooldown:BOSS_ATTACKS[e.kind].minInterval,repeats:0,cast:null};}for(const t of g.towers){const d=TOWER[t.kind];if(t.kind==='laser')t.ramp=Math.min(t.ramp??1,d.cap[t.level-1]);if(t.kind==='commander'){t.active=Math.min(t.active,d.activeDuration[t.level-1]);t.abilityCooldown=Math.min(t.abilityCooldown,d.activeCooldown);}}for(const v of g.vehicles){if(v.supportVersion!==3){v.fireBoost=Math.min(v.fireBoost??1,TOWER.commander.boost[4]);v.fireWindows=[];v.supportVersion=3;}v.fireWindows=(v.fireWindows??[]).map(w=>({...w,fire:Math.min(w.fire,1.55)}));v.cooldown=Math.max(0,v.cooldown??0);v.rocketCooldown=Math.max(0,v.rocketCooldown??0);}g.effects=[];g.paused=true;return g;}
+ snapshot(){const result={version:3,mapId:this.map.id,difficulty:this.difficulty,loadout:this.loadout};for(const k of ['enemyRulesVersion','legacyWave','waveEnemyVariant','spawnClockVersion','pacingVersion','phase','intermissionTime','lastWaveCash','cheats','damageCashRemainder','layoutVersion','cash','health','maxHealth','time','wave','waveTime','waveDuration','wavePar','skipOffered','queue','spawnIndex','towers','enemies','vehicles','bombs','nextId','started','ended','won','rewardCents','completed','kills','damage','rng','discovered','speed'])result[k]=structuredClone(this[k]);return result;}
+ static restore(snapshot,hooks={}){if(!snapshot||snapshot.version!==3||!MAPS.some(m=>m.id===snapshot.mapId)||!DIFFICULTIES[snapshot.difficulty])throw Error('저장된 전투를 읽을 수 없습니다.');const g=new Game(snapshot.mapId,snapshot.difficulty,snapshot.loadout,hooks);for(const k of ['enemyRulesVersion','legacyWave','waveEnemyVariant','spawnClockVersion','pacingVersion','phase','intermissionTime','lastWaveCash','cheats','damageCashRemainder','layoutVersion','cash','health','maxHealth','time','wave','waveTime','waveDuration','wavePar','skipOffered','queue','spawnIndex','towers','enemies','vehicles','bombs','nextId','started','ended','won','rewardCents','completed','kills','damage','rng','discovered','speed'])if(snapshot[k]!==undefined)g[k]=structuredClone(snapshot[k]);if(!['preparation','wave','intermission','ended'].includes(snapshot.phase))g.phase=g.ended?'ended':g.started?'wave':'preparation';g.intermissionTime=Math.max(0,Math.min(ECONOMY.intermissionSeconds,Number(g.intermissionTime)||0));if((snapshot.spawnClockVersion??1)<SPAWN_CLOCK_VERSION)for(const t of g.towers)if(t.kind==='robot'&&t.cooldown>0)t.cooldown=Math.min(60,t.cooldown+10);g.spawnClockVersion=SPAWN_CLOCK_VERSION;g.setLayout(snapshot.layoutVersion??1);g.setCheats(snapshot.cheats);for(const t of g.towers){if(TOWER[t.kind].burst)t.ammo=Math.max(1,Math.min(t.ammo,TOWER[t.kind].burst[t.level-1]));}g.pacingVersion=PACING_VERSION;if(!g.wavePar&&g.wave)g.wavePar=wavePar(g.difficulty,Math.min(g.wave,g.config.count),g.length);const oldEnemyRules=(snapshot.enemyRulesVersion??1)<ENEMY_RULES_VERSION;if(oldEnemyRules)g.legacyWave=true;g.enemyRulesVersion=ENEMY_RULES_VERSION;for(const e of g.enemies){if(oldEnemyRules)e.legacy=true;e.moveSpeed=Number.isFinite(e.moveSpeed)?e.moveSpeed:enemyMoveSpeed(e.kind,e.variant??'base',e.legacy);e.shield=Math.max(0,e.shield??0);e.maxShield=Math.max(e.shield,e.maxShield??0);e.abilityClock=Math.max(0,e.abilityClock??0);e.hasteRemaining=Math.max(0,e.hasteRemaining??0);e.hasteMultiplier=Math.max(1,e.hasteMultiplier??1);e.variant=e.variant==='hard-late'?'hard-late':'base';if(e.kind==='overlord'&&e.maxHp===300000){e.hp*=ENEMIES.overlord.hp/e.maxHp;e.maxHp=ENEMIES.overlord.hp;}if(e.kind==='lava'&&e.maxHp===180){e.hp*=ENEMIES.lava.hp/e.maxHp;e.maxHp=ENEMIES.lava.hp;}if(BOSS_ATTACKS[e.kind]&&!e.boss)e.boss={entryDone:true,cooldown:BOSS_ATTACKS[e.kind].minInterval,repeats:0,cast:null};}for(const t of g.towers){const d=TOWER[t.kind];if(t.kind==='laser')t.ramp=Math.min(t.ramp??1,d.cap[t.level-1]);if(t.kind==='commander'){t.active=Math.min(t.active,d.activeDuration[t.level-1]);t.abilityCooldown=Math.min(t.abilityCooldown,d.activeCooldown);}}for(const v of g.vehicles){if(v.supportVersion!==3){v.fireBoost=Math.min(v.fireBoost??1,TOWER.commander.boost[4]);v.fireWindows=[];v.supportVersion=3;}v.fireWindows=(v.fireWindows??[]).map(w=>({...w,fire:Math.min(w.fire,1.55)}));v.cooldown=Math.max(0,v.cooldown??0);v.rocketCooldown=Math.max(0,v.rocketCooldown??0);}g.effects=[];g.paused=true;return g;}
 }
 
 Object.defineProperty(exports,"Game",{enumerable:true,get:()=>Game});
@@ -1825,12 +1586,12 @@ Object.defineProperty(exports,"preventTextSelection",{enumerable:true,get:()=>pr
 "pacing.js":function(require,exports){
 const {WAVE_SCRIPTS,DIFFICULTIES,enemyMoveSpeed}=require("data.js");
 
-const PACING_VERSION=6;
+const PACING_VERSION=7;
 // Seconds after the last spawn before an unfinished wave can roll over.
 const MIN_TAIL=6;
 // Mode tempo: scripts keep their shape; TEMPO scales every gap and pause, HOLD_SCALE every hold.
-// Tuned for about 24 minutes on normal and 33-36 minutes on hard.
-const TEMPO={normal:.75,hard:.7},HOLD_SCALE={normal:.25,hard:.25};
+// 3.0: about 20 minutes on normal (25 waves) and 30 minutes on hard (30 waves).
+const TEMPO={normal:0.7,hard:0.7},HOLD_SCALE={normal:0.2,hard:0.25};
 function scriptGroups(difficulty,wave){
  const script=WAVE_SCRIPTS[difficulty][wave-1];
  if(script.final)return script.g.map(([kind,count,gap,at])=>({kind,count,gap,start:at,end:at+(count-1)*gap}));
