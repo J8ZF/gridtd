@@ -57,7 +57,7 @@ html,body,body *,body *::before,body *::after{-webkit-user-select:none;user-sele
 .skip-offer button.primary.arming{background:linear-gradient(var(--accent),var(--accent)) left/0 100% no-repeat #29453c;border-color:#3f6b5d;color:#d4eee4;animation:arm 1s linear forwards}
 @keyframes arm{99%{background-size:100% 100%;color:#d4eee4;border-color:#3f6b5d}100%{background-size:100% 100%;color:#10231e;border-color:var(--accent)}}
 @keyframes skip-in{from{opacity:0;transform:translate(-50%,-6px)}}
-</style></head>
+.battle-footer .slot .tower-icon{width:38px;height:38px}.battle-footer .slot{gap:1px}.slot .price{font-size:11px;font-weight:800;color:var(--cash);-webkit-text-stroke:3px rgba(8,12,16,.55);paint-order:stroke fill;letter-spacing:.2px}.tower-art{overflow:visible}</style></head>
 <body><div id="app"></div><div id="modal-root"></div><div id="toast" role="status" aria-live="polite"></div><input id="import-file" type="file" accept="application/json,.json" hidden><script>
 (()=>{
 "use strict";
@@ -79,7 +79,7 @@ const wallet=()=>profile.cheats.coins?'∞':money(profile.coins);
 const seconds=s=>`${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;
 let profile=starterProfile(),savedRun=null,game=null,screen='home',previous='home',selected=null,placing=null,dragPointer=null,board=null,boardObserver=null,legacyRunDropped=false,chosenMap=MAPS[0],controlSignature='',skipDismissed=null,offerArmedAt=0,lastSave=0,lastUI=0,toastTimer,audioContext,lastSound=0,battleSettled=false,dialogKind='';
 let backNavigation,codexTab='normal';
-function sanitizeProfile(p){if(!p||p.version!==1||!Number.isSafeInteger(p.coins)||p.coins<0||p.coins>1e12||!Array.isArray(p.owned)||!Array.isArray(p.loadout))throw Error('지원하지 않는 저장 파일입니다.');const out=starterProfile();out.coins=p.coins;out.owned=[...new Set(p.owned.filter(k=>TOWER[k]))];out.loadout=Array(5).fill(null);const added=new Set();p.loadout.slice(0,5).forEach((k,i)=>{if(out.owned.includes(k)&&!added.has(k)){out.loadout[i]=k;added.add(k);}});out.seen=Object.fromEntries(Object.keys(p.seen??{}).filter(k=>ENEMIES[k]).map(k=>[k,true]));out.clears=Object.fromEntries(MAPS.flatMap(m=>['normal','hard'].map(d=>`${m.id}:${d}`)).filter(k=>p.clears?.[k]).map(k=>[k,true]));for(const k of ['sound','effects','vibration'])if(typeof p.settings?.[k]==='boolean')out.settings[k]=p.settings[k];out.stats={played:Math.max(0,Math.min(100000,Number(p.stats?.played)||0)),wins:Math.max(0,Math.min(100000,Number(p.stats?.wins)||0))};out.cheats=normalizeCheats(p.cheats);out.firstVisit=p.firstVisit!==false;return out;}
+function sanitizeProfile(p){if(!p||p.version!==1||!Number.isSafeInteger(p.coins)||p.coins<0||p.coins>1e12||!Array.isArray(p.owned)||!Array.isArray(p.loadout))throw Error('지원하지 않는 저장 파일입니다.');const out=starterProfile();out.coins=p.coins;out.owned=[...new Set(p.owned.filter(k=>TOWER[k]))];out.loadout=Array(5).fill(null);const added=new Set();p.loadout.slice(0,5).forEach((k,i)=>{if(out.owned.includes(k)&&!added.has(k)){out.loadout[i]=k;added.add(k);}});out.seen=Object.fromEntries(Object.keys(p.seen??{}).filter(k=>ENEMIES[k]).map(k=>[k,true]));out.clears=Object.fromEntries(MAPS.flatMap(m=>['normal','hard'].map(d=>`${m.id}:${d}`)).filter(k=>p.clears?.[k]).map(k=>[k,true]));for(const k of ['sound','effects','vibration','hidePlanes','levelMode'])if(typeof p.settings?.[k]==='boolean')out.settings[k]=p.settings[k];out.stats={played:Math.max(0,Math.min(100000,Number(p.stats?.played)||0)),wins:Math.max(0,Math.min(100000,Number(p.stats?.wins)||0))};out.cheats=normalizeCheats(p.cheats);out.firstVisit=p.firstVisit!==false;return out;}
 function validateRun(r){if(!r)return null;if(r.version===1||r.version===2){legacyRunDropped=true;return null;}if(r.version!==3||!MAPS.some(m=>m.id===r.mapId)||!DIFFICULTIES[r.difficulty]||!Array.isArray(r.loadout)||r.loadout.some(k=>k!==null&&!TOWER[k]))throw Error('전투 데이터가 올바르지 않습니다.');for(const k of ['cash','health','time','wave','nextId','rewardCents','completed'])if(!Number.isFinite(r[k])||r[k]<0)throw Error('전투 데이터가 올바르지 않습니다.');if(r.waveEnemyVariant!==undefined&&!['base','hard-late'].includes(r.waveEnemyVariant))throw Error('적 능력치 데이터가 올바르지 않습니다.');if(r.wave>DIFFICULTIES[r.difficulty].count||r.completed>r.wave||r.cash>1e12||r.health>100)throw Error('전투 범위를 확인할 수 없습니다.');for(const [key,max,valid] of [['towers',150,t=>TOWER[t.kind]&&t.level>=1&&t.level<=maxLevel(t.kind)&&Number.isInteger(t.col)&&t.col>=0&&t.col<COLS&&Number.isInteger(t.row)&&t.row>=0&&t.row<ROWS&&[undefined,0,1,2,3].includes(t.r)],['enemies',5000,e=>ENEMIES[e.kind]&&Number.isFinite(e.hp)&&Number.isFinite(e.progress)&&(e.variant===undefined||['base','hard-late'].includes(e.variant))&&['shield','maxShield','abilityClock','hasteRemaining'].every(k=>e[k]===undefined||(Number.isFinite(e[k])&&e[k]>=0))&&(e.moveSpeed===undefined||(Number.isFinite(e.moveSpeed)&&e.moveSpeed>=0&&e.moveSpeed<=5*SCALE))&&(e.hasteMultiplier===undefined||(Number.isFinite(e.hasteMultiplier)&&e.hasteMultiplier>=1&&e.hasteMultiplier<=1.15))],['vehicles',1000,v=>['robot','spawner'].includes(v.kind)&&v.level>=1&&v.level<=maxLevel(v.kind)&&Number.isFinite(v.hp)&&(v.fireWindows===undefined||(Array.isArray(v.fireWindows)&&v.fireWindows.length<=150&&v.fireWindows.every(w=>w&&Number.isFinite(w.until)&&Number.isFinite(w.fire)&&w.fire>=1&&w.fire<=2.1)))]]){if(!Array.isArray(r[key])||r[key].length>max||!r[key].every(valid))throw Error('전투 데이터가 올바르지 않습니다.');}if(r.bombs!==undefined&&(!Array.isArray(r.bombs)||r.bombs.length>150||!r.bombs.every(b=>['x','y','x2','y2','damage','radius','remaining','duration'].every(k=>Number.isFinite(b[k]))&&b.damage>=0&&b.radius>0&&b.duration>0&&b.remaining>=0&&b.remaining<=b.duration)))throw Error('폭탄 데이터가 올바르지 않습니다.');return r.ended?null:r;}
 try{const raw=localStorage.getItem(KEY);if(raw){const data=JSON.parse(raw);profile=sanitizeProfile(data.profile);savedRun=validateRun(data.run);}}catch{setTimeout(()=>toast('저장 데이터를 읽지 못했습니다. 저장 파일을 불러올 수 있습니다.'),100);}
 if(legacyRunDropped)setTimeout(()=>toast('3.0으로 바뀌어 진행 중이던 전투는 이어할 수 없습니다.'),100);
@@ -90,7 +90,7 @@ function vibrate(ms=8){if(profile.settings.vibration)navigator.vibrate?.(ms);}
 function button(action,label,cls='',extra=''){return `<button class="${cls}" data-action="${action}" ${extra}>${label}</button>`;}
 function header(title,back='home',extra=''){return `<header class="bar"><div class="bar-title">${button(back,icon('back'),'icon flat','aria-label="뒤로"')}<h2>${title}</h2></div>${extra||`<span class="wallet">${icon('coin')}${wallet()}</span>`}</header>`;}
 function setScreen(name,html){if(name!=='battle'){placing=null;dragPointer=null;}screen=name;app.innerHTML=`<main class="screen ${name}">${html}</main>`;controlSignature='';}
-function slots(loadout=profile.loadout,battle=false,removable=false){return `<div class="loadout">${loadout.map((id,i)=>{const t=TOWER[id];return t?button(battle?'build':removable?'unequip':'inventory',`${towerIcon(id)}<span>${t.name}</span>${battle?`<span class="price" data-price="${id}">${money(t.cost*100)}</span>`:''}`,`slot ${removable?'removable':''} ${battle&&placing?.kind===id?'active':''}`,`style="--color:${t.color}" data-kind="${id}" aria-label="${t.name}${battle?' 배치 '+t.cost+'원':removable?' 해제':''}" ${battle&&(!game.canBuild(id)||!game.canAfford(t.cost*100))?'disabled':''}`):button(battle?'noop':'inventory',icon('plus'),'slot empty',`aria-label="빈 슬롯 ${i+1}" ${battle?'disabled':''}`);}).join('')}</div>`;}
+function slots(loadout=profile.loadout,battle=false,removable=false){return `<div class="loadout">${loadout.map((id,i)=>{const t=TOWER[id];return t?button(battle?'build':removable?'unequip':'inventory',`${towerIcon(id)}${battle?`<span class="price" data-price="${id}">${money(t.cost*100)}</span>`:`<span>${t.name}</span>`}`,`slot ${removable?'removable':''} ${battle&&placing?.kind===id?'active':''}`,`style="--color:${t.color}" data-kind="${id}" aria-label="${t.name}${battle?' 배치 '+t.cost+'원':removable?' 해제':''}" ${battle&&(!game.canBuild(id)||!game.canAfford(t.cost*100))?'disabled':''}`):button(battle?'noop':'inventory',icon('plus'),'slot empty',`aria-label="빈 슬롯 ${i+1}" ${battle?'disabled':''}`);}).join('')}</div>`;}
 function home(){if(game&&!game.ended){game.paused=true;savedRun=game.snapshot();}save();setScreen('home',`<header class="bar home-top"><span class="wallet">${icon('coin')}${wallet()}</span>${button('codex',icon('book'),'icon flat','aria-label="적 도감"')}</header><div class="home-center"><div class="home-title"><svg class="home-mark" viewBox="-30 -30 60 60" aria-hidden="true"><path d="M0-27 24-13.5V13.5L0 27-24 13.5V-13.5Z" fill="none" stroke="currentColor" stroke-width="2"/>${glyph('soldier')}</svg><h1>타워<br>디펜스</h1></div><nav class="home-menu">${button('play',`<span>플레이</span>${icon('play')}`,'primary')}${button('inventory',`<span>인벤토리</span>${icon('inventory')}`)}${button('settings',`<span>설정</span>${icon('settings')}`)}</nav></div><div class="home-bottom">${slots()}</div>`);}
 function openDialog(title,body,buttons,kind='dialog'){dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2>${title}</h2>${body}<div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('button')?.focus();}
 function closeDialog(){dialogKind='';modal.innerHTML='';}
@@ -112,7 +112,7 @@ function equip(id){if(!profile.owned.includes(id)||profile.loadout.includes(id))
 
 function codex(tab=codexTab){codexTab=tab==='hard'?'hard':'normal';const ids=CODEX_GROUPS[codexTab],seen=ids.filter(k=>profile.seen[k]).length;setScreen('codex',header('적 도감','home',`<span class="muted small">${seen} / ${ids.length}</span>`)+`${codexTab==='hard'?`<p class="codex-note muted small">어려움 모드에서는 모든 적의 체력과 보호막이 ${Math.round((DIFFICULTIES.hard.hpScale-1)*100)}% 많습니다.</p>`:''}<nav class="codex-tabs" aria-label="도감 분류">${['normal','hard'].map(id=>button('codex-tab',id==='normal'?'일반':'어려움',id===codexTab?'active':'',`data-kind="${id}" aria-pressed="${id===codexTab}"`)).join('')}</nav><div class="scroll codex-grid">${ids.map(id=>{const e=ENEMIES[id];return profile.seen[id]?`<article class="enemy-card" data-enemy="${id}">${enemyIcon(id)}<h3>${e.name}</h3><div class="enemy-stats"><span>HP ${e.hp.toLocaleString()}</span>${e.shield?`<span class="shield-stat">보호막 ${e.shield.toLocaleString()}</span>`:''}<span>${enemyMoveSpeed(id)>0?enemyMoveSpeed(id).toFixed(3)+'칸/초':'이동 안 함'}</span></div><p>${e.desc}</p></article>`:`<article class="enemy-card locked">${icon('lock')}<span class="small">미발견</span></article>`;}).join('')}</div>`);}
 
-function settings(from=screen){if(from!=='settings')previous=from;if(game&&!game.ended)game.paused=true;setScreen('settings',header('설정','back-settings','<span></span>')+`<div class="scroll">${[['sound','효과음'],['effects','공격 효과'],['vibration','진동']].map(([key,label])=>`<div class="setting-row"><span>${label}</span><button role="switch" aria-checked="${profile.settings[key]}" aria-label="${label}" data-action="toggle-setting" data-key="${key}" class="switch ${profile.settings[key]?'on':''}"></button></div>`).join('')}<div class="section-label"><span>개발 치트</span></div>${[['lives','무한 라이프'],['cash','무한 전투 자금'],['coins','무한 크레딧']].map(([key,label])=>`<div class="setting-row"><span>${label}</span><button role="switch" aria-checked="${profile.cheats[key]}" aria-label="${label}" data-action="toggle-cheat" data-key="${key}" class="switch ${profile.cheats[key]?'on':''}"></button></div>`).join('')}<p class="cheat-help">전투에도 즉시 적용됩니다. 끄면 기존 잔액을 사용합니다.</p><div class="setting-row"><span>타워·도감 전체 해금</span>${allUnlocked()?'<span class="muted small">해금 완료</span>':button('unlock-all','해금','')}</div><div class="setting-row"><div>자동 저장<p>현재 기기·브라우저에 저장됩니다.<br>기기를 옮길 때는 저장 파일을 사용하세요.</p></div>${icon('check')}</div><div class="setting-actions">${button('export',`${icon('download')} 내보내기`)}${button('import',`${icon('upload')} 불러오기`)}</div><div class="setting-row">${button('balance','밸런스 기준','flat')}</div><div class="setting-row">${button('guide',`${icon('info')} 조작 안내`,'flat')}</div><div class="setting-row"><span>클리어</span><span class="mono">${profile.stats.wins}</span></div></div>`);}
+function settings(from=screen){if(from!=='settings')previous=from;if(game&&!game.ended)game.paused=true;setScreen('settings',header('설정','back-settings','<span></span>')+`<div class="scroll">${[['sound','효과음'],['effects','공격 효과'],['vibration','진동'],['hidePlanes','비행기 숨기기'],['levelMode','타워 레벨 표시']].map(([key,label])=>`<div class="setting-row"><span>${label}</span><button role="switch" aria-checked="${profile.settings[key]}" aria-label="${label}" data-action="toggle-setting" data-key="${key}" class="switch ${profile.settings[key]?'on':''}"></button></div>`).join('')}<div class="section-label"><span>개발 치트</span></div>${[['lives','무한 라이프'],['cash','무한 전투 자금'],['coins','무한 크레딧']].map(([key,label])=>`<div class="setting-row"><span>${label}</span><button role="switch" aria-checked="${profile.cheats[key]}" aria-label="${label}" data-action="toggle-cheat" data-key="${key}" class="switch ${profile.cheats[key]?'on':''}"></button></div>`).join('')}<p class="cheat-help">전투에도 즉시 적용됩니다. 끄면 기존 잔액을 사용합니다.</p><div class="setting-row"><span>타워·도감 전체 해금</span>${allUnlocked()?'<span class="muted small">해금 완료</span>':button('unlock-all','해금','')}</div><div class="setting-row"><div>자동 저장<p>현재 기기·브라우저에 저장됩니다.<br>기기를 옮길 때는 저장 파일을 사용하세요.</p></div>${icon('check')}</div><div class="setting-actions">${button('export',`${icon('download')} 내보내기`)}${button('import',`${icon('upload')} 불러오기`)}</div><div class="setting-row">${button('balance','밸런스 기준','flat')}</div><div class="setting-row">${button('guide',`${icon('info')} 조작 안내`,'flat')}</div><div class="setting-row"><span>클리어</span><span class="mono">${profile.stats.wins}</span></div></div>`);}
 // Cheat: own every tower and mark every enemy as seen.
 function allUnlocked(){return TOWERS.every(t=>profile.owned.includes(t.id))&&Object.keys(ENEMIES).every(k=>profile.seen[k]);}
 function unlockAll(){profile.owned=[...new Set([...profile.owned,...TOWERS.map(t=>t.id)])];for(const k of Object.keys(ENEMIES))profile.seen[k]=true;save();settings('settings');toast('모든 타워와 도감을 해금했습니다.');}
@@ -150,7 +150,7 @@ function updateOffer(){const el=$('#wave-offer');if(!el)return;const mode=offerM
 function skipArmed(){return $('#wave-offer')?.dataset.key===`skip:${game.wave}`&&performance.now()>=offerArmedAt;}
 // Pressing the button while it is still filling starts the fill over, so a burst of taps never gets through.
 document.addEventListener('pointerdown',e=>{const b=e.target.closest?.('#skip-button');if(!b||performance.now()>=offerArmedAt)return;offerArmedAt=performance.now()+OFFER_ARM;b.classList.remove('arming');void b.offsetWidth;b.classList.add('arming');},true);
-function drawBattle(){if(screen!=='battle'||!board||!game)return;const shown=placing&&(placing.mode==='pending'||placing.shown)?placing:null;board.draw(game,{selected,placing:shown,effects:profile.settings.effects,time:game.time});}
+function drawBattle(){if(screen!=='battle'||!board||!game)return;const shown=placing&&(placing.mode==='pending'||placing.shown)?placing:null;board.draw(game,{selected,placing:shown,effects:profile.settings.effects,hidePlanes:profile.settings.hidePlanes,levelMode:profile.settings.levelMode,time:game.time});}
 function mountBoard(){const cv=$('#board');board=createBoard(cv,game.map);boardObserver?.disconnect();boardObserver=new ResizeObserver(()=>{board.resize();drawBattle();});boardObserver.observe(cv);board.resize();bindBoard(cv);}
 function boardPoint(e){const r=$('#board').getBoundingClientRect();return[e.clientX-r.left,e.clientY-r.top,e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom];}
 // Clipping: a footprint that does not fit where it is aimed moves to the nearest spot that fits.
@@ -248,9 +248,806 @@ home();requestAnimationFrame(frame);
 
 
 },
+"art.js":function(require,exports){
+// art.js: tower, road-unit and aircraft art, authored as SVG.
+// 1 cell = 20 SVG units, origin at the footprint center, +x is "forward".
+// Colors are tokens resolved per tower: "c" is the tower color, "c-55" darker,
+// "c+40" lighter; other names are shared neutrals (see N).
+// Flat top-down, no shadows: lighter = higher. The tower color is the
+// indicator (pad frame + top-most part); barrels are light steel so the aim
+// reads at any zoom.
+// Moving parts are named groups the game animates:
+//   turret  rotates to the aim (towers) or gun angle (units)
+//   treadA/treadB  alternate while a tracked unit drives
+//   exhaust  jet flames (hidden while parked)
+// Nothing else animates: no spinning props or radars.
+//   parked  unit waiting inside its building, empty  bay marking while deployed
+//   sortie  bar that fills toward the next deployment
+// Groups marked data-off are hidden unless the game turns them on.
+const { TOWER } = require("data.js");
+
+// ---- colors ---------------------------------------------------------------
+const INK = "#0b0f14";
+const N = {
+  hole: "#0d1218",
+  rubber: "#151c23",
+  pad: "#1d2630",
+  floor: "#222c36",
+  hull: "#2a3540",
+  steel: "#3a4652",
+  plate: "#4a5866",
+  steelHi: "#5f6d7a",
+  gun: "#8b98a4",
+  gunHi: "#c9d2da",
+  air: "#46525e",
+  airHi: "#5b6874",
+  glow: "#ffc08d",
+  hall: "#1b242c",
+  bay: "#212b34",
+  bayLine: "#2f3a45",
+  rail: "#2a3440",
+  booth: "#26313b",
+  slot: "#121920",
+  strip: "#1d242b",
+  paint: "#c4ced6"
+};
+const toneCache = new Map();
+function rgb(c) {
+  const n = parseInt(c.slice(1), 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+function tone(c, t) {
+  const k = c + "|" + t;
+  let v = toneCache.get(k);
+  if (v) return v;
+  const a = rgb(c), b = t < 0 ? rgb(INK) : [255, 255, 255], f = Math.abs(t);
+  v = "#" + a.map((x, i) => Math.round(x + (b[i] - x) * f).toString(16).padStart(2, "0")).join("");
+  toneCache.set(k, v);
+  return v;
+}
+// "c!" = the tower color at full saturation, light: for things that glow.
+function neon(c) {
+  const k = c + "|!";
+  let v = toneCache.get(k);
+  if (v) return v;
+  const [r, g, b] = rgb(c).map((x) => x / 255), mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
+  let h = 0;
+  if (d) h = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  h *= 60;
+  const L = 0.7, C = (1 - Math.abs(2 * L - 1)), X = C * (1 - Math.abs(((h / 60) % 2) - 1)), m = L - C / 2;
+  const [r1, g1, b1] = h < 60 ? [C, X, 0] : h < 120 ? [X, C, 0] : h < 180 ? [0, C, X] : h < 240 ? [0, X, C] : h < 300 ? [X, 0, C] : [C, 0, X];
+  v = "#" + [r1, g1, b1].map((x) => Math.round((x + m) * 255).toString(16).padStart(2, "0")).join("");
+  toneCache.set(k, v);
+  return v;
+}
+function color(token, c) {
+  if (!token || token === "none" || token[0] === "#") return token;
+  if (token === "c!") return neon(c);
+  const m = /^c([+-]\d+)?$/.exec(token);
+  if (m) return m[1] ? tone(c, +m[1] / 100) : c;
+  return N[token] ?? token;
+}
+
+// Low-res face texture (see face2.py): upscaled softly on purpose.
+const FACE = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAALCAYAAABs3u23AAABDklEQVR42u1SvUrDUBg9372JBONNDektNAEDxTFDHVwFJ1dH8cX6Ck7FJ6jQ1cEXkELmFMQWQrnku9ehDh28xaziWc/fx+ED/jrkEY6UyrNoEBVJHJu2bc2xIK31WRDHFyfynIzZ7nw64SPSdFSJsJsT08IwZkrlmU+rVJ4ZxoyYFiLs5mk6qnoXMrkxARUBBYCpEJx4Q/bclICCgIrJjb2z+YiyLKOPbXsjHU2stK+f6/UbAPvtcQd+B0AMhsMrweKaya1Sdbqs63rXq/AnJFpfUke3geAnAOisfHCBe9k0zftvM4I+haG1kiEe2cq7/bUuC6xd9smgnl9NidYT6ugeAFzgnjdNszqY+B/4Ar2fVAg/YcmYAAAAAElFTkSuQmCC";
+
+// ---- markup helpers (all numbers in SVG units) ---------------------------
+const f = (v) => +(+v).toFixed(2);
+const R = (x, y, w, h, fill, rx = 0, more = "") => `<rect x="${f(x)}" y="${f(y)}" width="${f(w)}" height="${f(h)}"${rx ? ` rx="${f(rx)}"` : ""} fill="${fill}"${more}/>`;
+const C = (cx, cy, r, fill, more = "") => `<circle cx="${f(cx)}" cy="${f(cy)}" r="${f(r)}" fill="${fill}"${more}/>`;
+const E = (cx, cy, rx, ry, fill, more = "") => `<ellipse cx="${f(cx)}" cy="${f(cy)}" rx="${f(rx)}" ry="${f(ry)}" fill="${fill}"${more}/>`;
+const L = (x1, y1, x2, y2, stroke, sw, more = "") => `<line x1="${f(x1)}" y1="${f(y1)}" x2="${f(x2)}" y2="${f(y2)}" stroke="${stroke}" stroke-width="${f(sw)}"${more}/>`;
+const P = (pts, fill, more = "") => `<polygon points="${pts.map(f).join(" ")}" fill="${fill}"${more}/>`;
+// polygon plus its mirror across the x axis
+const P2 = (pts, fill) => P(pts, fill) + P(pts.map((v, i) => (i % 2 ? -v : v)), fill);
+const G = (id, body, attrs = "") => `<g${id ? ` id="${id}"` : ""}${attrs}>${body}</g>`;
+const ROUND = ' stroke-linecap="round"';
+
+// ---- shared pieces --------------------------------------------------------
+// Pad under a person tower; the colored frame is the indicator.
+function pad(w, h) {
+  const hw = w * 10, hh = h * 10;
+  return R(-hw + 1.2, -hh + 1.2, hw * 2 - 2.4, hh * 2 - 2.4, "pad", 3.2) +
+    R(-hw + 2.8, -hh + 2.8, hw * 2 - 5.6, hh * 2 - 5.6, "none", 2, ' stroke="c" stroke-width="2.4"');
+}
+// People are "erasers": a square token with its two front corners cut at 45°,
+// split front to back into head, torso (the widest band) and legs. Forward is
+// +x, so the cut end is where the person looks. The head carries a low-res
+// smiley texture (mouth toward the front, eyes behind it) that the game
+// upscales softly, like an old low-res decal.
+// Bands, front to back: head x 4..13, torso -7..4, legs -13..-7.
+// Held things (guns, bombs, megaphone) sit OUTSIDE the token beside its right
+// side (+y) and are drawn under it; small hand nubs at the edge hold them.
+// Things worn on the back (packs, tanks, ammo boxes) sit on the torso.
+const HX = 4, TX = -7, CUT = 3.4, GY = 15.8;
+const band = (x0, fill) => P([x0, -13, 13 - CUT, -13, 13, -13 + CUT, 13, 13 - CUT, 13 - CUT, 13, x0, 13], fill);
+// eyes sit at (6.9, ±4.3) once the face is placed
+const EYE_X = 6.9, EYE_Y = 4.3;
+function body(o = {}) {
+  const legs = o.legs ?? "c-38", torso = o.torso ?? "c-8", head = o.head ?? "c+42";
+  return band(-13, legs) + band(TX, torso) + band(HX, head) +
+    G("", `<image href="face" x="-11" y="-4.3" width="22" height="8.6"/>`, ` transform="translate(8.5 0) rotate(-90)"`);
+}
+// one square hand on the token edge holding the weapon, s = side (1 right, -1 left)
+const nub = (x, s = 1) => R(x, s > 0 ? 11.8 : -15.6, 3.8, 3.8, "c+42", 0, ' stroke="c+12" stroke-width="0.8"');
+// Goggles shaped like real ski goggles: straight top (toward the forehead,
+// -x), corners cut at the bottom and a notch for the nose (toward the mouth).
+// Dark tinted frame, lens filled with the tower color so it glows against
+// the frame. No glare streaks. Stops short of the mouth so the smile shows.
+const gogglePts = (k) => [4.2 + k, -10.4 + k, 4.2 + k, 10.4 - k, 7.8 - k * 0.4, 10.4 - k, 9.4 - k, 8.6 - k * 0.4,
+  9.4 - k, 2.8, 7.9 - k * 0.5, 0, 9.4 - k, -2.8, 9.4 - k, -8.6 + k * 0.4, 7.8 - k * 0.4, -10.4 + k];
+const goggles = () => R(EYE_X - 0.8, -13, 1.6, 26, "c-62") + P(gogglePts(0), "c-74") + P(gogglePts(1.1), "c!");
+// A one-handed person stands a little left of the pad center so token + weapon
+// stay inside the pad frame; two-handed (both sides) stays centered.
+const tower = (under, over = "", shift = -2.6) => ({ base: pad(2, 2), turret: G("", under + body() + over, ` transform="translate(0 ${shift})"`) });
+
+// ---- towers: { base, turret } per level -----------------------------------
+const TOWERS = {};
+
+TOWERS.soldier = (lv) => {
+  const y = GY;
+  let gun;
+  if (lv < 3) gun = R(-4, y - 1.7, 4, 3.4, "steel", 0.8) + R(0, y - 1.5, 11.4, 3, "steelHi", 0.8) + R(11.4, y - 0.9, 9, 1.8, "gunHi");
+  else
+    // light machine gun: thicker, drum magazine, longer barrel and a flash hider
+    gun = R(-4, y - 2, 15.4, 4, "steelHi", 1) + C(4, y + 2.6, 2.4, "steel") + C(4, y + 2.6, 0.9, "c-20") +
+      R(11.4, y - 1.1, 10, 2.2, "gunHi") + R(21, y - 1.6, 1.8, 3.2, "gun");
+  const pack = lv >= 3 ? R(-6.6, -10, 7, 12, "c-55", 1.6) + R(-5.6, -8.6, 1.6, 9.2, "c-30", 0.6) : ""; // field pack
+  return tower(gun, pack + nub(1) + (lv >= 2 ? goggles() : ""));
+};
+
+TOWERS.bomb = (lv) => {
+  const r = lv >= 3 ? 4.6 : 3.8, bx = 11, by = GY + 0.6;
+  const bomb = C(bx, by, r, "#2b3138") + C(bx - r * 0.35, by - r * 0.35, r * 0.28, "#4a5866") +
+    L(bx + r * 0.7, by - r * 0.3, bx + r + 2, by - r * 0.3, "paint", 1) + C(bx + r + 2.4, by - r * 0.3, 1.4, "c+55");
+  let over = R(-6, -12.6, 6.4, 5.4, "c-55", 1.4) + C(-2.8, -9.9, 1.2, "c-20"); // hip satchel
+  if (lv >= 3) {
+    // bandolier of small bombs across the chest
+    over += L(-6, -12, 3, 9, "c-62", 2);
+    for (const [x, y] of [[-4.6, -8.6], [-2, -2.6], [0.6, 3.4]]) over += C(x, y, 1.9, "#2b3138") + C(x - 0.5, y - 0.5, 0.6, "#4a5866");
+  }
+  return tower(bomb, over + nub(8.6) + (lv >= 2 ? goggles() : ""));
+};
+
+TOWERS.sniper = (lv) => {
+  const y = GY;
+  let gun;
+  if (lv < 4) {
+    const bh = lv >= 3 ? 2 : 1.3;
+    gun = R(-5, y - 1.5, 5, 3, "steel", 0.8) + R(0, y - 1.3, 12, 2.6, "steelHi", 0.6) + R(12, y - bh / 2, 14, bh, "gunHi");
+    if (lv >= 3) gun += R(24, y - 1.1, 2.6, 2.2, "gun"); // heavier barrel, muzzle cap
+  } else {
+    // anti-materiel rifle: long heavy barrel, muzzle brake, bipod
+    gun = R(-5, y - 1.9, 5, 3.8, "steel", 0.8) + R(0, y - 1.9, 13, 3.8, "steelHi", 0.8) + R(13, y - 1.1, 16, 2.2, "gunHi") +
+      R(28, y - 2.3, 3, 4.6, "gun", 0.6) + L(22, y - 1.2, 24, y - 4.6, "gun", 1.2) + L(22, y + 1.2, 24, y + 4.6, "gun", 1.2);
+  }
+  if (lv >= 2) gun += R(2.4, y - 1.1, 8.4, 2.2, "plate", 1.1) + C(10.6, y, 0.9, "c+60"); // scope
+  let over = R(HX - 0.2, -12.4, 1.6, 24.8, "c-30", 0.8); // hood edge behind the eyes
+  if (lv >= 3) over += R(-5.6, -12.4, 6, 4.4, "c-55", 1); // ammo pouch
+  return tower(gun, over + nub(0.4));
+};
+
+TOWERS.flame = (lv) => {
+  const y = GY;
+  let gun = R(-2, y - 1.7, 12, 3.4, "steelHi", 1);
+  gun += lv >= 3 ? P([10, y - 1.8, 17, y - 3.2, 17, y + 2.8, 10, y + 1.4], "gunHi") + C(18.4, y - 0.2, 1.7, "c+55")
+                 : R(10, y - 1.1, 7, 2.2, "gunHi") + C(18, y, 1.3, "c+55");
+  // fuel tanks on the back, seen from above as round tops on the torso; hose to the gun
+  let over = "";
+  const ys = lv >= 2 ? [-9, -3.2, 2.6] : [-7, 0.4], tr = lv >= 2 ? 2.9 : 3.5;
+  for (const t of ys) over += C(-2, t, tr, "c-40") + C(-2, t, tr * 0.45, "c+12");
+  over += L(-2, ys.at(-1) + tr, 0, 14, "rubber", 1.4);
+  // pyromaniac: gas mask over the mouth
+  if (lv >= 3) over += R(9.2, -5.4, 3.8, 10.8, "hole", 2) + C(13.6, 0, 2.2, "steel") + C(13.6, 0, 0.9, "gun");
+  return tower(gun, over + nub(1));
+};
+
+TOWERS.minigun = (lv) => {
+  const twin = lv >= 4;
+  const gun = (s) => {
+    const y = s * GY;
+    let m = R(-3, y - 2.8, 10, 5.6, "steelHi", 1.4);
+    for (const d of [-1.4, 0, 1.4]) m += L(7, y + d, 20.5, y + d, "gunHi", 1);
+    return m + R(14, y - 2.4, 1.6, 4.8, "gun");
+  };
+  // ammo box on the back, brass belt out to the gun from Lv2
+  const by = twin ? -4 : -10;
+  let over = R(-6.6, by, 6.6, 8, "c-55", 1.4) + R(-5.6, by + 1.6, 1.4, 4.8, "c-30", 0.5);
+  if (lv >= 2) {
+    over += L(0, by + 6, 1.6, 13, "c+28", 1.8, ' stroke-dasharray="1.2 0.8"');
+    if (twin) over += L(0, by + 2, 1.6, -13, "c+28", 1.8, ' stroke-dasharray="1.2 0.8"');
+  }
+  over += nub(1.2) + (twin ? nub(1.2, -1) : "");
+  return tower(gun(1) + (twin ? gun(-1) : ""), over + (lv >= 3 ? goggles() : ""), twin ? 0 : -2.6);
+};
+
+TOWERS.shotgun = (lv) => {
+  const y = GY;
+  let gun = R(-3, y - 1.6, 4, 3.2, "steel", 0.8) + R(1, y - 1.8, 8, 3.6, "steelHi", 0.8) +
+    R(9, y - 1.8, 7.4, 1.5, "gunHi") + R(9, y + 0.3, 7.4, 1.5, "gunHi");
+  if (lv >= 3) gun += P([16, y - 2.2, 19.4, y - 3.6, 19.4, y + 3.6, 16, y + 2.2], "gunHi"); // flared muzzle
+  gun += R(10.2, y - 2.5, 3, 5, "plate", 1); // pump
+  if (lv >= 2) gun += C(4.6, y + 3, 2.6, "steel") + C(4.6, y + 3, 1, "c-20"); // drum
+  // close-quarters armor: shoulder plates on the torso edges
+  const armor = lv >= 3 ? R(-6, -13, 8, 3.2, "c+22", 1.2) + R(-6, 9.8, 8, 3.2, "c+22", 1.2) : "";
+  return tower(gun, armor + nub(1.4));
+};
+
+TOWERS.commander = (lv) => {
+  const big = lv >= 3, fl = big ? 1.3 : 1;
+  // pennant flying from a pole worn on the back-left; bigger with a star at Lv3
+  let under = P([-11, -11, -11 - 11 * fl, -13.6 - 2 * fl, -11 - 8 * fl, -9.4 + 1.4 * fl], "c+15");
+  if (big) under += C(-19, -12.2, 1.3, "c-40") +
+    R(4.6, GY - 1.2, 3.4, 2.4, "steel", 0.6) + P([8, GY - 1, 8, GY + 1, 15.6, GY + 3.2, 15.6, GY - 3.2], "gunHi"); // megaphone
+  let over = C(-11, -11, 1.6, "gun");
+  if (lv >= 2) over += R(-6.4, 1.6, 5.6, 7.4, "steel", 1) + L(-3.6, 3, -10, 9.4, "gun", 0.8) + C(-10, 9.4, 1, "c+42"); // radio pack
+  // epaulettes + a star badge
+  over += R(-4, -13.6, 6, 2.4, "c+42", 0.6) + R(-4, 11.2, 6, 2.4, "c+42", 0.6) +
+    P([0, -2.4, 0.7, -0.7, 2.5, -0.7, 1.1, 0.4, 1.6, 2.2, 0, 1.2, -1.6, 2.2, -1.1, 0.4, -2.5, -0.7, -0.7, -0.7], "c+42");
+  if (big) over += nub(4.4);
+  return tower(under, over);
+};
+
+TOWERS.agent = (lv) => {
+  const pistol = (s) => {
+    const y = s * GY, len = lv >= 3 ? 11 : 6.5;
+    return R(5.4, y - 1.1, 7, 2.2, "steelHi", 0.6) + R(12.4, y - 0.7, len, 1.4, lv >= 3 ? "gun" : "gunHi");
+  };
+  const under = pistol(1) + (lv >= 3 ? pistol(-1) : "");
+  // dark suit, white collar and black tie at the chest
+  let t = body({ torso: "c-55", legs: "c-68" }) + P([HX, -3, 1, 0, HX, 3], "paint") + R(-3, -0.8, 7, 1.6, "hole");
+  // wraparound shades: one dark band across both eyes
+  t += R(4.7, -9.4, 4.4, 18.8, "hole", 2.2);
+  if (lv >= 2) t += L(6.9, -7.6, 6.9, 7.6, "c+60", 0.8, ' opacity="0.85"') + C(4, -12.6, 1.2, "paint"); // night lens + earpiece
+  t += nub(4) + (lv >= 3 ? nub(4, -1) : "");
+  return { base: pad(2, 2), turret: G("", under + t, ` transform="translate(0 ${lv >= 3 ? 0 : -2.6})"`) };
+};
+
+// ---- road units -------------------------------------------------------------
+// Tracked robot. Lv1 tracks + one minigun, Lv2 armor (track skirts, pauldrons),
+// Lv3 twin miniguns + rocket pods on the shoulders, Lv4 big center minigun
+// with a missile rack on each side.
+function robotUnit(lv) {
+  let hull = "", a = "", b = "";
+  for (const s of [-1, 1]) {
+    const y0 = s > 0 ? 13.6 : -24;
+    hull += R(-26.4, y0, 52.8, 10.4, "rubber", 4.4);
+    for (let x = -21.6; x <= 21.61; x += 4.8) a += L(x, y0 + 1.2, x, y0 + 9.2, "steel", 1.6);
+    for (let x = -19.2; x <= 19.21; x += 4.8) b += L(x, y0 + 1.2, x, y0 + 9.2, "steel", 1.6);
+  }
+  let skirts = "";
+  if (lv >= 2)
+    for (const s of [-1, 1]) {
+      const yo = s > 0 ? 18.4 : -24.8;
+      skirts += R(-22, yo, 44, 6.4, "c-40", 1.2);
+      for (const x of [-16, 0, 16]) skirts += C(x, yo + 3.2, 0.9, "c+10");
+    }
+  // lower hull between the tracks, front glacis and the turret ring
+  let low = R(-21.6, -14, 43.2, 28, "hull", 2.4) + R(16, -12, 4.8, 24, "steel", 1.2);
+  for (const y of [-7.6, 0, 7.6]) low += R(17.2, y - 1.2, 2.4, 2.4, "plate", 0.6);
+  low += C(-3, 0, 12.4, "steel");
+
+  // upper body: turns with the guns
+  const L4 = lv >= 4, wide = lv >= 2 ? 14 : 12.4;
+  const armTo = (y, x1) => R(-2.4, y - 2.6, x1 * 20 + 2.4, 5.2, "steelHi", 1.4) + L(0.4, y, x1 * 20 - 1.2, y, "plate", 1.2);
+  const minigun = (y, x0, len) => {
+    const X = x0 * 20;
+    let m = R(X - 0.8, y - 3, 6.4, 6, "plate", 1);
+    for (const d of [-1.5, 0, 1.5]) m += L(X + 5.2, y + d, X + 5.2 + len * 20, y + d, "gunHi", 1);
+    return m + R(X + 5.2 + len * 12, y - 2.4, 1.4, 4.8, "gun");
+  };
+  let t = "";
+  if (!L4) {
+    t += armTo(wide, 0.48) + armTo(-wide, lv >= 3 ? 0.48 : 0.3) + minigun(wide, 0.48, 0.78);
+    if (lv >= 3) t += minigun(-wide, 0.48, 0.78);
+    else t += R(5.2, -wide - 3.2, 4, 6.4, "plate", 1.6) + R(8.8, -wide - 2.6, 1.6, 1.6, "gun") + R(8.8, -wide + 1, 1.6, 1.6, "gun"); // fist
+  } else {
+    for (const s of [-1, 1]) {
+      const y = s * 18.4;
+      t += R(-12.4, y - 5.2, 23.2, 10.4, "steel", 1.6);
+      for (const k of [-1, 0, 1]) {
+        const yy = y + k * 3;
+        t += R(-10, yy - 1, 18.4, 2, "gunHi", 1) + P([8.4, yy - 1, 12, yy, 8.4, yy + 1], "c");
+      }
+    }
+  }
+  const cw = L4 ? 12.4 : lv >= 2 ? 11.2 : 10;
+  if (!L4) for (const s of [-1, 1]) t += C(-2, s * wide, 4, "plate"); // shoulder joints
+  // chamfered chest: an armored mech chest, not a crate
+  const chest = (x0, x1, h, k, fill) => P([x0 + k, -h, x1 - k, -h, x1, -h + k, x1, h - k, x1 - k, h, x0 + k, h, x0, h - k, x0, -h + k], fill);
+  t += chest(-12.4, 8, cw, 4, "c-18") + chest(-10, 5.2, cw - 2.4, 2.8, "c");
+  if (lv >= 2) t += L(-2.8, -cw + 3.2, -2.8, cw - 3.2, "c-40", 1.2);
+  if (lv === 2) for (const s of [-1, 1]) t += R(-8.4, s * (wide + 0.8) - 4, 9.2, 8, "c+12", 2.4); // pauldrons
+  if (lv === 3)
+    for (const s of [-1, 1]) {
+      // rocket pods on the shoulders, tubes open to the sky
+      const y = s * (wide + 0.4);
+      t += R(-10, y - 4.8, 11.2, 9.6, "steel", 1.4);
+      for (const [x, yy] of [[-7.2, -2], [-7.2, 2], [-2, -2], [-2, 2]]) t += C(x, y + yy, 1.7, "hole") + C(x, y + yy, 0.7, "c+35");
+    }
+  if (L4) {
+    // big center minigun in front of the chest, cockpit pushed back
+    t += R(6, -6.4, 10, 12.8, "plate", 2) + C(12.4, 0, 4.8, "steelHi");
+    for (const k of [-2, -1, 0, 1, 2]) t += L(15.6, k * 1.5, 37, k * 1.5, "gunHi", 1);
+    t += R(25, -4.4, 1.8, 8.8, "gun") + R(34.4, -4, 1.6, 8, "gun");
+    t += R(-8.4, -3.2, 5.2, 6.4, "c-40", 1.2) + R(-4.8, -2.2, 1.2, 4.4, "c+65");
+  } else t += R(4, -4, 6.4, 8, "c-40", 1.6) + R(8.4, -2.6, 1.6, 5.2, "c+65");
+  return hull + G("treadA", a) + G("treadB", b, " data-off=\"1\"") + skirts + low + G("turret", t);
+}
+
+// ---- aircraft -----------------------------------------------------------------
+function propeller(x, r) {
+  return L(x, -r, x, r, "gunHi", 1) + C(x, 0, 1.4, "gunHi");
+}
+// Lv1 biplane, Lv2 biplane with bombs, Lv3 long-wing spy plane with a radar
+// dome, Lv4 swept-wing jet carrying four missiles.
+function planeUnit(lv) {
+  let p = "";
+  if (lv <= 2) {
+    p += R(-6.4, -21.6, 7.2, 43.2, "c-55", 1.6); // lower wing peeks out (biplane stagger)
+    if (lv === 2)
+      for (const s of [-1, 1]) p += E(-7.6, s * 8.4, 4.8, 1.5, "steel") + R(-13.2, s * 8.4 - 1.6, 1.6, 3.2, "gun") + C(-3.2, s * 8.4, 0.8, "c");
+    p += P([18.4, -3.4, 18.4, 3.4, -6, 4, -21, 1.4, -21, -1.4, -6, -4], "c-30"); // fuselage
+    p += R(-20.4, -9.2, 5.2, 18.4, "c", 1.2) + L(-22, 0, -13.6, 0, "c+35", 1.4); // tail
+    p += R(-2.4, -24, 8.4, 48, "c", 2) + L(3.6, -22.4, 3.6, 22.4, "c+20", 1); // upper wing
+    p += R(-0.4, 20.4, 4.4, 3.6, "c+35", 0.8) + R(-0.4, -24, 4.4, 3.6, "c+35", 0.8);
+    for (const s of [-1, 1]) p += L(6, s * 8.4, 11.2, s * 8.4, "gunHi", 1.4); // wing guns
+    p += C(-7.2, 0, 2.8, "hole") + C(-7.2, 0, 1.6, "c+35"); // cockpit + pilot
+    p += R(15.2, -4, 4, 8, "steelHi", 1.6) + propeller(20, 10);
+    return p;
+  }
+  if (lv === 3) {
+    // long straight wings, dark airframe, color only on tips and stripes
+    p += R(-4.8, -30, 6.8, 60, "air", 1.6) + R(-4.8, 24, 6.8, 6, "c", 1.2) + R(-4.8, -30, 6.8, 6, "c", 1.2);
+    for (const s of [-1, 1]) p += R(-4.8, s * 12.4 - 0.8, 6.8, 1.6, "c-20");
+    p += P([20, -2.6, 20, 2.6, -4, 3.4, -23, 1.2, -23, -1.2, -4, -3.4], "airHi");
+    p += R(-22.8, -10, 4.4, 20, "air", 1) + L(-24, 0, -16, 0, "c", 1.4); // T-tail
+    p += C(-10, 0, 5.4, "c-35") + L(-10, 0, -5.2, 0, "c+35", 1.2) + C(-10, 0, 1.4, "c+35");
+    p += C(8.4, 0, 1.8, "hole") + R(17.2, -3, 3.2, 6, "steelHi", 1.2) + propeller(20.8, 8.4);
+    return p;
+  }
+  // Lv4 jet
+  p += P2([7, 3.6, -11, 24.4, -16.4, 24.4, -12.4, 4], "c-12");
+  for (const s of [-1, 1])
+    for (const [y, x1] of [[12.4, -1], [18, -4.1]]) {
+      const yy = s * y;
+      p += R(-12.4, yy - 0.9, x1 + 12.4, 1.8, "gunHi", 0.8) + P([x1, yy - 0.9, x1 + 2.8, yy, x1, yy + 0.9], "c");
+    }
+  p += P([26, 0, 15, -3.4, -17, -4, -21, -2.4, -21, 2.4, -17, 4, 15, 3.4], "c-30");
+  p += P2([-12.4, 3.6, -21, 12.4, -23.6, 12.4, -20, 3.2], "c-12");
+  p += L(-12, 2.8, -21.6, 4.8, "c+35", 1.2) + L(-12, -2.8, -21.6, -4.8, "c+35", 1.2);
+  p += E(9.6, 0, 6, 2, "c+55");
+  p += C(-21.4, 1.4, 1.3, "steel") + C(-21.4, -1.4, 1.3, "steel");
+  p += G("exhaust", C(-21.4, 1.4, 1.3, "glow") + C(-21.4, -1.4, 1.3, "glow"));
+  return p;
+}
+
+// ---- buildings with a parked unit ------------------------------------------
+// Robot factory: dark hall, colored roll-up door on the top edge; the robot
+// of the current level waits in the bay while none of its robots are out.
+TOWERS.robot = (lv) => {
+  let b = R(-70, -70, 140, 140, "hall") + R(-59, -38, 118, 94, "bay", 2.4);
+  for (const x of [-50, -30, -10, 10, 30, 50]) b += L(x, -35, x, 53, "bayLine", 1.6);
+  for (const s of [-1, 1]) {
+    const x = s * 61.6 - 2;
+    b += R(x, -38, 4, 94, "rail");
+    for (let y = -35; y < 52; y += 12) b += R(x, y, 4, 5.6, "c-35"); // hazard rail
+  }
+  b += R(-42, -70, 84, 27, "c"); // door
+  for (const y of [-64.4, -59, -53.6, -48.2]) b += L(-39, y, 39, y, "c-62", 2);
+  b += R(-62, -63, 24, 13, "booth", 1.6) + R(38, -63, 24, 13, "booth", 1.6);
+  b += R(-42, -41.6, 84, 2.4, "slot") + G("sortie", R(-42, -41.6, 84, 2.4, "c+25"), ' data-pivot="-42,0"');
+  b += G("parked", robotUnit(lv), ' transform="translate(0 9) rotate(-90)"');
+  b += G("empty", R(-26, -19, 52, 56, "none", 0, ' stroke="c-30" stroke-width="2" stroke-dasharray="7 5"'), ' data-off="1"');
+  b += R(-68.6, -68.6, 137.2, 137.2, "none", 2.4, ' stroke="c" stroke-width="2.8"');
+  return { base: b };
+};
+// Runway: the art the player liked, with the plane of the current level.
+TOWERS.plane = (lv) => {
+  let b = R(-30, -60, 60, 120, "strip");
+  b += G("", L(-24, -56, -24, 56, "c", 2) + L(24, -56, 24, 56, "c", 2), ' opacity="0.75"');
+  let m = L(0, -40, 0, 40, "paint", 2, ' stroke-dasharray="10 8"');
+  for (const s of [-1, 1]) for (const x of [-18, -11, 11, 18]) m += L(x, s * 55, x, s * 45, "paint", 2.8);
+  b += G("", m, ' opacity="0.55"');
+  b += R(-28.8, -58.8, 57.6, 117.6, "none", 0, ' stroke="c" stroke-width="2.4"');
+  b += G("parked", planeUnit(lv), ' transform="translate(0 26) rotate(-90) scale(0.82)"');
+  return { base: b };
+};
+
+// ---- machines and buildings (no aiming except the laser turret) -----------
+
+// Farm 4x3: crop field on the left, a barn on the right.
+// Lv1 sprout rows, Lv2 lush rows + fertilizer sacks, Lv3 an orchard of trees.
+TOWERS.farm = (lv) => {
+  let b = R(-38.8, -28.8, 77.6, 57.6, "pad", 3.2);
+  // field
+  b += R(-35, -25, 44, 50, "c-72", 2);
+  if (lv < 3) {
+    for (const x of [-29, -19, -9, 1]) {
+      b += R(x - 2.6, -22, 5.2, 44, "c-62", 2.6); // ridge
+      for (let y = -18; y <= 18; y += 6) b += lv >= 2 ? C(x, y, 2.5, "c-12") + C(x, y, 1.1, "c+22") : C(x, y, 1.6, "c-20");
+    }
+  } else {
+    // orchard: round crowns, lighter at the top, a few fruits
+    for (const [x, y] of [[-26, -14], [-26, 2], [-26, 17], [-12, -6], [-12, 10], [2, -14], [2, 2], [2, 17]].slice(0, 8)) {
+      b += C(x, y, 6.6, "c-30") + C(x, y, 4.2, "c-8") + C(x - 1, y - 1, 1.8, "c+30");
+      b += C(x + 3, y + 2.6, 1, "c+55") + C(x - 3.2, y + 1.4, 1, "c+55");
+    }
+  }
+  // barn: gable roof seen from above, the ridge is the highest line
+  b += R(13, -21, 22, 42, "c-38", 1.4) + R(15, -19, 8.4, 38, "c-14") + R(25.6, -19, 8.4, 38, "c-22") + R(23, -21, 2.6, 42, "c+32");
+  if (lv >= 2) for (const [x, y] of [[13.4, 23.6], [19.4, 23.6]]) b += R(x, y - 1.6, 5, 3.6, "paint", 1.2) + R(x + 1, y - 0.4, 3, 1, "c-30"); // sacks
+  b += R(-37.2, -27.2, 74.4, 54.4, "none", 2, ' stroke="c" stroke-width="2.4"');
+  return { base: b };
+};
+
+// Tesla 3x3: coil seen from above (windings as rings) under a bright sphere.
+// Lv2 insulator posts, Lv3 a small radar dish (hidden detection), Lv4 three
+// satellite coils joined by a ring.
+TOWERS.tesla = (lv) => {
+  let b = pad(3, 3) + P([-10, -24, 10, -24, 24, -10, 24, 10, 10, 24, -10, 24, -24, 10, -24, -10], "floor");
+  if (lv >= 2) for (const [x, y] of [[-16, -16], [16, -16], [-16, 16], [16, 16]]) b += C(x, y, 3.4, "steel") + C(x, y, 1.5, "c+30");
+  if (lv >= 4) {
+    b += C(0, 0, 21, "none", ' stroke="c-20" stroke-width="1.4"');
+    for (const a of [-90, 30, 150]) {
+      const x = 21 * Math.cos((a * Math.PI) / 180), y = 21 * Math.sin((a * Math.PI) / 180);
+      b += C(x, y, 5.2, "c-45") + C(x, y, 2.6, "c+25");
+    }
+  }
+  b += C(0, 0, 16, "c-58");
+  for (const r of [14, 11, 8]) b += C(0, 0, r, "none", ' stroke="c-18" stroke-width="1.6"');
+  b += C(0, 0, 6.4, "c") + C(0, 0, 2.8, "c+45");
+  if (lv >= 3) b += C(-20, 20, 5.4, "plate") + C(-20, 20, 3.6, "steel") + L(-20, 20, -16.4, 16.4, "gunHi", 1.2) + C(-20, 20, 1.2, "c+40");
+  return { base: b };
+};
+
+// Gauss 3x3: heavy plate that shakes the ground; ribs radiate from a hub.
+// Lv2 a wider plate with more ribs, Lv3 a glowing reactor core and cooling fins.
+TOWERS.gauss = (lv) => {
+  let b = pad(3, 3) + R(-22, -22, 44, 44, "floor", 4);
+  for (const [x, y] of [[-16, -16], [16, -16], [-16, 16], [16, 16]]) b += C(x, y, 3.2, "steel") + C(x, y, 1.3, "plate");
+  if (lv >= 3)
+    for (const [x, y, w, h] of [[-27, -8, 5, 16], [22, -8, 5, 16], [-8, -27, 16, 5], [-8, 22, 16, 5]]) {
+      b += R(x, y, w, h, "steel", 1);
+      for (let k = 1; k < 4; k++) b += w < h ? L(x, y + (h * k) / 4, x + w, y + (h * k) / 4, "plate", 0.8) : L(x + (w * k) / 4, y, x + (w * k) / 4, y + h, "plate", 0.8);
+    }
+  const r = lv >= 2 ? 19 : 16, n = lv >= 2 ? 12 : 8;
+  b += C(0, 0, r, "c-52") + C(0, 0, r - 1, "none", ' stroke="c-25" stroke-width="1.4"');
+  for (let k = 0; k < n; k++) {
+    const a = (k / n) * Math.PI * 2;
+    b += L(Math.cos(a) * 7, Math.sin(a) * 7, Math.cos(a) * (r - 2.4), Math.sin(a) * (r - 2.4), "c-28", 1.4);
+  }
+  b += lv >= 3 ? C(0, 0, 8, "c-68") + C(0, 0, 6, "c!") + C(0, 0, 2.6, "c+60") : C(0, 0, 6.2, "c") + C(0, 0, 2.6, "c+40");
+  return { base: b };
+};
+
+// Laser 3x3: round turret with a lens barrel and capacitor cells on the back.
+// Lv2 a bigger battery, Lv3 a large focusing lens, Lv4 a long barrel ringed
+// with coils and two prongs at the muzzle.
+TOWERS.laser = (lv) => {
+  const base = pad(3, 3) + C(0, 0, 21, "floor") + C(0, 0, 20, "none", ' stroke="steel" stroke-width="1.4"');
+  let t = "";
+  // capacitor cells behind the body
+  const cols = lv >= 2 ? 2 : 1;
+  for (let c2 = 0; c2 < cols; c2++)
+    for (const y of [-8, -2.6, 2.8]) t += R(-19 + c2 * 4.6, y, 4, 4.6, "c-60", 0.8) + R(-18.2 + c2 * 4.6, y + 0.8, 2.4, 3, "c+40", 0.5);
+  t += R(-14, -11, 22, 22, "c-45", 4) + R(-11, -8, 15, 16, "c", 3);
+  const len = lv >= 4 ? 30 : 23;
+  t += R(6, -3.4, len - 6, 6.8, "steelHi", 1.6) + R(6, -1.4, len - 6, 2.8, "gunHi", 1);
+  if (lv >= 4) for (const x of [12, 17, 22]) t += R(x, -4.6, 2.2, 9.2, "c+18", 0.8);
+  if (lv >= 4) t += R(len - 1, -5, 4, 2, "gun") + R(len - 1, 3, 4, 2, "gun");
+  if (lv >= 3) t += C(9, 0, 6.4, "plate") + C(9, 0, 4.4, "c-40") + C(9, 0, 3, "c!");
+  t += C(len, 0, 3.4, "c-35") + C(len, 0, 2, "c!");
+  return { base, turret: t };
+};
+
+// ---- the spawner's car ---------------------------------------------------------
+// Lv1 jeep, Lv2 spiked bumper, Lv3 explosive crates in the back, Lv4 an armored
+// car with six wheels and a machine-gun turret (turns to its target).
+function carUnit(lv) {
+  let p = "";
+  if (lv < 4) {
+    for (const x of [-13, 13]) for (const s of [-1, 1]) p += R(x - 5, s > 0 ? 9.4 : -15, 10, 5.6, "rubber", 1.6);
+    p += C(-23.6, 0, 4.4, "rubber") + C(-23.6, 0, 2, "steel"); // spare tire
+    p += R(-22, -11.4, 44, 22.8, "c-38", 4); // tub
+    p += R(6, -10.4, 15, 20.8, "c", 3) + L(9, -6, 18, -6, "c-20", 0.9) + L(9, 6, 18, 6, "c-20", 0.9); // hood
+    p += R(3, -10.6, 2.8, 21.2, "paint", 1); // windshield
+    if (lv < 3) p += R(-7, -8.6, 7.4, 7.4, "c-62", 1.6) + R(-7, 1.2, 7.4, 7.4, "c-62", 1.6) + R(-14, -9, 3, 18, "c-55", 1); // seats
+    p += R(-10.4, -11.4, 2, 22.8, "steel"); // roll bar
+    if (lv >= 2) {
+      p += R(21.6, -12.4, 3, 24.8, "steel", 1);
+      for (const y of [-9, -3, 3, 9]) p += P([24.6, y - 2.2, 29.4, y, 24.6, y + 2.2], "gunHi");
+    }
+    if (lv >= 3) {
+      // explosive crate with warning stripes, two drums
+      p += R(-21, -9.6, 14, 19.2, "c-55", 1.4);
+      for (let k = 0; k < 4; k++) p += R(-19.4 + k * 3.2, -8.2, 1.6, 16.4, "c+35");
+      p += C(-3, -5.4, 3.4, "c-30") + C(-3, -5.4, 1.4, "c+20") + C(-3, 5.4, 3.4, "c-30") + C(-3, 5.4, 1.4, "c+20");
+    }
+    return p;
+  }
+  // Lv4 armored car
+  for (const x of [-16, 0, 16]) for (const s of [-1, 1]) p += R(x - 4.6, s > 0 ? 11 : -16.6, 9.2, 5.6, "rubber", 1.6);
+  p += P([-24, -12, 18, -12, 26, -5, 26, 5, 18, 12, -24, 12], "c-30");
+  p += P([-20, -9, 15, -9, 21, -4, 21, 4, 15, 9, -20, 9], "c-12");
+  p += R(17, -6, 2, 4, "hole") + R(17, 2, 2, 4, "hole"); // vision slits
+  for (const [x, y] of [[-20, -9], [-20, 9], [12, -9], [12, 9]]) p += C(x, y, 0.9, "c+20");
+  p += G("turret", C(-3, 0, 7.6, "c-40") + C(-3, 0, 6, "c") + R(2, -1.3, 20, 2.6, "gunHi", 0.6) + R(14, -2, 2, 4, "gun") + C(-3, 0, 2.2, "c+40"));
+  return p;
+}
+
+// Garage 3x5: same language as the robot factory; the car of the current
+// level waits inside while none of this garage's cars are out.
+TOWERS.spawner = (lv) => {
+  let b = R(-30, -50, 60, 100, "hall") + R(-24, -26, 48, 70, "bay", 2);
+  for (const x of [-12, 0, 12]) b += L(x, -23, x, 41, "bayLine", 1.4);
+  for (const s of [-1, 1]) {
+    const x = s * 26.6 - 1.6;
+    b += R(x, -26, 3.2, 70, "rail");
+    for (let y = -23; y < 42; y += 10) b += R(x, y, 3.2, 4.6, "c-35");
+  }
+  b += R(-22, -50, 44, 19, "c");
+  for (const y of [-45.4, -41, -36.6]) b += L(-19.6, y, 19.6, y, "c-62", 1.8);
+  b += R(-22, -29.6, 44, 2, "slot") + G("sortie", R(-22, -29.6, 44, 2, "c+25"), ' data-pivot="-22,0"');
+  b += G("parked", carUnit(lv), ' transform="translate(0 9) rotate(-90)"');
+  b += G("empty", R(-13, -14, 26, 46, "none", 0, ' stroke="c-30" stroke-width="1.8" stroke-dasharray="6 4"'), ' data-off="1"');
+  b += R(-28.8, -48.8, 57.6, 97.6, "none", 2.4, ' stroke="c" stroke-width="2.4"');
+  return { base: b };
+};
+
+// ---- compile SVG into canvas draw lists ------------------------------------------
+const listCache = new Map();
+function parseTransform(s) {
+  const ops = [];
+  if (!s) return ops;
+  for (const m of s.matchAll(/(translate|rotate|scale)\(([^)]*)\)/g)) ops.push([m[1], m[2].trim().split(/[\s,]+/).map(Number)]);
+  return ops;
+}
+function roundRectPath(x, y, w, h, r) {
+  const p = new Path2D();
+  r = Math.max(0, Math.min(r, w / 2, h / 2));
+  p.moveTo(x + r, y);
+  p.arcTo(x + w, y, x + w, y + h, r);
+  p.arcTo(x + w, y + h, x, y + h, r);
+  p.arcTo(x, y + h, x, y, r);
+  p.arcTo(x, y, x + w, y, r);
+  p.closePath();
+  return p;
+}
+function compileNode(el, c, inherit) {
+  const out = [];
+  for (const n of el.children) {
+    const a = (k, d) => n.getAttribute(k) ?? d;
+    const style = {
+      fill: color(a("fill", inherit.fill), c),
+      stroke: color(a("stroke", inherit.stroke), c),
+      sw: +a("stroke-width", inherit.sw),
+      cap: a("stroke-linecap", inherit.cap),
+      dash: a("stroke-dasharray", inherit.dash)
+    };
+    if (n.tagName === "g") {
+      out.push({
+        group: true,
+        id: n.getAttribute("id") || "",
+        off: n.hasAttribute("data-off"),
+        pivot: (n.getAttribute("data-pivot") || "0,0").split(",").map(Number),
+        tf: parseTransform(n.getAttribute("transform")),
+        opacity: n.hasAttribute("opacity") ? +n.getAttribute("opacity") : null,
+        kids: compileNode(n, c, style)
+      });
+      continue;
+    }
+    const num = (k) => +a(k, 0);
+    if (n.tagName === "image") {
+      out.push({ img: a("href", ""), x: num("x"), y: num("y"), w: num("width"), h: num("height") });
+      continue;
+    }
+    let p = new Path2D(), open = false;
+    switch (n.tagName) {
+      case "rect":
+        p = roundRectPath(num("x"), num("y"), num("width"), num("height"), num("rx"));
+        break;
+      case "circle":
+        p.arc(num("cx"), num("cy"), num("r"), 0, Math.PI * 2);
+        break;
+      case "ellipse":
+        p.ellipse(num("cx"), num("cy"), num("rx"), num("ry"), 0, 0, Math.PI * 2);
+        break;
+      case "line":
+        p.moveTo(num("x1"), num("y1"));
+        p.lineTo(num("x2"), num("y2"));
+        open = true;
+        break;
+      case "polygon":
+      case "polyline": {
+        const v = a("points", "").trim().split(/[\s,]+/).map(Number);
+        p.moveTo(v[0], v[1]);
+        for (let i = 2; i < v.length; i += 2) p.lineTo(v[i], v[i + 1]);
+        if (n.tagName === "polygon") p.closePath();
+        else open = true;
+        break;
+      }
+      case "path":
+        p = new Path2D(a("d", ""));
+        break;
+      default:
+        continue;
+    }
+    out.push({
+      p,
+      fill: open ? null : style.fill && style.fill !== "none" ? style.fill : null,
+      stroke: style.stroke && style.stroke !== "none" ? style.stroke : null,
+      sw: style.sw || 1,
+      cap: style.cap || "butt",
+      dash: style.dash ? style.dash.split(/[\s,]+/).map(Number) : null,
+      opacity: n.hasAttribute("opacity") ? +n.getAttribute("opacity") : null
+    });
+  }
+  return out;
+}
+function compile(markup, c) {
+  const doc = new DOMParser().parseFromString(`<svg xmlns="http://www.w3.org/2000/svg">${markup}</svg>`, "image/svg+xml");
+  return compileNode(doc.documentElement, c, { fill: "none", stroke: "none", sw: 1, cap: "butt", dash: null });
+}
+function list(key, c, make) {
+  let v = listCache.get(key);
+  if (!v) listCache.set(key, (v = compile(make(), c)));
+  return v;
+}
+// Raster textures referenced by <image href="name">; loaded once, drawn when ready.
+const textures = {};
+function texture(name) {
+  let im = textures[name];
+  if (!im) {
+    im = textures[name] = new Image();
+    im.src = name === "face" ? FACE : name;
+  }
+  return im.complete && im.naturalWidth ? im : null;
+}
+// dyn[id]: false hides the group; true shows a data-off group;
+// { rotate, scale: [sx, sy], translate: [dx, dy] } moves it around its pivot.
+function run(g, items, dyn) {
+  for (const it of items) {
+    if (it.group) {
+      const d = dyn[it.id];
+      if (d === false || (it.off && !d)) continue;
+      g.save();
+      for (const [op, v] of it.tf) {
+        if (op === "translate") g.translate(v[0], v[1] ?? 0);
+        else if (op === "rotate") g.rotate((v[0] * Math.PI) / 180);
+        else g.scale(v[0], v[1] ?? v[0]);
+      }
+      if (d && typeof d === "object") {
+        const [px, py] = it.pivot;
+        g.translate(px, py);
+        if (d.translate) g.translate(d.translate[0], d.translate[1]);
+        if (d.rotate) g.rotate(d.rotate);
+        if (d.scale) g.scale(d.scale[0], d.scale[1]);
+        g.translate(-px, -py);
+      }
+      if (it.opacity != null) g.globalAlpha *= it.opacity;
+      run(g, it.kids, dyn);
+      g.restore();
+      continue;
+    }
+    if (it.img) {
+      const im = texture(it.img);
+      if (im) {
+        g.imageSmoothingEnabled = true;
+        g.drawImage(im, it.x, it.y, it.w, it.h);
+      }
+      continue;
+    }
+    const a = g.globalAlpha;
+    if (it.opacity != null) g.globalAlpha *= it.opacity;
+    if (it.fill) {
+      g.fillStyle = it.fill;
+      g.fill(it.p);
+    }
+    if (it.stroke) {
+      g.strokeStyle = it.stroke;
+      g.lineWidth = it.sw;
+      g.lineCap = it.cap;
+      if (it.dash) g.setLineDash(it.dash);
+      g.stroke(it.p);
+      if (it.dash) g.setLineDash([]);
+    }
+    g.globalAlpha = a;
+  }
+}
+
+// ---- public API -------------------------------------------------------------------
+const hasArt = (kind) => !!TOWERS[kind];
+// Placed tower around its center, in cells. Returns false when the kind still
+// uses the old art (the board falls back to it).
+function drawTower(g, kind, level, o = {}) {
+  if (!TOWERS[kind]) return false;
+  const c = TOWER[kind].color;
+  const parts = list(`${kind}:${level}`, c, () => {
+    const m = TOWERS[kind](level);
+    return G("base", m.base) + (m.turret ? G("turret", m.turret) : "");
+  });
+  const dyn = { turret: { rotate: o.aim ?? 0 } };
+  if (kind === "robot" || kind === "spawner") Object.assign(dyn, { turret: undefined, parked: !o.deployed, empty: !!o.deployed, sortie: { scale: [Math.max(0, Math.min(1, o.ready ?? 1)), 1] }, treadB: false });
+  if (kind === "plane") Object.assign(dyn, { parked: !!o.parked, exhaust: false });
+  g.save();
+  g.scale(0.05, 0.05);
+  run(g, parts, dyn);
+  g.restore();
+  return true;
+}
+const UNITS = { robot: robotUnit, spawner: carUnit };
+function drawUnit(g, kind, level, o = {}) {
+  if (!UNITS[kind]) return false;
+  const parts = list(`unit:${kind}:${level}`, TOWER[kind].color, () => UNITS[kind](level));
+  const frame = Math.floor((o.travel ?? 0) * 6) % 2 === 0;
+  g.save();
+  g.scale(0.05, 0.05);
+  run(g, parts, { turret: { rotate: o.gunAngle ?? 0 }, treadA: frame, treadB: !frame });
+  g.restore();
+  return true;
+}
+function drawPlane(g, level, o = {}) {
+  const parts = list(`air:${level}`, TOWER.plane.color, () => planeUnit(level));
+  g.save();
+  g.scale(0.05, 0.05);
+  run(g, parts, { exhaust: true });
+  g.restore();
+}
+// Standalone SVG (colors resolved) for icons and for opening in a vector tool.
+function towerSVG(kind, level, part = "tower") {
+  const c = TOWER[kind].color;
+  let body, w, h;
+  if (part === "unit") {
+    body = UNITS[kind](level);
+    w = h = 3.6;
+  } else if (part === "air") {
+    body = planeUnit(level);
+    w = h = 3.4;
+  } else {
+    const m = TOWERS[kind](level);
+    body = m.base + (m.turret ? G("turret", m.turret, ' transform="rotate(-90)"') : "");
+    [w, h] = TOWER[kind].size;
+  }
+  body = body.replace(/<g id="(treadB|empty)"[^>]*data-off="1"[^>]*>.*?<\/g>/g, "").replace(/href="face"/g, `href="${FACE}"`);
+  body = body.replace(/(fill|stroke)="([^"]+)"/g, (_, k, v) => `${k}="${color(v, c)}"`);
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${-w * 10} ${-h * 10} ${w * 20} ${h * 20}">${body}</svg>`;
+}
+// UI icon: Lv1, facing up. People without their pad, mobile towers as their
+// unit (robot, car, plane), the rest as the whole tower.
+const PEOPLE = new Set(["soldier", "bomb", "sniper", "flame", "minigun", "shotgun", "commander", "agent"]);
+function iconSVG(kind) {
+  if (!TOWERS[kind]) return "";
+  const c = TOWER[kind].color;
+  let body, vb;
+  if (PEOPLE.has(kind)) {
+    body = G("", TOWERS[kind](1).turret, ' transform="rotate(-90)"');
+    vb = "-19 -23 39 39";
+  } else if (kind === "robot") {
+    body = G("", robotUnit(1), ' transform="rotate(-90)"');
+    vb = "-27 -28 54 54";
+  } else if (kind === "spawner") {
+    body = G("", carUnit(1), ' transform="rotate(-90)"');
+    vb = "-24 -29 48 54";
+  } else if (kind === "plane") {
+    body = G("", planeUnit(1), ' transform="rotate(-90)"');
+    vb = "-25 -26 50 50";
+  } else {
+    const m = TOWERS[kind](1), [w, h] = TOWER[kind].size, square = w === 3 && h === 3, s = square ? 25 : Math.max(w, h) * 10;
+    body = m.base.replace(square ? pad(3, 3) : "\u0000", "") + (m.turret ? G("", m.turret, ' transform="rotate(-90)"') : "");
+    vb = `${-s} ${-s} ${s * 2} ${s * 2}`;
+  }
+  body = body.replace(/<g id="(treadB|empty)"[^>]*data-off="1"[^>]*>.*?<\/g>/g, "").replace(/href="face"/g, `href="${FACE}"`);
+  body = body.replace(/(fill|stroke)="([^"]+)"/g, (_, k, v) => `${k}="${color(v, c)}"`);
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vb}">${body}</svg>`;
+}
+Object.assign(exports, { drawTower, drawUnit, drawPlane, towerSVG, iconSVG, hasArt, tone });
+
+},
 "board.js":function(require,exports){
 const {COLS,ROWS,TOWER,ENEMIES,stat,dims}=require("data.js");
 const {GLYPHS,enemyShape,enemyFront}=require("icons.js");
+const ART=require("art.js");let artGame=null,artTime=0;
 // Canvas battlefield. World units are cells (1 cell = 1 stud). Flat top-down art:
 // height reads as brightness (lighter = higher), never as shadows.
 const C={cave:'#0b0f14',ground:'#19212a',groundRim:'#26303b',road:'#2f373f',roadEdge:'#47515b',roadMark:'#5d6873',
@@ -336,13 +1133,11 @@ function createBoard(canvas,map){
   ctx.fillStyle=C.base;ctx.fillRect(-hw+.06,-hh+.06,w-.12,h-.12);ctx.strokeStyle=c;ctx.lineWidth=.12;ctx.strokeRect(-hw+.14,-hh+.14,w-.28,h-.28);
   if(w>=3){ctx.strokeStyle='#2c3743';ctx.lineWidth=.1;ctx.beginPath();ctx.arc(0,0,hw-.45,0,Math.PI*2);ctx.stroke();}
   ctx.save();ctx.rotate(kind==='gauss'?time*.7:SPIN.has(kind)?0:aim);glyph(kind,w>=3?2.3:1.45,c);ctx.restore();}
- function tower(t,o){const T=TOWER[t.kind];ctx.save();ctx.translate(t.x,t.y);ctx.rotate((t.r??0)*Math.PI/2);if(t.disabled>0)ctx.globalAlpha*=.45;
-  towerArt(t.kind,(t.angle??-Math.PI/2)-(t.r??0)*Math.PI/2,false,o.time);ctx.restore();
-  // level badge sits at the footprint's lower-left corner, readable at any zoom
-  if(Math.min(t.w,t.h)*scale<22)return tower.stun(t);const b=Math.max(.95,12/scale);ctx.fillStyle=T.color;ctx.fillRect(t.col+.1,t.row+t.h-b*.82-.1,b,b*.82);ctx.fillStyle='#102028';ctx.font=`800 ${b*.68}px system-ui,sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(t.level,t.col+.1+b/2,t.row+t.h-.1-b*.41);
+ function tower(t,o){const T=TOWER[t.kind];ctx.save();ctx.translate(t.x,t.y);ctx.rotate((t.r??0)*Math.PI/2);if(t.disabled>0)ctx.globalAlpha*=.45;if(o.levelMode)ctx.globalAlpha*=.38;
+  {const aim=(t.angle??-Math.PI/2)-(t.r??0)*Math.PI/2,unit=t.kind==='robot'||t.kind==='spawner';if(!ART.drawTower(ctx,t.kind,t.level,{aim,time:o.time,deployed:unit&&!!artGame?.vehicles.some(v=>v.source===t.id&&v.hp>0),ready:unit?1-Math.max(0,t.cooldown)/stat(t).period:null}))towerArt(t.kind,aim,false,o.time);}ctx.restore();
   tower.stun(t);}
  tower.stun=t=>{if(t.disabled>0){ctx.strokeStyle='#eff2f7';ctx.lineWidth=Math.max(.2,2.5/scale);const m=Math.min(t.w,t.h)*.3;ctx.beginPath();ctx.moveTo(t.x-m,t.y-m);ctx.lineTo(t.x+m,t.y+m);ctx.moveTo(t.x+m,t.y-m);ctx.lineTo(t.x-m,t.y+m);ctx.stroke();}};
- function aircraft(t){const p=planePosition(t);ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.ang);glyph('plane',2.2,TOWER.plane.color);ctx.restore();}
+ function aircraft(t){const p=planePosition(t);ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.ang);ART.drawPlane(ctx,t.level,{time:artTime});ctx.restore();}
  function enemy(e){const d=ENEMIES[e.kind],k=(d.finalBoss?1.6:d.boss?1.15:d.child?.65:.85)*UNIT;ctx.save();ctx.translate(e.x,e.y);ctx.scale(k,k);
   ctx.save();ctx.rotate((e.angle??0)-enemyFront(e.kind));ctx.globalAlpha=d.camo&&!e.revealed?.35:.95;ctx.lineWidth=2;for(const{p,stroke}of shapeParts(e.kind)){if(stroke){ctx.strokeStyle=stroke;ctx.stroke(p);}else{ctx.fillStyle=d.color;ctx.strokeStyle=d.color;ctx.fill(p);ctx.stroke(p);}}ctx.restore();
   ctx.lineWidth=1.2;if(e.shield>0){ctx.strokeStyle='#e8cf78';ctx.beginPath();ctx.arc(0,0,16,0,Math.PI*2);ctx.stroke();}
@@ -354,18 +1149,18 @@ function createBoard(canvas,map){
   if(e.burn>0){ctx.strokeStyle='#ff955c';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(0,0,14,0,Math.PI*2);ctx.stroke();}
   if(e.stun>0){ctx.strokeStyle='#d6bfff';ctx.lineWidth=1.2;ctx.setLineDash([3,4]);ctx.beginPath();ctx.arc(0,0,16,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);}
   ctx.restore();}
- function vehicle(v){const c=TOWER[v.kind].color,k=(v.kind==='robot'?1.05:.8)*UNIT;ctx.save();ctx.translate(v.x,v.y);ctx.scale(k,k);ctx.save();ctx.rotate(v.angle);ctx.fillStyle='#293841';ctx.strokeStyle=c;ctx.lineWidth=2;ctx.fillRect(-17,-11,34,22);ctx.strokeRect(-17,-11,34,22);ctx.beginPath();ctx.moveTo(-11,-15);ctx.lineTo(-11,-10);ctx.moveTo(-11,10);ctx.lineTo(-11,15);ctx.moveTo(10,-15);ctx.lineTo(10,-10);ctx.moveTo(10,10);ctx.lineTo(10,15);ctx.moveTo(4,-8);ctx.lineTo(4,8);ctx.stroke();ctx.restore();
+ function vehicle(v){if(ART.hasArt(v.kind)){const robot=v.kind==='robot',k=robot?1.25:1,ga=v.gunAngle===0?v.angle:v.gunAngle,bw=robot?3:2.2,by=robot?-2.4:-1.6;ctx.save();ctx.translate(v.x,v.y);ctx.save();ctx.rotate(v.angle);ctx.scale(k,k);ART.drawUnit(ctx,v.kind,v.level,{gunAngle:ga-v.angle,travel:v.progress});ctx.restore();ctx.fillStyle='#25313a';ctx.fillRect(-bw/2,by,bw,.26);ctx.fillStyle=TOWER[v.kind].color;ctx.fillRect(-bw/2,by,Math.max(0,v.hp/v.maxHp*bw),.26);ctx.restore();return;}const c=TOWER[v.kind].color,k=(v.kind==='robot'?1.05:.8)*UNIT;ctx.save();ctx.translate(v.x,v.y);ctx.scale(k,k);ctx.save();ctx.rotate(v.angle);ctx.fillStyle='#293841';ctx.strokeStyle=c;ctx.lineWidth=2;ctx.fillRect(-17,-11,34,22);ctx.strokeRect(-17,-11,34,22);ctx.beginPath();ctx.moveTo(-11,-15);ctx.lineTo(-11,-10);ctx.moveTo(-11,10);ctx.lineTo(-11,15);ctx.moveTo(10,-15);ctx.lineTo(10,-10);ctx.moveTo(10,10);ctx.lineTo(10,15);ctx.moveTo(4,-8);ctx.lineTo(4,8);ctx.stroke();ctx.restore();
   if(TOWER[v.kind].gun[v.level-1]>0){ctx.save();ctx.rotate(v.gunAngle);ctx.strokeStyle=c;ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(23,0);ctx.stroke();ctx.restore();}
   ctx.fillStyle='#25313a';ctx.fillRect(-16,-20,32,3);ctx.fillStyle=c;ctx.fillRect(-16,-20,Math.max(0,v.hp/v.maxHp*32),3);ctx.restore();}
  function range(t,game,radiusOverride){const T=TOWER[t.kind];const r=radiusOverride??stat(t).range*(['plane','commander'].includes(t.kind)?1:game.buffs(t).range);if(!(r>0))return;ctx.save();ctx.beginPath();ctx.arc(t.x,t.y,r,0,Math.PI*2);if(t.kind!=='plane'){ctx.fillStyle=T.color;ctx.globalAlpha=.065;ctx.fill();}ctx.globalAlpha=.65;ctx.strokeStyle=T.color;ctx.lineWidth=1.5/scale;if(t.kind==='plane')ctx.setLineDash([6/scale,5/scale]);ctx.stroke();ctx.restore();}
- function effects(game){const px=1/scale;for(const f of game.effects){const a=Math.max(0,f.life/f.maxLife);ctx.save();ctx.globalAlpha=1;
+ function effects(game,eo){const px=1/scale;for(const f of game.effects){if(eo?.hidePlanes&&f.air)continue;const a=Math.max(0,f.life/f.maxLife);ctx.save();ctx.globalAlpha=1;
   if(f.type==='income'){ctx.restore();continue;}
   if(f.type==='arc'){ctx.globalAlpha=a;ctx.strokeStyle=f.color;ctx.lineWidth=2.6*px;const dx=f.x2-f.x,dy=f.y2-f.y;ctx.beginPath();ctx.moveTo(f.x,f.y);ctx.lineTo(f.x+dx*.35+.8,f.y+dy*.35-.9);ctx.lineTo(f.x+dx*.68-.7,f.y+dy*.68+.7);ctx.lineTo(f.x2,f.y2);ctx.stroke();}
   else if(f.type==='shot'||f.type==='laser'){ctx.globalAlpha=a*.85;ctx.strokeStyle=f.color;ctx.lineWidth=(f.type==='laser'?2.8:f.heavy?3:1.6)*px;ctx.beginPath();ctx.moveTo(f.x,f.y);ctx.lineTo(f.x2,f.y2);ctx.stroke();ctx.globalAlpha=a;ctx.fillStyle=f.color;ctx.beginPath();ctx.arc(f.x2,f.y2,(f.heavy?4:2)*px,0,Math.PI*2);ctx.fill();}
   else if(f.type==='flame'){const cone=f.cone??.65;ctx.globalAlpha=a*.28;ctx.fillStyle=f.color;ctx.beginPath();ctx.moveTo(f.x,f.y);ctx.lineTo(f.x+Math.cos(f.angle-cone)*f.r,f.y+Math.sin(f.angle-cone)*f.r);ctx.quadraticCurveTo(f.x+Math.cos(f.angle)*f.r*1.25,f.y+Math.sin(f.angle)*f.r*1.25,f.x+Math.cos(f.angle+cone)*f.r,f.y+Math.sin(f.angle+cone)*f.r);ctx.closePath();ctx.fill();}
   else{const r=Math.max(.01,f.r*(f.type==='pulse'?1-a*.5:1-a*.65));ctx.beginPath();ctx.arc(f.x,f.y,r,0,Math.PI*2);if(f.type==='blast'){ctx.globalAlpha=a*.15;ctx.fillStyle=f.color;ctx.fill();}ctx.globalAlpha=a;ctx.strokeStyle=f.color;ctx.lineWidth=2*px;ctx.stroke();}
   ctx.restore();}
-  for(const b of game.bombs){const q=1-b.remaining/b.duration,x=b.x+(b.x2-b.x)*q,y=b.y+(b.y2-b.y)*q;ctx.fillStyle='#88c5ef';ctx.beginPath();ctx.arc(x,y,(5-q*2)*px*1.4,0,Math.PI*2);ctx.fill();}}
+  if(!eo?.hidePlanes)for(const b of game.bombs){const q=1-b.remaining/b.duration,x=b.x+(b.x2-b.x)*q,y=b.y+(b.y2-b.y)*q;ctx.fillStyle='#88c5ef';ctx.beginPath();ctx.arc(x,y,(5-q*2)*px*1.4,0,Math.PI*2);ctx.fill();}}
  function incomeTexts(game){ctx.save();ctx.setTransform(DPR,0,0,DPR,0,0);ctx.font='700 13px system-ui,sans-serif';ctx.textAlign='center';for(const f of game.effects){if(f.type!=='income')continue;const a=Math.max(0,f.life/f.maxLife);ctx.globalAlpha=a;ctx.fillStyle=f.color;ctx.fillText(f.text,ox+f.x*scale,oy+f.y*scale-(1-a)*24-14);}ctx.restore();}
  function bossWarnings(game){for(const e of game.enemies){if(e.dead||!e.boss?.cast)continue;ctx.save();ctx.strokeStyle='#ff9b9f';ctx.lineWidth=2/scale;ctx.setLineDash([5/scale,4/scale]);ctx.beginPath();ctx.arc(e.x,e.y,3.7,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
   for(const id of e.boss.cast.targets){const t=game.towers.find(t=>t.id===id);if(!t)continue;ctx.strokeRect(t.col-.35,t.row-.35,t.w+.7,t.h+.7);ctx.lineWidth=3/scale;ctx.beginPath();ctx.moveTo(t.x,t.y-t.h*.32);ctx.lineTo(t.x,t.y+t.h*.05);ctx.moveTo(t.x,t.y+t.h*.15);ctx.lineTo(t.x,t.y+t.h*.22);ctx.stroke();ctx.lineWidth=2/scale;}ctx.restore();}}
@@ -374,18 +1169,24 @@ function createBoard(canvas,map){
  function ghost(game,g){const T=TOWER[g.kind],[w,h]=dims(g.kind,g.r),gx=g.x+w/2,gy=g.y+h/2,R=13,x0=Math.max(0,Math.floor(gx-R)),x1=Math.min(COLS-1,Math.ceil(gx+R)),y0=Math.max(0,Math.floor(gy-R)),y1=Math.min(ROWS-1,Math.ceil(gy+R));
   for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const d=Math.hypot(x+.5-gx,y+.5-gy);if(d>R)continue;const fade=1-d/R,i=y*COLS+x;if(game.grid[i]!==0||game.occ[i]){ctx.fillStyle=`rgba(255,122,131,${(.28*fade).toFixed(3)})`;ctx.fillRect(x,y,1,1);}ctx.strokeStyle=`rgba(140,154,169,${(.22*fade).toFixed(3)})`;ctx.lineWidth=.04;ctx.strokeRect(x,y,1,1);}
   const col=g.ok?T.color:'#ff7a83',probe={kind:g.kind,level:1,x:gx,y:gy,w,h,r:g.r};if(g.ok)range(probe,game,stat(probe).range);
-  ctx.fillStyle=col;ctx.globalAlpha=.16;ctx.fillRect(g.x,g.y,w,h);ctx.globalAlpha=g.ok?.88:.45;ctx.save();ctx.translate(gx,gy);ctx.rotate(g.r*Math.PI/2);towerArt(g.kind,-Math.PI/2-g.r*Math.PI/2,true,0);ctx.restore();ctx.globalAlpha=1;
+  ctx.fillStyle=col;ctx.globalAlpha=.16;ctx.fillRect(g.x,g.y,w,h);ctx.globalAlpha=g.ok?.88:.45;ctx.save();ctx.translate(gx,gy);ctx.rotate(g.r*Math.PI/2);if(!ART.drawTower(ctx,g.kind,1,{aim:-Math.PI/2-g.r*Math.PI/2,parked:true,time:0}))towerArt(g.kind,-Math.PI/2-g.r*Math.PI/2,true,0);ctx.restore();ctx.globalAlpha=1;
   ctx.strokeStyle=col;ctx.lineWidth=.18;ctx.setLineDash([.6,.35]);ctx.strokeRect(g.x-.12,g.y-.12,w+.24,h+.24);ctx.setLineDash([]);
   if(T.turns){const dir=g.r*Math.PI/2-Math.PI/2,reach=(g.r%2?w:h)/2+1;ctx.save();ctx.translate(gx+Math.cos(dir)*reach,gy+Math.sin(dir)*reach);ctx.rotate(dir);ctx.fillStyle=col;ctx.beginPath();ctx.moveTo(.6,0);ctx.lineTo(-.4,-.6);ctx.lineTo(-.4,.6);ctx.closePath();ctx.fill();ctx.restore();}}
- function draw(game,o){terrain();ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(cache,0,0);ctx.setTransform(DPR*scale,0,0,DPR*scale,DPR*ox,DPR*oy);
+ // Level mode labels, in screen pixels: name over level number; small towers get the number only.
+  function levelLabels(game){ctx.save();ctx.setTransform(DPR,0,0,DPR,0,0);ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineJoin='round';ctx.strokeStyle='rgba(11,15,20,.92)';
+   for(const t of game.towers){const T=TOWER[t.kind],sx=ox+t.x*scale,sy=oy+t.y*scale,big=Math.min(t.w,t.h)*scale>=30;
+    if(big){ctx.font='700 11px system-ui,sans-serif';ctx.lineWidth=3;ctx.strokeText(T.name,sx,sy-8);ctx.fillStyle='#eef3f7';ctx.fillText(T.name,sx,sy-8);}
+    ctx.font=`800 ${big?16:12}px system-ui,sans-serif`;ctx.lineWidth=3.5;const ly=big?sy+7:sy;ctx.strokeText(t.level,sx,ly);ctx.fillStyle=T.color;ctx.fillText(t.level,sx,ly);}
+   ctx.restore();}
+ function draw(game,o){artGame=game;artTime=o.time??0;terrain();ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(cache,0,0);ctx.setTransform(DPR*scale,0,0,DPR*scale,DPR*ox,DPR*oy);
   const sel=game.towers.find(t=>t.id===o.selected);if(sel)range(sel,game);
   for(const e of game.enemies)if(!e.dead)enemy(e);
   for(const v of game.vehicles)vehicle(v);
   for(const t of game.towers)tower(t,o);
   if(sel){ctx.strokeStyle='#eef3f7';ctx.lineWidth=Math.max(.16,1.6/scale);ctx.strokeRect(sel.col-.15,sel.row-.15,sel.w+.3,sel.h+.3);}
-  crane();for(const t of game.towers)if(t.kind==='plane')aircraft(t);
-  bossWarnings(game);if(o.effects)effects(game);if(o.placing)ghost(game,o.placing);
-  if(o.effects)incomeTexts(game);}
+  crane();for(const t of game.towers)if(t.kind==='plane'&&!(o.hidePlanes&&(t.flight??TAKEOFF)>=1.4))aircraft(t);
+  bossWarnings(game);if(o.effects)effects(game,o);if(o.placing)ghost(game,o.placing);
+  if(o.levelMode)levelLabels(game);if(o.effects)incomeTexts(game);}
  return {resize,fit,zoomTo,zoomBy,pan,toWorld,view,draw};
 }
 
@@ -558,7 +1359,7 @@ const {ENEMIES}=require("enemies.js");
 const {LEGACY_ENEMIES,LEGACY_LATE_STATS}=require("legacy-enemies.js");
 const DIFFICULTIES={normal:{name:'일반',count:25,reward:700,duration:1200,finalDuration:150},hard:{name:'어려움',count:30,reward:2000,duration:1800,finalDuration:300,hpScale:1.2}};
 const TARGETS={first:'선두',last:'후미',strong:'강한 적',weak:'약한 적',near:'가까운 적'};
-const starterProfile=()=>({version:VERSION,coins:0,owned:['soldier','bomb','sniper','farm'],loadout:['soldier','bomb','sniper','farm',null],seen:{},clears:{},settings:{sound:true,effects:true,vibration:false},cheats:{lives:false,cash:false,coins:false},stats:{played:0,wins:0},firstVisit:true});
+const starterProfile=()=>({version:VERSION,coins:0,owned:['soldier','bomb','sniper','farm'],loadout:['soldier','bomb','sniper','farm',null],seen:{},clears:{},settings:{sound:true,effects:true,vibration:false,hidePlanes:false,levelMode:false},cheats:{lives:false,cash:false,coins:false},stats:{played:0,wins:0},firstVisit:true});
 // Cell map: 0 open ground, 1 cave rock, 2 feature (wall, rock, water, building), 3 road.
 const GRIDS=new WeakMap();
 const inPoly=(x,y,p)=>{let c=false;for(let i=0,j=p.length-1;i<p.length;j=i++){const[a,b]=p[i],[d,e]=p[j];if((b>y)!==(e>y)&&x<(d-a)*(y-b)/(e-b)+a)c=!c;}return c;};
@@ -1376,7 +2177,7 @@ class Game{
   else if(t.kind==='shotgun'){ // direct hit, then spread damage to the nearest others inside the 70° cone
    const others=this.enemies.filter(v=>v!==e&&!v.dead&&v.hp>0&&this.visible(v,t)&&distance(t,v)<=range&&Math.abs(angleDiff(Math.atan2(v.y-t.y,v.x-t.x),t.angle))<=d.cone/2).sort((a,b)=>distance(t,a)-distance(t,b)).slice(0,d.extra[i]);
    this.hit(e,s.damage,t);this.fx('shot',t,{x2:e.x,y2:e.y,color:d.color,life:.14,heavy:true});for(const v of others){this.hit(v,d.spreadDamage[i],t);this.fx('shot',t,{x2:v.x,y2:v.y,color:d.color,life:.14});}}
-  else {let amount=s.damage;if(t.kind==='laser'){if(t.lastTarget!==e.id){t.ramp=1;t.lastTarget=e.id;}amount*=t.ramp;t.ramp=Math.min(d.cap[i],t.ramp+d.ramp[i]);}this.hit(e,amount,t);this.fx(t.kind==='laser'?'laser':'shot',origin,{x2:e.x,y2:e.y,color:d.color,life:t.kind==='sniper'?.22:.1});}
+  else {let amount=s.damage;if(t.kind==='laser'){if(t.lastTarget!==e.id){t.ramp=1;t.lastTarget=e.id;}amount*=t.ramp;t.ramp=Math.min(d.cap[i],t.ramp+d.ramp[i]);}this.hit(e,amount,t);this.fx(t.kind==='laser'?'laser':'shot',origin,{x2:e.x,y2:e.y,color:d.color,life:t.kind==='sniper'?.22:.1,air:t.kind==='plane'});}
   if(d.burst){t.ammo--;if(t.ammo<=0){t.cooldown+=s.period;t.ammo=d.burst[i];t.ramp=1;t.lastTarget=null;}else t.cooldown+=Array.isArray(d.shot)?d.shot[i]:d.shot;}else t.cooldown+=s.period;
   return true;
  }
@@ -1393,7 +2194,7 @@ class Game{
    let fired=false;
    for(let n=0;n<d.missileCount;n++){
     const e=this.select(t,origin,d.gunRange[i]*buff.range);if(!e)break;
-    this.fx('shot',origin,{x2:e.x,y2:e.y,color:d.color,life:.22,heavy:true});
+    this.fx('shot',origin,{x2:e.x,y2:e.y,color:d.color,life:.22,heavy:true,air:true});
     this.splash(e,d.missile[i],d.missileRadius,t);fired=true;
    }
    if(fired)t.missileCooldown=d.missilePeriod;
@@ -1472,7 +2273,7 @@ const GLYPHS={
  robot:'<path d="M-10-8H8V8H-10Zm3-7H5v7H-7ZM8-3h12v6H8M-10-5h-6v10h6M-7 8v8m12-8v8"/><path d="M-3-11h4M-6-2v4m10-4v4"/>'
 };
 function glyph(kind){return `<g fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="square" stroke-linejoin="miter">${GLYPHS[kind]}</g>`;}
-function towerIcon(kind,cls='tower-icon'){if(!kind)return icon('plus',cls);return `<svg class="${cls}" viewBox="-24 -24 48 48" style="color:${TOWER[kind].color}" aria-hidden="true">${glyph(kind)}</svg>`;}
+function towerIcon(kind,cls='tower-icon'){const art=kind&&require('art.js').iconSVG(kind);if(art)return art.replace('<svg ',`<svg class="${cls} tower-art" aria-hidden="true" `);if(!kind)return icon('plus',cls);return `<svg class="${cls}" viewBox="-24 -24 48 48" style="color:${TOWER[kind].color}" aria-hidden="true">${glyph(kind)}</svg>`;}
 // Local +X is travel direction; the long point at -X is the trailing end.
 const FINAL_BOSS_OUTLINE=[[-18,0],[-6,-9],[-9,-14],[11,-12],[14,-6],[14,6],[11,12],[-9,14],[-6,9]];
 // Which way each drawing faces when unrotated (radians). Upright drawings face up; the arrow and
