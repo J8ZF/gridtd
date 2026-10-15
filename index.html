@@ -435,7 +435,8 @@ const modules={
 // Modules: pieces drawn from the module draw (500 C each) and fitted into a 10×10 board.
 // Bigger pieces carry bigger effects. A piece's effect counts once per copy on the board;
 // pieces whose effect cannot stack give `dup` instead from the second copy on
-// (dup[0] for the second, dup[1] for the third and later, and so on, the last one repeating).
+// (dup[0] for the second, dup[1] for the third, ...); past the list each copy gives 70% of the
+// copy before it, so piling one piece up levels off.
 // Effect keys: "dmg", "range", "fire" (attack speed), "cost" (build cost cut), "upgrade",
 // "sell" (+refund), "boss", "shield", "cash" (damage cash), "camoDmg" as fractions;
 // "dmg.blast" etc. for one tower label; "...Mul" keys multiply; the rest add up.
@@ -447,6 +448,7 @@ const GRADES=[
  {id:'myth',name:'신화',rate:.013,sell:2000,color:'#d9534a'},
  {id:'genesis',name:'창세',rate:.002,sell:6000,color:'#a8dcea'}];
 // Most a board can add to one stat (all-tower and label pieces together). Past it, more copies do nothing.
+const DECAY=.7;
 const CAPS={range:.6,splash:1,vhp:1,spawn:.7,cost:.7,upgrade:.7,srange:10,sboost:.5,sell:.1,shield:1,camoDmg:1,placement:15,health:200,startCash:2000,regen:20,farmLimit:5,intermission:30};
 const GRADE=Object.fromEntries(GRADES.map((g,i)=>[g.id,{...g,rank:i}]));
 const TAGS={blast:'폭발',close:'근거리',long:'원거리',rapid:'연사',energy:'에너지',summon:'소환',support:'지원',econ:'경제'};
@@ -460,8 +462,8 @@ const MODULES=[
  // are what odd decks stack to the extreme: such a deck at 100 cells is about 3–3.5× as strong.
  // One tower kind counts about an eighth of an army. An effect you could get by just building more
  // of that tower (more planes, more shotguns) is worth no more than the slots and cash that takes.
- // A second copy of a piece that cannot stack gives `dup`; for myth and genesis pieces those are
- // percentages that shrink copy by copy (formation: +30%, +20%, +10%, then +5% each).
+ // A second copy of a piece that cannot stack gives `dup`; each copy after that gives 70% of the
+ // one before (formation: +30%, then 21%, 14.7%, ... never past +100% in all).
  // common: one tower label (1–3 cells)
  M('powder','common','화약 주머니','burst',['#'],'폭발 타워 공격력 +2%',{'dmg.blast':.02}),
  M('fuse','common','넓은 뇌관','burst',['##'],'폭발 타워 폭발 범위 +6% (최대 +100%)',{'splash.blast':.06}),
@@ -497,28 +499,28 @@ const MODULES=[
  M('repair','legend','자가 수리','heart',['.###','###.'],'웨이브마다 기지 체력 +4 (최대치까지 · 모듈로 최대 +20)',{regen:4}),
  M('bonus','legend','성과급','star',['##','##','##'],'웨이브 보상 +15%',{waveBonus:.15}),
  M('absorber','legend','충격 흡수 장치','bolt',['.#','##','#.'],'모든 마비 시간 절반 · 2개째부터 남은 시간이 또 절반씩',{stunMul:.5}),
- M('nightbook','legend','야간 작전 교본','eye',['###','#..'],'히든 감지 레벨 한 단계 낮춤 (최소 Lv.1) · 2개째 한 단계 더 · 3개째부터 히든에게 주는 피해 +15%씩 (최대 +100%)',{camoShift:1},{dup:[{camoShift:1},{camoDmg:.15}]}),
+ M('nightbook','legend','야간 작전 교본','eye',['###','#..'],'히든 감지 레벨 한 단계 낮춤 (최소 Lv.1) · 2개째 한 단계 더 · 3개째부터 히든에게 주는 피해 +15% (하나 더할 때마다 ×0.7)',{camoShift:1},{dup:[{camoShift:1},{camoDmg:.15}]}),
  M('coop','legend','협동조합','leaf',['#..','#..','###'],'농장 배치 한도 +1 (최대 +5) · 경제 타워 수입 +10%',{farmLimit:1,'income.econ':.1}),
  M('rest','legend','긴 휴식','clock',['##'],'인터미션 +5초 (최대 +30초)',{intermission:5}),
  // myth: one tower (3–6 cells; effects come in 4.2)
- M('disguise','myth','위장 신분','agent',['.#','##'],'[에이전트] 첫 에이전트 무료 · 2개째 에이전트 업그레이드 비용 -15%, 3개째 -10%, 4개째부터 -5%씩',{},{pending:true}),
- M('bigbore','myth','사냥용 대구경','shotgun',['####'],'[샷건] 사거리 +40%, 공격력 +50% · 대가: 업그레이드 비용 +35%, 공속 -15% · 2개째 샷건 공격력 +20%, 3개째 +12%, 4개째부터 +6%씩',{},{pending:true}),
- M('tankplan','myth','전차 설계도','spawner',['.#.','###','#.#'],'[정비소] 숨겨진 Lv.5: 탱크 출격 · 2개째 출격 주기 -15%, 3개째 -10%, 4개째부터 -5%씩 (최대 -70%)',{},{pending:true}),
- M('specops','myth','특수부대','soldier',['.#.','###','.##'],'[군인] 숨겨진 Lv.4 · 2개째 군인 공격력 +25%, 3개째 +15%, 4개째부터 +8%씩',{},{pending:true}),
- M('pierce','myth','관통탄','sniper',['#####','..#..'],'[스나이퍼] 일직선 3명 관통 · 2개째 스나이퍼 공격력 +25%, 3개째 +15%, 4개째부터 +8%씩',{},{pending:true}),
- M('agri','myth','기업농','farm',['##','##'],'[농장] 생산 2배 · 대가: 농장 한도 2개 · 2개째 농장 생산 +30%, 3개째 +20%, 4개째부터 +10%씩',{},{pending:true}),
- M('chain','myth','연쇄 반응','tesla',['#.','##','.#'],'[테슬라] 전이 +2명 · 2개째 테슬라 공격력 +25%, 3개째 +15%, 4개째부터 +8%씩',{},{pending:true}),
- M('spinup','myth','회전 예열','minigun',['##.','.##'],'[미니건] 쉬지 않고 쏠수록 공속 최대 +50% · 2개째 최대치 +25%p, 3개째 +15%p, 4개째부터 +8%p씩',{},{pending:true}),
- M('formation','myth','편대 비행','plane',['.#.','###','.#.','.#.'],'[비행기] 비행기 2대 출격 · 대가: 비행기 가격 +50% · 2개째 비행기 공격력 +30%, 3개째 +20%, 4개째 +10%, 5개째부터 +5%씩',{},{pending:true}),
- M('mobilize','myth','총동원령','commander',['###','.#.','.#.'],'[커맨더] 콜 투 암즈 지속 10초 → 14초 · 2개째 지속 +3초, 3개째 +2초, 4개째부터 +1초씩 (최대 30초)',{},{pending:true}),
- M('resonance','myth','공명 증폭','gauss',['###'],'[가우스] 피해 수입 2배 · 2개째 피해 수입 +30%, 3개째 +20%, 4개째부터 +10%씩',{},{pending:true}),
- M('overload','myth','과부하','laser',['#.','##'],'[레이저] 최대 피해 배율 +1배 · 2개째 +0.5배, 3개째 +0.3배, 4개째부터 +0.15배씩',{},{pending:true}),
+ M('disguise','myth','위장 신분','agent',['.#','##'],'[에이전트] 첫 에이전트 무료 · 2개째부터 에이전트 업그레이드 비용 -15% (하나 더할 때마다 ×0.7)',{},{pending:true}),
+ M('bigbore','myth','사냥용 대구경','shotgun',['####'],'[샷건] 사거리 +40%, 공격력 +50% · 대가: 업그레이드 비용 +35%, 공속 -15% · 2개째부터 샷건 공격력 +20% (하나 더할 때마다 ×0.7)',{},{pending:true}),
+ M('tankplan','myth','전차 설계도','spawner',['.#.','###','#.#'],'[정비소] 숨겨진 Lv.5: 탱크 출격 · 2개째부터 출격 주기 -15% (하나 더할 때마다 ×0.7)',{},{pending:true}),
+ M('specops','myth','특수부대','soldier',['.#.','###','.##'],'[군인] 숨겨진 Lv.4 · 2개째부터 군인 공격력 +25% (하나 더할 때마다 ×0.7)',{},{pending:true}),
+ M('pierce','myth','관통탄','sniper',['#####','..#..'],'[스나이퍼] 일직선 3명 관통 · 2개째부터 스나이퍼 공격력 +25% (하나 더할 때마다 ×0.7)',{},{pending:true}),
+ M('agri','myth','기업농','farm',['##','##'],'[농장] 생산 2배 · 대가: 농장 한도 2개 · 2개째부터 농장 생산 +30% (하나 더할 때마다 ×0.7)',{},{pending:true}),
+ M('chain','myth','연쇄 반응','tesla',['#.','##','.#'],'[테슬라] 전이 +2명 · 2개째부터 테슬라 공격력 +25% (하나 더할 때마다 ×0.7)',{},{pending:true}),
+ M('spinup','myth','회전 예열','minigun',['##.','.##'],'[미니건] 쉬지 않고 쏠수록 공속 최대 +50% · 2개째부터 최대치 +25%p (하나 더할 때마다 ×0.7)',{},{pending:true}),
+ M('formation','myth','편대 비행','plane',['.#.','###','.#.','.#.'],'[비행기] 비행기 2대 출격 · 대가: 비행기 가격 +50% · 2개째부터 비행기 공격력 +30% (하나 더할 때마다 ×0.7)',{},{pending:true}),
+ M('mobilize','myth','총동원령','commander',['###','.#.','.#.'],'[커맨더] 콜 투 암즈 지속 10초 → 14초 · 2개째부터 지속 +3초 (하나 더할 때마다 ×0.7)',{},{pending:true}),
+ M('resonance','myth','공명 증폭','gauss',['###'],'[가우스] 피해 수입 2배 · 2개째부터 피해 수입 +30% (하나 더할 때마다 ×0.7)',{},{pending:true}),
+ M('overload','myth','과부하','laser',['#.','##'],'[레이저] 최대 피해 배율 +1배 · 2개째부터 +0.5배 (하나 더할 때마다 ×0.7)',{},{pending:true}),
  // genesis: hidden, no strings attached (5–40 cells; effects come in 4.3)
- M('skeleton','genesis','해골 공장','skull',['###','#.#'],'매 웨이브 기지에서 체력 10 스켈레톤이 길을 따라 걸어 나감 · 2개째 스켈레톤 체력 +10, 3개째 +6, 4개째부터 +3씩',{},{pending:true}),
- M('expansion','genesis','확장 장비함','slots',['#####','#####','#####','#####'],'장착 칸 2페이지 (5칸 추가) · 2개째 타워 설치 비용 -20%, 3개째 -10%, 4개째부터 -5%씩 (최대 -70%)',{},{pending:true}),
- M('arsenal','genesis','비밀 병기고','crate',['########','########','########','########','########'],'다섯 번째 칸을 비우고 시작하면 숨겨진 타워 사용 · 2개째 숨겨진 타워 공격력·공속 +30%',{},{pending:true}),
- M('secondlife','genesis','두 번째 기회','heart',['.##.','####'],'기지 체력이 0이 되면 한 번 체력 50으로 다시 일어남 · 2개째 그때 체력 +30, 3개째 +20, 4개째부터 +10씩',{},{pending:true}),
- M('timewarp','genesis','시간 왜곡','clock',['####','.##.','####'],'모든 적 이동 속도 -10% · 2개째 -6%, 3개째 -4%, 4개째부터 -2%씩 (곱해서 줄어듦)',{},{pending:true})];
+ M('skeleton','genesis','해골 공장','skull',['###','#.#'],'매 웨이브 기지에서 체력 10 스켈레톤이 길을 따라 걸어 나감 · 2개째부터 스켈레톤 체력 +10 (하나 더할 때마다 ×0.7)',{},{pending:true}),
+ M('expansion','genesis','확장 장비함','slots',['#####','#####','#####','#####'],'장착 칸 2페이지 (5칸 추가) · 2개째부터 타워 설치 비용 -20% (하나 더할 때마다 ×0.7)',{},{pending:true}),
+ M('arsenal','genesis','비밀 병기고','crate',['########','########','########','########','########'],'다섯 번째 칸을 비우고 시작하면 숨겨진 타워 사용 · 2개째부터 숨겨진 타워 공격력·공속 +30% (하나 더할 때마다 ×0.7)',{},{pending:true}),
+ M('secondlife','genesis','두 번째 기회','heart',['.##.','####'],'기지 체력이 0이 되면 한 번 체력 50으로 다시 일어남 · 2개째부터 그때 체력 +30 (하나 더할 때마다 ×0.7)',{},{pending:true}),
+ M('timewarp','genesis','시간 왜곡','clock',['####','.##.','####'],'모든 적 이동 속도 -10% · 2개째부터 -6% (하나 더할 때마다 ×0.7)',{},{pending:true})];
 const MODULE=Object.fromEntries(MODULES.map(m=>[m.id,m]));
 const BY_GRADE=Object.fromEntries(GRADES.map(g=>[g.id,MODULES.filter(m=>m.grade===g.id)]));
 // Cells of a piece at rotation r (quarter turns clockwise), as [x,y] from its top-left.
@@ -534,8 +536,8 @@ const buyable=(open,i)=>!open.includes(i)&&neighbours(i).some(n=>open.includes(n
 function layout(state){const map=new Array(BOARD*BOARD).fill(-1),open=new Set(state.cells);for(let k=0;k<state.placed.length;k++){const p=state.placed[k];for(const [dx,dy] of cells(p.id,p.r)){const x=p.x+dx,y=p.y+dy,i=y*BOARD+x;if(x<0||y<0||x>=BOARD||y>=BOARD||!open.has(i)||map[i]!==-1)return null;map[i]=k;}}return map;}
 function fits(state,id,x,y,r,ignore=-1){const map=layout({...state,placed:state.placed.filter((_,k)=>k!==ignore)});if(!map)return false;const open=new Set(state.cells);return cells(id,r).every(([dx,dy])=>{const cx=x+dx,cy=y+dy,i=cy*BOARD+cx;return cx>=0&&cy>=0&&cx<BOARD&&cy<BOARD&&open.has(i)&&map[i]===-1;});}
 // Sum of the effects on the board.
-function effects(placed,opt={}){const out={},count={};for(const p of placed){const m=MODULE[p.id];if(!m||m.pending)continue;const n=count[p.id]=(count[p.id]??0)+1;const fx=n===1||!m.dup?m.fx:m.dup[Math.min(n-2,m.dup.length-1)];
-  for(const [k,v] of Object.entries(fx)){if(k.endsWith('Mul'))out[k]=(out[k]??1)*v;else out[k]=(out[k]??0)+v;}}
+function effects(placed,opt={}){const out={},count={};for(const p of placed){const m=MODULE[p.id];if(!m||m.pending)continue;const n=count[p.id]=(count[p.id]??0)+1;let fx=m.fx,f=1;if(n>1&&m.dup){const k=n-2,L=m.dup.length;fx=m.dup[Math.min(k,L-1)];if(k>=L)f=DECAY**(k-L+1);}
+  for(const [k,v] of Object.entries(fx)){if(k.endsWith('Mul'))out[k]=(out[k]??1)*(1-(1-v)*f);else out[k]=(out[k]??0)+v*f;}}
  if(!opt.raw)for(const k of Object.keys(out)){const c=CAPS[k.split('.')[0]];if(c!=null)out[k]=Math.min(out[k],c);}return out;}
 // Multipliers for one tower kind under a set of effects.
 function towerMods(fx,kind){const tags=TOWER_TAGS[kind]??[],sum=key=>Math.min(CAPS[key]??Infinity,(fx[key]??0)+tags.reduce((a,t)=>a+(fx[key+'.'+t]??0),0));
@@ -543,7 +545,7 @@ function towerMods(fx,kind){const tags=TOWER_TAGS[kind]??[],sum=key=>Math.min(CA
 // One draw: grade by rate, then any piece of that grade.
 function draw(random=Math.random){let r=random(),grade=GRADES[0].id;for(const g of GRADES){if(r<g.rate){grade=g.id;break;}r-=g.rate;}const list=BY_GRADE[grade];return list[Math.floor(random()*list.length)].id;}
 
-for(const [k,v] of Object.entries({BOARD,START_CELLS,PULL_COST,CAPS,GRADES,GRADE,TAGS,TOWER_TAGS,MODULES,MODULE,BY_GRADE,cells,size,cellCost,neighbours,buyable,layout,fits,effects,towerMods,draw}))Object.defineProperty(exports,k,{enumerable:true,get:()=>v});
+for(const [k,v] of Object.entries({BOARD,START_CELLS,PULL_COST,CAPS,DECAY,GRADES,GRADE,TAGS,TOWER_TAGS,MODULES,MODULE,BY_GRADE,cells,size,cellCost,neighbours,buyable,layout,fits,effects,towerMods,draw}))Object.defineProperty(exports,k,{enumerable:true,get:()=>v});
 },
 "app.js":function(require,exports){
 const {enemyMoveSpeed,CODEX_GROUPS,SCALE}=require("data.js");
@@ -621,7 +623,7 @@ function header(title,back='home',extra=''){return `<header class="bar xp-title"
 function statusBar(){return `<footer class="xp-status"><span class="xp-cell grow">준비</span><span class="xp-cell wallet">${icon('coin')}${wallet()}</span></footer>`;}
 function setScreen(name,html){if(name!=='battle'){placing=null;dragPointer=null;}screen=name;app.innerHTML=`<main class="screen ${name}">${html}${name==='battle'?'':statusBar()}</main>`;controlSignature='';backNavigation?.sync?.();}
 function slots(loadout=profile.loadout,battle=false,removable=false){return `<div class="loadout">${loadout.map((id,i)=>{const t=TOWER[id];return t?button(battle?'build':removable?'unequip':'inventory',`${towerIcon(id)}${battle?`<span class="price" data-price="${id}">${money(game.buildCost(id))}</span>`:`<span>${t.name}</span>`}`,`slot ${removable?'removable':''} ${battle&&placing?.kind===id?'active':''}`,`style="--color:${t.color}" data-kind="${id}" aria-label="${t.name}${battle?' 배치 '+t.cost+'원':removable?' 해제':''}" ${battle&&(!game.canBuild(id)||!game.canAfford(game.buildCost(id)))?'disabled':''}`):button(battle?'noop':'inventory',icon('plus'),'slot empty',`aria-label="빈 슬롯 ${i+1}" ${battle?'disabled':''}`);}).join('')}</div>`;}
-function home(){if(game&&!game.ended){game.paused=true;savedRun=game.snapshot();}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p>버전 4.1.6</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
+function home(){if(game&&!game.ended){game.paused=true;savedRun=game.snapshot();}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p>버전 4.1.7</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
 function openDialog(title,body,buttons,kind='dialog'){if(kind!=='result')sound(kind.startsWith('msg')?'question':'open');dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2><span>${title}</span>${button('dialog-x','<i>×</i>','xp-x','aria-label="닫기"')}</h2>${body}<div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('.dialog').classList.toggle('msgbox',kind.startsWith('msg'));(modal.querySelector('.xp-yes')??modal.querySelector('.dialog-actions button')??modal.querySelector('button'))?.focus();backNavigation?.sync?.();}
 // Yes/no question in a Windows message box: icon, text, then [예] [아니요] on the right.
 const QUESTION='<svg class="xp-qicon" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="14" fill="#2f6fd8" stroke="#fff" stroke-width="2"/><text x="16" y="22.5" text-anchor="middle" font-size="19" font-weight="700" fill="#fff">?</text></svg>';
@@ -1081,7 +1083,7 @@ function openMenu(id){const drop=$('#menu-drop'),bar=$('.xp-menubar');if(!drop||
  drop.style.left=Math.max(0,Math.min(btn.offsetLeft,bar.clientWidth-190))+'px';drop.style.top=(bar.offsetTop+bar.offsetHeight)+'px';drop.hidden=false;}
 function closeMenu(){menuOpen='';const drop=$('#menu-drop');if(drop){drop.hidden=true;drop.innerHTML='';}for(const b of document.querySelectorAll('.xp-menu.open'))b.classList.remove('open');}
 document.addEventListener('pointerdown',e=>{if(menuOpen&&!e.target.closest?.('#menu-drop,.xp-menubar'))closeMenu();},true);
-function about(){openDialog('그리드 타워 디펜스 정보','<p>그리드 타워 디펜스 4.1.6<br>보더랜드 · 일반 25웨이브 · 어려움 30웨이브</p><p class="muted small">효과음: Kenney UI Audio (CC0) · KDE Ocean 사운드, Guilherme Marçal Silva (CC BY-SA 4.0)</p>',button('close-dialog','확인','primary'));}
+function about(){openDialog('그리드 타워 디펜스 정보','<p>그리드 타워 디펜스 4.1.7<br>보더랜드 · 일반 25웨이브 · 어려움 30웨이브</p><p class="muted small">효과음: Kenney UI Audio (CC0) · KDE Ocean 사운드, Guilherme Marçal Silva (CC BY-SA 4.0)</p>',button('close-dialog','확인','primary'));}
 function pauseMenu(){if(!game||game.ended)return;game.paused=true;save();openDialog('일시정지',`<p>${game.map.name} · ${game.config.name}<br>웨이브 ${game.wave} / ${game.config.count} · ${seconds(game.time)}</p>`,(game.started?button('run','계속하기','primary'):button('close-dialog','닫기','primary'))+button('guide','조작 안내')+button('battle-settings','설정')+button('battle-home','메인 메뉴로 돌아가기'),'pause');updateBattleUI();}
 function requestExit(){if(game&&!game.ended)game.paused=true;save();msgBox('그리드 타워 디펜스','<p>정말 나가시겠습니까?</p>','confirm-exit','','msg-exit');}
 function handleAppBack(){
