@@ -97,6 +97,23 @@ html,body,body *,body *::before,body *::after{-webkit-user-select:none;user-sele
 .inv-badge{position:absolute;top:4px;right:4px;display:flex;color:var(--muted)}
 .inv-badge svg{width:14px;height:14px}
 .inv-badge.eq{color:var(--accent)}
+/* 3.4: square selected-tower box; the equipped column is five squares of the
+   same total height (L + 12 + s = width, 5s + 24 = L). */
+.inventory .inv-top{--A:calc(min(100vw,600px) - 36px);--L:calc((5 * var(--A) - 36px) / 6);grid-template-columns:var(--L) minmax(0,1fr);row-gap:10px}
+.inventory .inv-hero{position:relative;width:var(--L);height:var(--L)}
+.inventory .inv-hero .inv-hero-art{width:70%;height:70%;margin-top:6%}
+.inv-hero-head{position:absolute;left:12px;right:12px;top:9px;display:flex;justify-content:space-between;align-items:baseline;gap:8px;min-width:0}
+.inv-hero-head strong{font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.inv-hero-head span{font-size:12px;color:var(--muted);white-space:nowrap}
+.inventory .inv-loadout{height:var(--L)}
+.inv-info{grid-column:1/-1;display:flex;flex-direction:column;gap:8px}
+.inventory .inv-desc{min-height:0}
+.inventory .inv-detail{flex:1;max-height:none;border-bottom:0}
+/* 3.4: in-battle tray: bigger art, price on a dark fade along the bottom */
+.battle-footer .slot{position:relative;padding:0;justify-content:flex-start}
+.battle-footer .slot .tower-icon{width:54px;height:54px;margin-top:3px}
+.battle-footer .slot .price{position:absolute;left:0;right:0;bottom:0;padding:13px 2px 3px;line-height:13px;text-align:center;background:linear-gradient(to top,rgba(8,12,16,.92) 35%,rgba(8,12,16,0))}
+@media(max-height:700px){.battle-footer .slot .tower-icon{width:48px;height:48px;margin-top:2px}}
 </style></head>
 <body><div id="app"></div><div id="modal-root"></div><div id="toast" role="status" aria-live="polite"></div><input id="import-file" type="file" accept="application/json,.json" hidden><script>
 (()=>{
@@ -162,22 +179,23 @@ function levelLine(id,lv){const d=TOWER[id],i=lv-1,s=[],sec=v=>fmtN(v)+'초';
  return s.map(([k,v])=>k?`<span>${k} <b>${v}</b></span>`:`<span class="inv-camo">${v}</span>`).join('');}
 function invDetails(id){const t=TOWER[id],n=t.upgrades.length+1;return `<p class="inv-long">${t.detail}</p>${Array.from({length:n},(_,i)=>`<div class="inv-level"><div class="inv-level-head"><strong>Lv.${i+1}${i?` <span>${t.upgradeNames[i-1]}</span>`:''}</strong><span class="cash">${i?'':'배치 '}${money((i?t.upgrades[i-1]:t.cost)*100)}</span></div><div class="inv-level-stats">${levelLine(id,i+1)}</div></div>`).join('')}<div class="inv-level-meta"><span>크기 <b>${t.size[0]}×${t.size[1]}</b>${t.turns?' · 회전 가능':''}</span>${t.placementLimit?`<span>배치 한도 <b>${t.placementLimit}개</b></span>`:''}<span>최대 레벨까지 <b class="cash">${money(cumulativeCost(id,n)*100)}</b></span></div>`;}
 const invOwned=k=>profile.owned.includes(k);
-function invPickHTML(){const t=TOWER[invSel],own=invOwned(invSel),eq=profile.loadout.includes(invSel),full=!profile.loadout.includes(null),buyable=canBuyTower(profile,invSel);
+function invHeroHTML(){const t=TOWER[invSel],own=invOwned(invSel);return `<div class="inv-hero" data-kind="${invSel}" style="--color:${t.color}"><div class="inv-hero-head"><strong style="color:${t.color}">${t.name}</strong><span>티어 ${t.tier}${own?'':' · 잠김'}</span></div>${towerIcon(invSel,'inv-hero-art')}</div>`;}
+function invInfoHTML(){const t=TOWER[invSel],own=invOwned(invSel),eq=profile.loadout.includes(invSel),full=!profile.loadout.includes(null),buyable=canBuyTower(profile,invSel);
  const act=own?(eq?button('unequip','해제','inv-act unequip-button',`data-kind="${invSel}"`):button('equip','장착','inv-act equip-button',`data-kind="${invSel}" ${full?'disabled':''}`)):button('buy',`${icon('coin')}<span>${money(t.unlock*100)}</span>`,`inv-act ${buyable?'credit':'credit-off'}`,`data-kind="${invSel}" aria-label="${t.name} 구매" ${buyable?'':'disabled'}`);
- return `<div class="inv-pick"><div class="inv-hero" data-kind="${invSel}" style="--color:${t.color}">${towerIcon(invSel,'inv-hero-art')}</div><div class="inv-title"><strong style="color:${t.color}">${t.name}</strong><span class="muted small">티어 ${t.tier}${own?'':' · 잠김'}</span></div><p class="inv-desc">${t.desc}</p><div class="inv-actions">${button('inv-more',invMore?'접기':'더보기','inv-more-btn',`aria-expanded="${invMore}"`)}${act}</div></div>`;}
+ return `<div class="inv-info"><p class="inv-desc">${t.desc}</p><div class="inv-actions">${button('inv-more',invMore?'접기':'더보기','inv-more-btn',`aria-expanded="${invMore}"`)}${act}</div></div>`;}
 function invLoadoutHTML(){return `<div class="inv-loadout" data-key="${profile.loadout.join(',')}" aria-label="장착한 타워">${profile.loadout.map((k,i)=>k?button('inv-pick',towerIcon(k),`inv-slot ${k===invSel?'on':''}`,`style="--color:${TOWER[k].color}" data-kind="${k}" aria-label="${TOWER[k].name}"`):`<div class="inv-slot empty" aria-label="빈 슬롯 ${i+1}">${icon('plus')}</div>`).join('')}</div>`;}
 function invBadge(id){return profile.loadout.includes(id)?`<i class="inv-badge eq">${icon('check')}</i>`:invOwned(id)?'':`<i class="inv-badge">${icon('lock')}</i>`;}
 function invCellHTML(x){const o=invOwned(x.id),e=profile.loadout.includes(x.id);return button('inv-pick',`${towerIcon(x.id)}<span class="inv-name">${x.name}</span>${invBadge(x.id)}`,`inv-cell ${x.id===invSel?'on':''} ${o?'':'locked'}`,`style="--color:${x.color}" data-kind="${x.id}" aria-label="${x.name}${e?' 장착됨':o?'':' 잠김'}"`);}
 function inventory(){if(!TOWER[invSel])invSel=profile.loadout.find(Boolean)??TOWERS[0].id;
- setScreen('inventory',header('인벤토리')+`<section class="inv-top">${invPickHTML()}${invLoadoutHTML()}</section>${invMore?`<div class="inv-detail" data-kind="${invSel}">${invDetails(invSel)}</div>`:''}<div class="scroll inv-list">${[1,2,3,4].map(tier=>{const list=TOWERS.filter(x=>x.tier===tier);return `<div class="section-label"><span>티어 ${tier}</span><span>${list.length}종</span></div><div class="inv-grid">${list.map(invCellHTML).join('')}</div>`;}).join('')}</div>`);}
+ setScreen('inventory',header('인벤토리')+`<section class="inv-top">${invHeroHTML()}${invLoadoutHTML()}${invInfoHTML()}</section>${invMore?`<div class="inv-detail" data-kind="${invSel}">${invDetails(invSel)}</div>`:''}<div class="scroll inv-list" ${invMore?'hidden':''}>${[1,2,3,4].map(tier=>{const list=TOWERS.filter(x=>x.tier===tier);return `<div class="section-label"><span>티어 ${tier}</span><span>${list.length}종</span></div><div class="inv-grid">${list.map(invCellHTML).join('')}</div>`;}).join('')}</div>`);}
 function balance(){setScreen('balance',header('밸런스 기준','back-balance','<span></span>')+balancePanel());}
 function towerInfo(id){const t=TOWER[id];openDialog(t.name,`<div class="tower-face" style="--color:${t.color};margin-bottom:16px">${towerIcon(id)}</div><p>${t.detail}</p><div class="keyline"><span>크기</span><span>${t.size[0]}×${t.size[1]}칸${t.turns?' · 회전 가능':''}</span></div>${t.placementLimit?`<div class="keyline"><span>배치 한도</span><span>${t.placementLimit}개</span></div>`:""}<div class="keyline"><span>배치</span><span class="cash">${money(t.cost*100)}</span></div>${t.upgrades.map((v,i)=>`<div class="keyline"><span><strong class="upgrade-name">${t.upgradeNames[i]}</strong><small class="upgrade-detail">Lv.${i+1} → Lv.${i+2} · ${t.notes[i]}</small></span><span class="cash">${money(v*100)}<small class="upgrade-detail">누적 ${money(cumulativeCost(id,i+2)*100)}</small></span></div>`).join('')}<div style="height:16px"></div>`,button('close-dialog','닫기','primary'));}
 function buy(id){const t=TOWER[id];if(!canBuyTower(profile,id))return;openDialog(`${t.name} 해금`,`<p>${t.detail}</p><div class="result-row big"><span>${icon('coin')}</span><span>${money(t.unlock*100)}</span></div>`,button('confirm-buy','해금','primary',`data-kind="${id}"`)+button('close-dialog','취소','flat'));}
 function confirmBuy(id){const t=TOWER[id];if(!canBuyTower(profile,id))return;const empty=profile.loadout.indexOf(null);if(!purchaseTower(profile,id))return;save();closeDialog();invSel=id;refreshInventory();toast(empty!==-1?'해금하고 빈 슬롯에 장착했습니다.':'해금했습니다.');}
 function refreshInventory(){save();const top=$('.inventory .inv-top');if(screen!=='inventory'||!top){inventory();return;}
- top.querySelector('.inv-pick').outerHTML=invPickHTML();
+ top.querySelector('.inv-hero').outerHTML=invHeroHTML();top.querySelector('.inv-info').outerHTML=invInfoHTML();
  const key=profile.loadout.join(',');const lo=top.querySelector('.inv-loadout');if(lo.dataset.key!==key)lo.outerHTML=invLoadoutHTML();else for(const el of lo.querySelectorAll('.inv-slot[data-kind]'))el.classList.toggle('on',el.dataset.kind===invSel);
- const det=$('.inv-detail');if(invMore){const html=`<div class="inv-detail" data-kind="${invSel}">${invDetails(invSel)}</div>`;if(!det)top.insertAdjacentHTML('afterend',html);else if(det.dataset.kind!==invSel)det.outerHTML=html;}else det?.remove();
+ const det=$('.inv-detail'),list=$('.inv-list');if(invMore){const html=`<div class="inv-detail" data-kind="${invSel}">${invDetails(invSel)}</div>`;if(!det)top.insertAdjacentHTML('afterend',html);else if(det.dataset.kind!==invSel)det.outerHTML=html;if(list)list.hidden=true;}else{det?.remove();if(list)list.hidden=false;}
  for(const el of document.querySelectorAll('.inv-cell')){const id=el.dataset.kind,o=invOwned(id);el.classList.toggle('on',id===invSel);el.classList.toggle('locked',!o);const want=invBadge(id),badge=el.querySelector('.inv-badge');if((badge?.outerHTML??'')!==want){badge?.remove();if(want)el.insertAdjacentHTML('beforeend',want);}el.setAttribute('aria-label',`${TOWER[id].name}${profile.loadout.includes(id)?' 장착됨':o?'':' 잠김'}`);}
  const w=$('.inventory .wallet');if(w)w.innerHTML=`${icon('coin')}${wallet()}`;}
 function unequip(id){const index=profile.loadout.indexOf(id);if(index===-1)return;profile.loadout[index]=null;refreshInventory();}
@@ -402,7 +420,7 @@ function color(token, c) {
 }
 
 // Low-res face texture (see face2.py): upscaled softly on purpose.
-const FACE = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAALCAYAAABs3u23AAABDklEQVR42u1SvUrDUBg9372JBONNDektNAEDxTFDHVwFJ1dH8cX6Ck7FJ6jQ1cEXkELmFMQWQrnku9ehDh28xaziWc/fx+ED/jrkEY6UyrNoEBVJHJu2bc2xIK31WRDHFyfynIzZ7nw64SPSdFSJsJsT08IwZkrlmU+rVJ4ZxoyYFiLs5mk6qnoXMrkxARUBBYCpEJx4Q/bclICCgIrJjb2z+YiyLKOPbXsjHU2stK+f6/UbAPvtcQd+B0AMhsMrweKaya1Sdbqs63rXq/AnJFpfUke3geAnAOisfHCBe9k0zftvM4I+haG1kiEe2cq7/bUuC6xd9smgnl9NidYT6ugeAFzgnjdNszqY+B/4Ar2fVAg/YcmYAAAAAElFTkSuQmCC";
+const FACE = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAALCAYAAABs3u23AAABDUlEQVR42u2SwUrDQBRF75tJQjCd1phOaRMwIC6zqKAbF/6OP+C/9C/6CV24cKPgByhCNlKwKJISyjQv40KXTmm24t2eyz3weMBfj9zBSKk0CQdh1o8iU9e12TWkte55UXQcyEMyptq4esIF4nhUCL+ZE9PCMGZKpYmrq1SaGMaMmBbCb+ZxPCo6C5nshICCgAzAVAjuO0e+2ZSAjICCyU6cZ3OBPM/Dj6q+kpZOWtnef65WjwBal3MwHJ4JFhdM9iVWB7dlWW46CX9LbzzW3ra9FLZ5AICWvPPGF3fr5fJt3w2vizAw0AxcM7wbABYW68DgCcDeQur41aRUegSfTwEAW/lcVa/vACz+85MvG8BRNw+6xfIAAAAASUVORK5CYII=";
 
 // ---- markup helpers (all numbers in SVG units) ---------------------------
 const f = (v) => +(+v).toFixed(2);
@@ -1041,7 +1059,8 @@ function drawTower(g, kind, level, o = {}) {
     return G("base", m.base) + (m.turret ? G("turret", m.turret) : "");
   });
   const dyn = { turret: { rotate: o.aim ?? 0 } };
-  if (kind === "robot" || kind === "spawner") Object.assign(dyn, { turret: undefined, parked: !o.deployed, empty: !!o.deployed, sortie: { scale: [Math.max(0, Math.min(1, o.ready ?? 1)), 1] }, treadB: false });
+  // the unit always stands in its building: several can be out on the road at once
+  if (kind === "robot" || kind === "spawner") Object.assign(dyn, { turret: undefined, parked: true, empty: false, sortie: { scale: [Math.max(0, Math.min(1, o.ready ?? 1)), 1] }, treadB: false });
   if (kind === "plane") Object.assign(dyn, { parked: !!o.parked, exhaust: false });
   g.save();
   g.scale(0.05, 0.05);
@@ -1499,7 +1518,7 @@ Object.defineProperty(exports,"stat",{enumerable:true,get:()=>stat});
 // Starting cash, damage cash and the five-second intermission are user requirements.
 // Wave reward amounts are tuning defaults.
 // 3.0: wave reward 90 + 18 per wave (108, 126 … ).
-const ECONOMY=Object.freeze({startingCash:650,damageCash:1,waveBase:90,waveStep:18,intermissionSeconds:5});
+const ECONOMY=Object.freeze({startingCash:600,damageCash:1,waveBase:90,waveStep:18,intermissionSeconds:5});
 const waveCash=wave=>Math.round(ECONOMY.waveBase+wave*ECONOMY.waveStep);
 
 Object.defineProperty(exports,"ECONOMY",{enumerable:true,get:()=>ECONOMY});
