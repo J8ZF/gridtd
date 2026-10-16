@@ -642,7 +642,7 @@ const WAVE_NOTICES={
   25:'<b>공성 보스</b>“이 방어선도 오늘로 끝이다.”'},
  hard:{6:'다음 웨이브에서는 보스 1이 등장합니다.',7:'다음 웨이브에서는 히든이 처음으로 등장합니다.',12:'다음 웨이브에서는 보스 2가 등장합니다.',14:'다음 웨이브에서는 용암병이 처음으로 등장합니다.',16:'다음 웨이브에서는 히든 보스가 등장합니다.',22:'다음 웨이브에서는 보스 3이 등장합니다.',25:'다음 웨이브에서는 보스 4가 등장합니다.',27:'다음 웨이브에서는 네크로맨서 보스가 등장합니다.',29:'다음 웨이브가 마지막입니다.',
   30:'<b>군주</b>“네 놈들은 여기서 끝날 것이다.”'},
- doom:{1:'다음 웨이브에서는 재생병이 처음으로 등장합니다.',2:'다음 웨이브에서는 중화기병이 처음으로 등장합니다.',4:'다음 웨이브에서는 은폐병과 보스 5가 등장합니다.',6:'<b>기습</b> 적이 한꺼번에 몰려옵니다!'+'<br>다음 웨이브에서는 강하 포드가 처음으로 등장합니다.',7:'다음 웨이브에서는 방패병이 처음으로 등장합니다.',9:'<b>기습</b> 적이 한꺼번에 몰려옵니다!'+'<br>다음 웨이브에서는 공병과 중장갑병이 처음으로 등장합니다.',10:'다음 웨이브에서는 강철병과 분대장이 처음으로 등장합니다. 강철병에게는 방어력 이하의 공격이 1만 들어갑니다.',11:'다음 웨이브에서는 방벽술사와 정예병이 처음으로 등장합니다.',12:'다음 웨이브에서는 폭주체와 EMP병이 처음으로 등장합니다.',13:'다음 웨이브에서 가디언 프라임이 다가옵니다.',14:'다음 웨이브에서는 과성장체·돌격병·수송 트럭이 처음으로 등장합니다.',15:'다음 웨이브에서는 대소환사와 보스 7이 등장합니다.',17:'<b>기습</b> 적이 한꺼번에 몰려옵니다!'+'<br>다음 웨이브에서는 대형 수송체가 처음으로 등장합니다.',18:'다음 웨이브에서는 보스 8이 등장합니다.',19:'다음 웨이브에서는 지휘관이 등장합니다.',22:'<b>기습</b> 적이 한꺼번에 몰려옵니다!'+'<br>다음 웨이브에서는 강습선이 등장합니다.',23:'다음 웨이브에서는 친위대가 등장합니다.',26:'다음 웨이브에서 맥스웰이 나타납니다.',28:'<b>기습</b> 적이 한꺼번에 몰려옵니다!',29:'다음 웨이브에서는 군주가 등장합니다.',31:'다음 웨이브가 마지막입니다.'}};
+ doom:{1:'다음 웨이브에서는 재생병이 처음으로 등장합니다.',2:'다음 웨이브에서는 중화기병이 처음으로 등장합니다.',4:'다음 웨이브에서는 은폐병과 보스 M1이 등장합니다.',6:'<b>기습</b> 적이 한꺼번에 몰려옵니다!'+'<br>다음 웨이브에서는 강하 포드가 처음으로 등장합니다.',7:'다음 웨이브에서는 방패병이 처음으로 등장합니다.',9:'<b>기습</b> 적이 한꺼번에 몰려옵니다!'+'<br>다음 웨이브에서는 공병과 중장갑병이 처음으로 등장합니다.',10:'다음 웨이브에서는 강철병과 분대장이 처음으로 등장합니다. 강철병에게는 방어력 이하의 공격이 1만 들어갑니다.',11:'다음 웨이브에서는 방벽술사와 정예병이 처음으로 등장합니다.',12:'다음 웨이브에서는 폭주체와 EMP병이 처음으로 등장합니다.',13:'다음 웨이브에서 가디언 프라임이 다가옵니다.',14:'다음 웨이브에서는 과성장체·돌격병·수송 트럭이 처음으로 등장합니다.',15:'다음 웨이브에서는 대소환사와 보스 M3이 등장합니다.',17:'<b>기습</b> 적이 한꺼번에 몰려옵니다!'+'<br>다음 웨이브에서는 대형 수송체가 처음으로 등장합니다.',18:'다음 웨이브에서는 보스 M4가 등장합니다.',19:'다음 웨이브에서는 지휘관이 등장합니다.',22:'<b>기습</b> 적이 한꺼번에 몰려옵니다!'+'<br>다음 웨이브에서는 강습선이 등장합니다.',23:'다음 웨이브에서는 친위대가 등장합니다.',26:'다음 웨이브에서 맥스웰이 나타납니다.',28:'<b>기습</b> 적이 한꺼번에 몰려옵니다!',29:'다음 웨이브에서는 군주가 등장합니다.',31:'다음 웨이브가 마지막입니다.'}};
 const BOSS_LINES={guardianPrime:{spawn:'방어선 해체를 시작한다.'},maxwell:{spawn:'내 앞을 막아 봐.',down:'…아직 안 끝났어.',revive:'이제 진짜 달린다!'},doombringer:{spawn:'모든 것은 결국 무너진다.',phase1:'버텨 봐라. 조금 늦게 무너질 뿐이다.',phase2:'끝이 보이는가? 너희의 끝이다.'}};
 function waveNotice(n){const text=WAVE_NOTICES[game?.difficulty]?.[n];if(text&&screen==='battle')notice(text,'main',n===game.config.count?9000:6000);}
 // Interface sounds: Kenney "UI Audio" (CC0) and the KDE Ocean sound theme by Guilherme Marçal Silva
@@ -691,7 +691,7 @@ document.addEventListener('click',e=>{if(performance.now()-swipeAt<400&&e.target
 // a slot that cannot be used says why on release, unless the finger swiped across the slots
 function warnTap(e,msg){const id=e.pointerId,x=e.clientX,up=ev=>{if(ev.pointerId!==id)return;window.removeEventListener('pointerup',up);if(Math.abs(ev.clientX-x)<30)warn(msg);};window.addEventListener('pointerup',up);}
 
-function home(){fitLoadout(profile);if(game&&!game.ended){game.paused=true;savedRun=game.snapshot();}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p>버전 4.6</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
+function home(){fitLoadout(profile);if(game&&!game.ended){game.paused=true;savedRun=game.snapshot();}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p>버전 4.6.1</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
 function openDialog(title,body,buttons,kind='dialog'){if(kind!=='result')sound(kind.startsWith('msg')?'question':'open');dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2><span>${title}</span>${button('dialog-x','<i>×</i>','xp-x','aria-label="닫기"')}</h2>${body}<div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('.dialog').classList.toggle('msgbox',kind.startsWith('msg'));(modal.querySelector('.xp-yes')??modal.querySelector('.dialog-actions button')??modal.querySelector('button'))?.focus();backNavigation?.sync?.();}
 // Yes/no question in a Windows message box: icon, text, then [예] [아니요] on the right.
 const QUESTION='<svg class="xp-qicon" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="14" fill="#2f6fd8" stroke="#fff" stroke-width="2"/><text x="16" y="22.5" text-anchor="middle" font-size="19" font-weight="700" fill="#fff">?</text></svg>';
@@ -3367,15 +3367,15 @@ const ENEMIES={
  "overgrowth": {"id": "overgrowth", "name": "과성장체", "hp": 440, "speed": 0.7, "color": "#9fd45a", "codex": "doom", "native": true, "shape": "split", "dot": false,
   "regen": {"rate": 0.04, "over": 2}, "desc": "매초 최대 체력의 4%를 회복하며, 최대 체력의 두 배까지 계속 자라납니다. 회복한 체력에서는 캐시가 나오지 않습니다."},
 // -- C: 정예·보스 (black armour, neon #ff4d6d) --
- "xvanguard": {"id": "xvanguard", "name": "보스 5", "hp": 170, "speed": 0.8, "color": "#ff4d6d", "codex": "doom", "native": true, "shape": "boss", "boss": true, "dot": false,
+ "xvanguard": {"id": "xvanguard", "name": "보스 M1", "hp": 170, "speed": 0.8, "color": "#ff4d6d", "codex": "doom", "native": true, "shape": "boss", "boss": true, "dot": false,
   "desc": "외계 군대의 선봉에 서는 첫 보스."},
- "xjugger": {"id": "xjugger", "name": "보스 6", "hp": 1300, "speed": 0.55, "color": "#ff4d6d", "codex": "doom", "native": true, "shape": "boss", "boss": true, "dot": false,
+ "xjugger": {"id": "xjugger", "name": "보스 M2", "hp": 1300, "speed": 0.55, "color": "#ff644d", "codex": "doom", "native": true, "shape": "boss", "boss": true, "dot": false,
   "desc": "이동은 매우 느리지만 체력이 높은 중장갑 보스."},
  "xcloak": {"id": "xcloak", "name": "은폐 지휘관", "hp": 480, "shield": 160, "speed": 1.1, "color": "#ff4d6d", "codex": "doom", "native": true, "shape": "boss", "boss": true, "camo": true, "dot": false,
   "desc": "히든과 보호막 160. 감지와 보호막 제거를 함께 요구합니다."},
- "xraider": {"id": "xraider", "name": "보스 7", "hp": 1200, "speed": 1.6, "color": "#ff4d6d", "codex": "doom", "native": true, "shape": "arrow", "boss": true, "dot": false,
+ "xraider": {"id": "xraider", "name": "보스 M3", "hp": 1200, "speed": 1.6, "color": "#ff4d6d", "codex": "doom", "native": true, "shape": "arrow", "boss": true, "dot": false,
   "desc": "빠른 중형 보스. 다른 적 뒤에서 추월해 방어선을 돌파합니다."},
- "xwarlord": {"id": "xwarlord", "name": "보스 8", "hp": 3800, "speed": 1, "color": "#ff4d6d", "codex": "doom", "native": true, "shape": "boss", "boss": true, "armor": 3, "dot": false,
+ "xwarlord": {"id": "xwarlord", "name": "보스 M4", "hp": 3800, "speed": 1, "color": "#ff4da0", "codex": "doom", "native": true, "shape": "boss", "boss": true, "armor": 3, "dot": false,
   "desc": "방어력 3. 빠르고 매우 단단한 대형 보스. 차량 충돌은 막지 못합니다."},
  "xdropship": {"id": "xdropship", "name": "강습선", "hp": 7000, "shield": 1200, "speed": 0.62, "color": "#ff4d6d", "codex": "doom", "native": true, "shape": "carrier", "boss": true, "dot": false,
   "thresholdSpawn": {"fractions": [0.75, 0.5, 0.25], "kind": "xelite", "count": 3},
@@ -3391,7 +3391,7 @@ const ENEMIES={
  "mothership": {"id": "mothership", "name": "대형 수송체", "hp": 2400, "shield": 600, "speed": 0.5, "color": "#ff4d6d", "codex": "doom", "native": true, "shape": "carrier", "dot": false,
   "deathSpawn": [{"kind": "xdrone", "count": 6}, {"kind": "xlancer", "count": 4}, {"kind": "xtrooper", "count": 4}],
   "desc": "보호막 600. 파괴되면 드론 6기, 돌격병 4기, 병사 4기를 한꺼번에 쏟아냅니다."},
- "guardianPrime": {"id": "guardianPrime", "name": "가디언 프라임", "hp": 6500, "speed": 0.3, "color": "#ff4d6d", "codex": "doom", "native": true, "shape": "guardian",
+ "guardianPrime": {"id": "guardianPrime", "name": "가디언 프라임", "hp": 6500, "speed": 0.3, "color": "#f2f2f2", "codex": "doom", "native": true, "shape": "guardian",
   "boss": true, "bar": true, "stunImmune": true, "slowImmune": true, "armorPct": 0.2, "line": true, "dot": false,
   "jammer": {"shot": {"first": 3, "period": 8, "range": 3, "count": 2, "stun": 4, "grace": 3}, "jam": {"first": 10, "period": 24, "seconds": 7, "mul": 0.6}},
   "desc": "14웨이브의 중간 보스. 받는 피해 20% 감소. 8초마다 반경 3칸 안의 가장 가까운 지상 타워 2개를 쏴서 4초 기절시키고, 24초마다 맵 위 모든 타워의 공격 속도를 7초 동안 40% 떨어뜨립니다. 정지·화상 감속에 면역입니다."},
@@ -3403,7 +3403,7 @@ const ENEMIES={
   "boss": true, "finalBoss": true, "stunImmune": true, "slowImmune": true, "armor": 8, "line": true, "dot": false,
   "summons": {"pool": ["xraider", "xwarlord", "xjugger"], "count": 1, "extra": 1, "period": 24, "stopAt": 0.7, "back": 1.5},
   "phases": {"at": [0.66, 0.33], "jam": {"seconds": 8, "mul": 0.5}, "shield": 0.06, "kind": "berserker", "count": 3},
-  "desc": "파멸적 난이도의 마지막 보스. 방어력 8. 등장 충격파와 최대 5회의 마비 공격으로 지상 타워를 6초 멈춥니다. 24초마다 보스 6·보스 7·보스 8 중 1~2기를 불러냅니다. 체력 66%와 33%에서 최대 체력 6%의 보호막을 두르고, 모든 타워의 공격 속도를 8초 동안 절반으로 떨어뜨리며 폭주체 3기를 부릅니다. 정지·화상 감속에 면역입니다."}
+  "desc": "파멸적 난이도의 마지막 보스. 방어력 8. 등장 충격파와 최대 5회의 마비 공격으로 지상 타워를 6초 멈춥니다. 24초마다 보스 M2·M3·M4 중 1~2기를 불러냅니다. 체력 66%와 33%에서 최대 체력 6%의 보호막을 두르고, 모든 타워의 공격 속도를 8초 동안 절반으로 떨어뜨리며 폭주체 3기를 부릅니다. 정지·화상 감속에 면역입니다."}
 };
 // Waves are written by hand, group by group: [kind, count, seconds between members, pause before
 // the group]. `hold` = how far along the path every group walks before an uncleared wave rolls over.
@@ -4036,9 +4036,11 @@ const SHAPE_FRONT={arrow:0,carrier:0,guardian:-Math.PI/2,fortress:-Math.PI/2,shi
 // 4.6 alien army palette: one dark armour, its rim, a deeper line, black elite armour, its raised
 // panel and the one neon. Honest neutral greys, no tint.
 const AK='#1c1c1c',AR='#474747',AD='#070707',XB='#1e1e1e',XP='#2a2a2a',XN='#ff4d6d';
+// 4.6.1: a few elites keep the army's red but turn it slightly, so they can be told apart at a glance
+const M2N='#ff644d',M4N='#ff4da0',GPN='#f2f2f2';
 const dA=d=>`<path d="${d}" fill="${AK}" stroke="${AR}" stroke-width="1.2"/>`,dB=d=>`<path d="${d}" fill="${AK}" stroke="${AR}" stroke-width="1"/>`,
- dC=d=>`<path d="${d}" fill="${XB}" stroke="${XN}" stroke-width="1.6"/>`,dL=(d,w=1.8)=>`<path d="${d}" fill="none" stroke="${AD}" stroke-width="${w}"/>`,
- nL=(d,w=.9)=>`<path d="${d}" fill="none" stroke="${XN}" stroke-width="${w}"/>`;
+ dC=(d,c=XN)=>`<path d="${d}" fill="${XB}" stroke="${c}" stroke-width="1.6"/>`,dL=(d,w=1.8)=>`<path d="${d}" fill="none" stroke="${AD}" stroke-width="${w}"/>`,
+ nL=(d,w=.9,c=XN)=>`<path d="${d}" fill="none" stroke="${c}" stroke-width="${w}"/>`;
 const BOSS_ART={
 // ---- 파멸적 (4.6): 외계 정규군 ----
 // One army in three steps, all facing up (-y), all sharing the same dark armour and one neon:
@@ -4122,23 +4124,23 @@ const BOSS_ART={
  // B · 과성장체: a coloured core bursting out between four cracked dark plates
  overgrowth:'<circle r="9"/>'+
   dB('M-12.6-3-9.4-10-3-12.6-4-8.4-8.2-6Z M3-12.6 10-9.4 12.6-3 8.4-4 6-8.2Z M12.6 3 9.4 10 3 12.6 4 8.4 8.2 6Z M-3 12.6-10 9.4-12.6 3-8.4 4-6 8.2Z'),
- // C · 보스 5: an angular helmet; two dark chevrons with a neon chevron between
+ // C · 보스 M1: an angular helmet; two dark chevrons with a neon chevron between
  xvanguard:dC('M0-14 11-7V6L5 12H-5L-11 6V-7Z')+
   dL('M-7-1 0-7 7-1M-7 3.4 0-2.6 7 3.4',2.2)+nL('M-7 1.2 0-4.8 7 1.2'),
- // C · 보스 6: a head between two raised shoulder pads; one groove down the centre, thin lines on the pads
- xjugger:dC('M-5.4-13.4H5.4L7.4-9.4H13.4L14.4-4V6L10.4 12.4H-10.4L-14.4 6V-4L-13.4-9.4H-7.4Z')+
+ // C · 보스 M2 (neon turned a little toward orange): a head between two raised shoulder pads; one groove down the centre, thin lines on the pads
+ xjugger:dC('M-5.4-13.4H5.4L7.4-9.4H13.4L14.4-4V6L10.4 12.4H-10.4L-14.4 6V-4L-13.4-9.4H-7.4Z',M2N)+
   '<path d="M-13.4-8.4H-7.8V3.6H-13.4Z M7.8-8.4H13.4V3.6H7.8Z" fill="'+XP+'" stroke="none"/>'+
-  dL('M-1.8-11.4V10.4M1.8-11.4V10.4',2.2)+nL('M0-11.4V10.8')+dL('M-13.4-2.4H-7.8M7.8-2.4H13.4',1.2),
+  dL('M-1.8-11.4V10.4M1.8-11.4V10.4',2.2)+nL('M0-11.4V10.8',.9,M2N)+dL('M-13.4-2.4H-7.8M7.8-2.4H13.4',1.2),
  // C · 은폐 지휘관: a stealth wing; dark chevrons with a neon chevron between
  xcloak:dC('M0-12.4 14.6 6.4H8.4L4.4 10.6 0 7.4-4.4 10.6-8.4 6.4H-14.6Z')+
   dL('M-8.6 2.8 0-5 8.6 2.8M-7 5.2 0-0.6 7 5.2',2.2)+nL('M-7.8 4 0-2.8 7.8 4'),
- // C · 보스 7: a swept-wing raider; a dark spine pair with neon between
+ // C · 보스 M3: a swept-wing raider; a dark spine pair with neon between
  xraider:dC('M0-15.4 5-4.6 12.6 8.4 5 6.2 3 12.4H-3L-5 6.2-12.6 8.4-5-4.6Z')+
   dL('M-1.6-9V8.4M1.6-9V8.4',2)+nL('M0-10.4V9.6'),
- // C · 보스 8: a crested warlord; a raised chest plate with a V-shaped groove like a collar
- xwarlord:dC('M0-15.4 5-11.2 12-12.4 14.4-3 12.4 9 6.4 14.4H-6.4L-12.4 9-14.4-3-12-12.4-5-11.2Z')+
+ // C · 보스 M4 (neon turned a little toward pink): a crested warlord; a raised chest plate with a V-shaped groove like a collar
+ xwarlord:dC('M0-15.4 5-11.2 12-12.4 14.4-3 12.4 9 6.4 14.4H-6.4L-12.4 9-14.4-3-12-12.4-5-11.2Z',M4N)+
   '<path d="M-8.6-6.4H8.6V6L4.4 10.4H-4.4L-8.6 6Z" fill="'+XP+'" stroke="none"/>'+
-  dL('M-8.6-3.6 0 2.4 8.6-3.6M-8.6 1 0 7 8.6 1',2.2)+nL('M-8.6-1.3 0 4.7 8.6-1.3'),
+  dL('M-8.6-3.6 0 2.4 8.6-3.6M-8.6 1 0 7 8.6 1',2.2)+nL('M-8.6-1.3 0 4.7 8.6-1.3',.9,M4N),
  // C · 강습선: a fuselage with straight wings and engine pods; dark spine pair, neon between
  xdropship:dC('M0-16.4 4.2-10.4V-2.4L16.4 4V8.4L4.2 6.4V10.4L2 14.4H-2L-4.2 10.4V6.4L-16.4 8.4V4L-4.2-2.4V-10.4Z')+
   '<path d="M-15.4 8.6H-10.6V12.6H-15.4Z M10.6 8.6H15.4V12.6H10.6Z" fill="'+XP+'" stroke="'+XN+'" stroke-width="1"/>'+
@@ -4162,11 +4164,11 @@ const BOSS_ART={
   dC('M-7-16.4H7L12.4-9.4V11L7 16.4H-7L-12.4 11V-9.4Z')+
   '<path d="M-7.4-9.4H7.4V-4.8H-7.4Z M-7.4-1.4H7.4V3.2H-7.4Z M-7.4 6.6H7.4V11.2H-7.4Z" fill="'+AD+'" stroke="none"/>'+
   nL('M-7.4-3.1H7.4M-7.4 4.9H7.4')+nL('M-3-13.4H3',1.2),
- // C · 가디언 프라임: a shield-mech with twin barrels and a neon core; dark chevrons with neon between
- guardianPrime:dC('M-6.8-17.8H-3.6V-10H-6.8Z M3.6-17.8H6.8V-10H3.6Z')+
-  dC('M-12.4-9 0-13.4 12.4-9V3C12.4 10 6.4 14.4 0 16.4-6.4 14.4-12.4 10-12.4 3Z')+
-  '<circle r="5.2" fill="'+AD+'" stroke="none"/><circle r="2.8" fill="'+XN+'" stroke="none"/>'+
-  dL('M-8.4 6.4 0 11.6 8.4 6.4M-8.4 2 0 7.2 8.4 2',2.4)+nL('M-8.4 4.2 0 9.4 8.4 4.2'),
+ // C · 가디언 프라임 (white neon): a shield-mech with twin barrels and a neon core; dark chevrons with neon between
+ guardianPrime:dC('M-6.8-17.8H-3.6V-10H-6.8Z M3.6-17.8H6.8V-10H3.6Z',GPN)+
+  dC('M-12.4-9 0-13.4 12.4-9V3C12.4 10 6.4 14.4 0 16.4-6.4 14.4-12.4 10-12.4 3Z',GPN)+
+  '<circle r="5.2" fill="'+AD+'" stroke="none"/><circle r="2.8" fill="'+GPN+'" stroke="none"/>'+
+  dL('M-8.4 6.4 0 11.6 8.4 6.4M-8.4 2 0 7.2 8.4 2',2.4)+nL('M-8.4 4.2 0 9.4 8.4 4.2',.9,GPN),
  // C · 맥스웰: a sprinting chassis, a dark cockpit with a neon strip, thrusters, side speed lines
  maxwell:'<path d="M-8.4 14H-3V17.6H-8.4Z M3 14H8.4V17.6H3Z" fill="'+XP+'" stroke="'+XN+'" stroke-width="1"/>'+
   dC('M0-16.4 7.4-9 12.4 5.4 8.4 14.4H-8.4L-12.4 5.4-7.4-9Z')+
