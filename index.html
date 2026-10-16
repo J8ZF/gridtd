@@ -642,7 +642,7 @@ const WAVE_NOTICES={
   25:'<b>공성 보스</b>“이 방어선도 오늘로 끝이다.”'},
  hard:{6:'다음 웨이브에서는 보스 1이 등장합니다.',7:'다음 웨이브에서는 히든이 처음으로 등장합니다.',12:'다음 웨이브에서는 보스 2가 등장합니다.',14:'다음 웨이브에서는 용암병이 처음으로 등장합니다.',16:'다음 웨이브에서는 히든 보스가 등장합니다.',22:'다음 웨이브에서는 보스 3이 등장합니다.',25:'다음 웨이브에서는 보스 4가 등장합니다.',27:'다음 웨이브에서는 네크로맨서 보스가 등장합니다.',29:'다음 웨이브가 마지막입니다.',
   30:'<b>군주</b>“네 놈들은 여기서 끝날 것이다.”'},
- doom:{1:'다음 웨이브에서는 재생병이 처음으로 등장합니다.',4:'다음 웨이브에서는 보스 1이 등장합니다.',6:'<b>기습</b> 적이 한꺼번에 몰려옵니다!',9:'<b>기습</b> 적이 한꺼번에 몰려옵니다!'+'<br>다음 웨이브에서는 중장갑병이 처음으로 등장합니다.',10:'다음 웨이브에서는 강철병이 처음으로 등장합니다. 방어력 이하의 공격은 1만 들어갑니다.',11:'다음 웨이브에서는 방벽술사가 처음으로 등장합니다.',12:'다음 웨이브에서는 폭주체가 처음으로 등장합니다.',13:'다음 웨이브에서 가디언 프라임이 다가옵니다.',14:'다음 웨이브에서는 과성장체가 처음으로 등장합니다.',15:'다음 웨이브에서는 대소환사와 보스 3이 등장합니다.',17:'<b>기습</b> 적이 한꺼번에 몰려옵니다!'+'<br>다음 웨이브에서는 대형 수송체가 처음으로 등장합니다.',18:'다음 웨이브에서는 보스 4가 등장합니다.',22:'<b>기습</b> 적이 한꺼번에 몰려옵니다!',23:'다음 웨이브에서는 가디언이 등장합니다.',26:'다음 웨이브에서 맥스웰이 나타납니다.',28:'<b>기습</b> 적이 한꺼번에 몰려옵니다!',29:'다음 웨이브에서는 군주가 등장합니다.',31:'다음 웨이브가 마지막입니다.'}};
+ doom:{1:'다음 웨이브에서는 재생병이 처음으로 등장합니다.',2:'다음 웨이브에서는 중화기병이 처음으로 등장합니다.',4:'다음 웨이브에서는 은폐병과 보스 5가 등장합니다.',6:'<b>기습</b> 적이 한꺼번에 몰려옵니다!'+'<br>다음 웨이브에서는 강하 포드가 처음으로 등장합니다.',7:'다음 웨이브에서는 방패병이 처음으로 등장합니다.',9:'<b>기습</b> 적이 한꺼번에 몰려옵니다!'+'<br>다음 웨이브에서는 공병과 중장갑병이 처음으로 등장합니다.',10:'다음 웨이브에서는 강철병과 분대장이 처음으로 등장합니다. 강철병에게는 방어력 이하의 공격이 1만 들어갑니다.',11:'다음 웨이브에서는 방벽술사와 정예병이 처음으로 등장합니다.',12:'다음 웨이브에서는 폭주체와 EMP병이 처음으로 등장합니다.',13:'다음 웨이브에서 가디언 프라임이 다가옵니다.',14:'다음 웨이브에서는 과성장체·돌격병·수송 트럭이 처음으로 등장합니다.',15:'다음 웨이브에서는 대소환사와 보스 7이 등장합니다.',17:'<b>기습</b> 적이 한꺼번에 몰려옵니다!'+'<br>다음 웨이브에서는 대형 수송체가 처음으로 등장합니다.',18:'다음 웨이브에서는 보스 8이 등장합니다.',19:'다음 웨이브에서는 지휘관이 등장합니다.',22:'<b>기습</b> 적이 한꺼번에 몰려옵니다!'+'<br>다음 웨이브에서는 강습선이 등장합니다.',23:'다음 웨이브에서는 친위대가 등장합니다.',26:'다음 웨이브에서 맥스웰이 나타납니다.',28:'<b>기습</b> 적이 한꺼번에 몰려옵니다!',29:'다음 웨이브에서는 군주가 등장합니다.',31:'다음 웨이브가 마지막입니다.'}};
 const BOSS_LINES={guardianPrime:{spawn:'방어선 해체를 시작한다.'},maxwell:{spawn:'내 앞을 막아 봐.',down:'…아직 안 끝났어.',revive:'이제 진짜 달린다!'},doombringer:{spawn:'모든 것은 결국 무너진다.',phase1:'버텨 봐라. 조금 늦게 무너질 뿐이다.',phase2:'끝이 보이는가? 너희의 끝이다.'}};
 function waveNotice(n){const text=WAVE_NOTICES[game?.difficulty]?.[n];if(text&&screen==='battle')notice(text,'main',n===game.config.count?9000:6000);}
 // Interface sounds: Kenney "UI Audio" (CC0) and the KDE Ocean sound theme by Guilherme Marçal Silva
@@ -691,7 +691,7 @@ document.addEventListener('click',e=>{if(performance.now()-swipeAt<400&&e.target
 // a slot that cannot be used says why on release, unless the finger swiped across the slots
 function warnTap(e,msg){const id=e.pointerId,x=e.clientX,up=ev=>{if(ev.pointerId!==id)return;window.removeEventListener('pointerup',up);if(Math.abs(ev.clientX-x)<30)warn(msg);};window.addEventListener('pointerup',up);}
 
-function home(){fitLoadout(profile);if(game&&!game.ended){game.paused=true;savedRun=game.snapshot();}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p>버전 4.5</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
+function home(){fitLoadout(profile);if(game&&!game.ended){game.paused=true;savedRun=game.snapshot();}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p>버전 4.6</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
 function openDialog(title,body,buttons,kind='dialog'){if(kind!=='result')sound(kind.startsWith('msg')?'question':'open');dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2><span>${title}</span>${button('dialog-x','<i>×</i>','xp-x','aria-label="닫기"')}</h2>${body}<div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('.dialog').classList.toggle('msgbox',kind.startsWith('msg'));(modal.querySelector('.xp-yes')??modal.querySelector('.dialog-actions button')??modal.querySelector('button'))?.focus();backNavigation?.sync?.();}
 // Yes/no question in a Windows message box: icon, text, then [예] [아니요] on the right.
 const QUESTION='<svg class="xp-qicon" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="14" fill="#2f6fd8" stroke="#fff" stroke-width="2"/><text x="16" y="22.5" text-anchor="middle" font-size="19" font-weight="700" fill="#fff">?</text></svg>';
@@ -712,7 +712,7 @@ function mapSVG(map){const pts=a=>a.map(p=>p.join(',')).join(' '),road=map.point
  return `<svg viewBox="0 ${map.viewTop} ${COLS} ${ROWS-map.viewTop}" aria-hidden="true"><rect x="-10" y="-10" width="${COLS+20}" height="${ROWS+20}" fill="#000000"/><polygon points="${pts(map.ground)}" fill="#202020" stroke="#2e2e2e" stroke-width=".6"/>${map.features.map(f=>f.circle?`<circle cx="${f.circle[0]}" cy="${f.circle[1]}" r="${f.circle[2]}" fill="#333333"/>`:`<polygon points="${pts(f.poly)}" fill="${tone[f.kind]??'#333333'}"/>`).join('')}<polyline points="${road}" fill="none" stroke="#4f4f4f" stroke-width="3" stroke-linejoin="miter"/><polyline points="${road}" fill="none" stroke="#363636" stroke-width="2.6" stroke-linejoin="miter"/><polyline points="${road}" fill="none" stroke="${map.color}" stroke-width=".4" stroke-dasharray="1.2 2.4"/><circle cx="3" cy="${map.points[1][1]+.5}" r="1.8" fill="${map.color}"/><rect x="${end[0]-1.5}" y="${end[1]-2.5}" width="4" height="4" fill="none" stroke="#ea7f90" stroke-width=".7"/></svg>`;}
 
 function maps(){closeDialog();setScreen('maps',header('맵 선택')+`<div class="scroll map-list">${MAPS.map(m=>button('choose-map',`<div class="map-thumb">${mapSVG(m,true)}</div><div class="map-label"><div><h3>${m.name}</h3><div class="muted">${m.difficulty} · ${makePath(m.points).length-1}칸</div></div><span class="rate">×${fmtN(m.mult)}</span></div>`,'map-card',`data-map="${m.id}"`)).join('')}</div>`);}
-function difficulty(map){chosenMap=map;setScreen('difficulty',header(map.name,'maps')+`<div class="scroll">${Object.entries(DIFFICULTIES).map(([id,d])=>{const first=!profile.clears[`${map.id}:${id}`],reward=Math.round(d.reward*map.mult*100*(first?1.2:1));return button('start-game',`<div><strong>${d.name}</strong><p>${d.count} 웨이브</p></div><div><div class="reward">${icon('coin')}<span>${money(reward)}</span></div><div class="first-clear">${first?'첫 클리어 +20%':'클리어 완료'}</div></div>`,'difficulty-card'+(id==='doom'?' doom':''),`data-difficulty="${id}"`);}).join('')}</div>`);}
+function difficulty(map){chosenMap=map;setScreen('difficulty',header(map.name,'maps')+`<div class="scroll">${Object.entries(DIFFICULTIES).map(([id,d])=>{const first=!profile.clears[`${map.id}:${id}`],reward=Math.round(d.reward*map.mult*100*(first?1.2:1));return button('start-game',`<div><strong>${d.name}</strong><p>${d.count} 웨이브${id==='doom'?' · 외계 군대':''}</p></div><div><div class="reward">${icon('coin')}<span>${money(reward)}</span></div><div class="first-clear">${first?'첫 클리어 +20%':'클리어 완료'}</div></div>`,'difficulty-card'+(id==='doom'?' doom':''),`data-difficulty="${id}"`);}).join('')}</div>`);}
 let invSel=null,invMore=false,invTap={kind:null,at:0};
 const fmtN=v=>String(+(+v).toFixed(2));
 // One line of key numbers for a tower at a level (lobby only, no buffs).
@@ -2357,8 +2357,8 @@ const SPIN=new Set(['farm','commander','gauss','plane','spawner','robot']);
 const glyphCache={},shapeCache={};
 function glyphPaths(kind){return glyphCache[kind]??=[...GLYPHS[kind].matchAll(/ d="([^"]+)"/g)].map(m=>new Path2D(m[1]));}
 function shapeParts(kind){if(shapeCache[kind])return shapeCache[kind];const parts=[];
- for(const m of enemyShape(kind).matchAll(/<(path|circle|polygon)([^>]*)\/>/g)){const a=m[2],stroke=(a.match(/ stroke="([^"]+)"/)||[])[1],tA=a.match(/data-t="([^"]+)"/),sA=a.match(/data-s="([^"]+)"/),wA=a.match(/data-w="([^"]+)"/);let p;
-  if(m[1]==='path')p=new Path2D(a.match(/ d="([^"]+)"/)[1]);else if(m[1]==='circle'){p=new Path2D();p.arc(0,0,+a.match(/r="([^"]+)"/)[1],0,Math.PI*2);}else p=new Path2D('M'+a.match(/points="([^"]+)"/)[1]+'Z');parts.push({p,stroke,t:tA?+tA[1]:null,s:sA?+sA[1]:null,w:wA?+wA[1]:2});}
+ for(const m of enemyShape(kind).matchAll(/<(path|circle|polygon)([^>]*)\/>/g)){const a=m[2],stroke=(a.match(/ stroke="([^"]+)"/)||[])[1],fill=(a.match(/ fill="([^"]+)"/)||[])[1],sw=+((a.match(/ stroke-width="([^"]+)"/)||[])[1]??2),tA=a.match(/data-t="([^"]+)"/),sA=a.match(/data-s="([^"]+)"/),wA=a.match(/data-w="([^"]+)"/);let p;
+  if(m[1]==='path')p=new Path2D(a.match(/ d="([^"]+)"/)[1]);else if(m[1]==='circle'){p=new Path2D();p.arc(0,0,+a.match(/r="([^"]+)"/)[1],0,Math.PI*2);}else p=new Path2D('M'+a.match(/points="([^"]+)"/)[1]+'Z');parts.push({p,stroke,fill,sw,t:tA?+tA[1]:null,s:sA?+sA[1]:null,w:wA?+wA[1]:2});}
  return shapeCache[kind]=parts;}
 function planePosition(t){const R=(artGame?.stat?artGame.stat(t):stat(t)).range,dir=(t.r??0)*Math.PI/2-Math.PI/2,ux=Math.cos(dir),uy=Math.sin(dir),f=t.flight??TAKEOFF,L=Math.max(t.w,t.h)/2;
  // roll down the runway, climb out along it, then join the ring at the runway heading
@@ -2436,10 +2436,10 @@ function createBoard(canvas,map){
  tower.stun=t=>{if(artGame?.jam?.left>0&&t.kind!=='icu'&&t.kind!=='farm'){ctx.strokeStyle='#ff6b6b';ctx.lineWidth=Math.max(.12,1.6/scale);ctx.setLineDash([.7,.5]);ctx.strokeRect(t.x-t.w/2+.2,t.y-t.h/2+.2,t.w-.4,t.h-.4);ctx.setLineDash([]);}if(t.disabled>0){ctx.strokeStyle='#f2f2f2';ctx.lineWidth=Math.max(.2,2.5/scale);const m=Math.min(t.w,t.h)*.3;ctx.beginPath();ctx.moveTo(t.x-m,t.y-m);ctx.lineTo(t.x+m,t.y+m);ctx.moveTo(t.x+m,t.y-m);ctx.lineTo(t.x-m,t.y+m);ctx.stroke();}};
  function aircraft(t){const f=t.flight??TAKEOFF,s=f<1.4?1:f<TAKEOFF?1+.6*(f-1.4)/(TAKEOFF-1.4):1.6,fly=p=>{ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.ang);ctx.scale(s,s);ART.drawPlane(ctx,t.level,{time:artTime});ctx.restore();};fly(planePosition(t));if(artGame?.mods?.['wing@plane']&&(t.flight??TAKEOFF)>=TAKEOFF)fly(planePosition({...t,orbit:t.orbit+Math.PI}));}
  function enemy(e){const d=ENEMIES[e.kind],k=(BOSS_SIZE[e.kind]??(d.finalBoss?1.6:d.boss?1.15:d.child?.65:.85))*UNIT;ctx.save();ctx.translate(e.x,e.y);ctx.scale(k,k);
-  ctx.save();ctx.rotate((e.angle??0)-enemyFront(e.kind));ctx.globalAlpha=d.camo&&!e.revealed?.35:.95;ctx.lineWidth=2;for(const{p,stroke,t,s:ts,w}of shapeParts(e.kind)){if(ts!=null){ctx.strokeStyle=enemyTone(d.color,ts);ctx.lineWidth=w;ctx.stroke(p);ctx.lineWidth=2;}else if(t!=null){ctx.fillStyle=enemyTone(d.color,t);ctx.fill(p);}else if(stroke){ctx.strokeStyle=stroke;ctx.stroke(p);}else{ctx.fillStyle=d.color;ctx.strokeStyle=d.color;ctx.fill(p);ctx.stroke(p);}}ctx.restore();
+  ctx.save();ctx.rotate((e.angle??0)-enemyFront(e.kind));ctx.globalAlpha=d.camo&&!e.revealed?.35:.95;ctx.lineWidth=2;for(const{p,stroke,fill,sw,t,s:ts,w}of shapeParts(e.kind)){if(ts!=null){ctx.strokeStyle=enemyTone(d.color,ts);ctx.lineWidth=w;ctx.stroke(p);ctx.lineWidth=2;}else if(t!=null){ctx.fillStyle=enemyTone(d.color,t);ctx.fill(p);}else if(fill){if(fill!=='none'){ctx.fillStyle=fill;ctx.fill(p);}if(stroke&&stroke!=='none'){ctx.strokeStyle=stroke;ctx.lineWidth=sw;ctx.stroke(p);ctx.lineWidth=2;}}else if(stroke){ctx.strokeStyle=stroke;ctx.stroke(p);}else{ctx.fillStyle=d.color;ctx.strokeStyle=d.color;ctx.fill(p);ctx.stroke(p);}}ctx.restore();
   ctx.lineWidth=1.2;if(e.shield>0){ctx.strokeStyle='#ffd700';ctx.beginPath();ctx.arc(0,0,16,0,Math.PI*2);ctx.stroke();}
   if(e.hasteRemaining>0||(e.rush??1)>1.6){ctx.strokeStyle='#ffe49a';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-8,16);ctx.lineTo(-3,13);ctx.lineTo(-8,10);ctx.moveTo(-2,16);ctx.lineTo(3,13);ctx.lineTo(-2,10);ctx.stroke();}
-  ctx.fillStyle=enemyTone(d.color,-.5);ctx.beginPath();ctx.arc(0,0,3,0,Math.PI*2);ctx.fill();
+  if(d.dot!==false){ctx.fillStyle=enemyTone(d.color,-.5);ctx.beginPath();ctx.arc(0,0,3,0,Math.PI*2);ctx.fill();}
   if(d.camo){ctx.strokeStyle='#dcdcdc';ctx.lineWidth=1.8;ctx.beginPath();ctx.moveTo(-9,8);ctx.lineTo(9,-8);ctx.stroke();}
   ctx.fillStyle='#303030';ctx.fillRect(-12,-19,24,3);ctx.fillStyle=d.color;ctx.fillRect(-12,-19,Math.max(0,Math.min(1,e.hp/e.maxHp)*24),3);if(e.hp>e.maxHp){ctx.fillStyle='#f2ffd0';ctx.fillRect(-12,-19,Math.min(1,e.hp/e.maxHp-1)*24,3);}
   if(e.maxShield>0){ctx.fillStyle='#ffd700';ctx.fillRect(-12,-24,Math.max(0,e.shield/e.maxShield*24),3);}
@@ -2687,7 +2687,7 @@ function scaleText(text){return text.replace(/(사거리|범위|반경)( ?)(\+?)
 
 const {ENEMIES}=require("enemies.js");
 const {LEGACY_ENEMIES,LEGACY_LATE_STATS}=require("legacy-enemies.js");
-const DIFFICULTIES={normal:{name:'쉬움',count:25,reward:700,duration:1200,finalDuration:150},hard:{name:'쉽지 않음',count:30,reward:2000,duration:1800,finalDuration:300,hpScale:1.2},doom:{name:'파멸적',count:32,reward:6000,duration:2400,finalDuration:400,hpScale:2,leakScale:2}};
+const DIFFICULTIES={normal:{name:'쉬움',count:25,reward:700,duration:1200,finalDuration:150},hard:{name:'쉽지 않음',count:30,reward:2000,duration:1800,finalDuration:300,hpScale:1.2},doom:{name:'파멸적',count:32,reward:6000,duration:2400,finalDuration:400,hpScale:1.5,leakScale:2}};
 const TARGETS={first:'선두',last:'후미',strong:'강한 적',weak:'약한 적',near:'가까운 적'};
 const starterProfile=()=>({version:VERSION,coins:0,owned:['soldier','bomb','sniper','farm'],loadout:['soldier','bomb','sniper','farm',null],seen:{},clears:{},settings:{sound:true,effects:true,vibration:false,hidePlanes:false,levelMode:false,panelOpen:true},cheats:{lives:false,cash:false,coins:false},stats:{played:0,wins:0,normalWins:0,hardWins:0,doomWins:0},modules:{owned:{},cells:[33,34,35,43,44,45,53,54,55],placed:[],board:10},firstVisit:true});
 // Cell map: 0 open ground, 1 cave rock, 2 feature (wall, rock, water, building), 3 road.
@@ -3310,37 +3310,100 @@ const ENEMIES={
   "shape": "boss",
   "desc": "가장 단단한 소환물."
  },
-"regen": {"id": "regen", "name": "재생병", "hp": 28, "speed": 1.05, "color": "#62d6a8", "codex": "doom", "native": true, "shape": "round",
+// ---- 파멸적 (4.6): 외계 정규군 ----
+// Everything below appears only on 파멸적 and keeps its stats as written (native).
+// Drawing tiers (icons.js): A 잡몹 = dark armour with a coloured core shape on top,
+// B 중형 = a coloured body with dark armour pieces around it, C 정예·보스 = black armour with
+// a neon outline and pairs of darker lines with neon between them. `dot:false` hides the
+// generic centre dot on B and C, whose drawings carry their own centre.
+// -- A: 잡몹 --
+ "xtrooper": {"id": "xtrooper", "name": "병사", "hp": 7, "speed": 1, "color": "#6fd47e", "codex": "doom", "native": true, "shape": "round",
+  "desc": "외계 군대의 기본 보병입니다."},
+ "xscout": {"id": "xscout", "name": "척후병", "hp": 4, "speed": 1.8, "color": "#5b9ff2", "codex": "doom", "native": true, "shape": "arrow",
+  "desc": "체력은 낮지만 병사의 두 배 가까운 속도로 달립니다."},
+ "xheavy": {"id": "xheavy", "name": "중화기병", "hp": 24, "speed": 0.6, "color": "#b9bec6", "codex": "doom", "native": true, "shape": "round",
+  "desc": "느리지만 단단한 보병입니다."},
+ "xstalker": {"id": "xstalker", "name": "은폐병", "hp": 12, "speed": 1.25, "color": "#b79cf0", "codex": "doom", "native": true, "shape": "diamond", "camo": true,
+  "desc": "히든입니다. 감지할 수 있는 타워만 공격합니다."},
+ "xpod": {"id": "xpod", "name": "강하 포드", "hp": 10, "speed": 1.05, "color": "#2f8cff", "codex": "doom", "native": true, "shape": "diamond",
+  "deathPool": ["xtrooper", "xscout", "xheavy", "xstalker"],
+  "desc": "부서지면 안에 타고 있던 병사·척후병·중화기병·은폐병 중 하나가 나옵니다."},
+ "xdrone": {"id": "xdrone", "name": "드론", "hp": 12, "speed": 1.35, "color": "#66d3d6", "codex": "doom", "native": true, "shape": "round", "child": true,
+  "desc": "공병이 날려 보내거나 수송선에서 쏟아지는 작은 기체입니다."},
+ "regen": {"id": "regen", "name": "재생병", "hp": 28, "speed": 1.05, "color": "#62d6a8", "codex": "doom", "native": true, "shape": "round",
   "regen": {"rate": 0.05}, "desc": "매초 최대 체력의 5%를 회복합니다. 회복한 체력에서는 캐시가 나오지 않습니다."},
- "steel": {"id": "steel", "name": "강철병", "hp": 80, "speed": 0.85, "color": "#b9b2a4", "codex": "doom", "native": true, "shape": "shield", "armor": 6,
+ "xshield": {"id": "xshield", "name": "방패병", "hp": 50, "shield": 40, "speed": 0.75, "color": "#d9c27c", "codex": "doom", "native": true, "shape": "shield",
+  "desc": "보호막 40. 보호막이 남아 있는 동안 정지·화상 감속에 면역입니다."},
+// -- B: 중형 --
+ "xelite": {"id": "xelite", "name": "정예병", "hp": 170, "speed": 0.95, "color": "#ef9b5a", "codex": "doom", "native": true, "shape": "round", "dot": false,
+  "desc": "병사보다 훨씬 단단하고 빠른 정예 보병입니다."},
+ "xleader": {"id": "xleader", "name": "분대장", "hp": 300, "speed": 0.8, "color": "#f0d36e", "codex": "doom", "native": true, "shape": "beacon", "dot": false,
+  "haste": {"radius": 2.4, "multiplier": 1.15, "duration": 3, "period": 8},
+  "desc": "8초마다 주변 적의 이동을 3초간 15% 빠르게 합니다. 보스에는 적용되지 않습니다."},
+ "xengineer": {"id": "xengineer", "name": "공병", "hp": 240, "shield": 60, "speed": 0.7, "color": "#d3a47b", "codex": "doom", "native": true, "shape": "star", "dot": false,
+  "summons": {"kind": "xdrone", "count": 2, "period": 7, "stopAt": 0.8},
+  "deathSpawn": [{"kind": "xcover", "count": 1}],
+  "desc": "보호막 60. 7초마다 드론 2기를 날려 보내고, 쓰러진 자리에 엄폐물을 세웁니다."},
+ "xcover": {"id": "xcover", "name": "엄폐물", "hp": 100, "speed": 0, "color": "#9a968f", "codex": "doom", "native": true, "shape": "round", "child": true,
+  "stationary": true, "lifetime": 16, "dot": false,
+  "desc": "공병이 쓰러진 자리에 남는 벽. 움직이지 않고 그 자리에서 타워의 공격을 받아 내며, 16초가 지나면 무너집니다. 기지에 닿지 않으므로 웨이브 종료를 막지 않습니다."},
+ "xemp": {"id": "xemp", "name": "EMP병", "hp": 320, "speed": 1.15, "color": "#c6cf66", "codex": "doom", "native": true, "shape": "star", "dot": false,
+  "deathStun": {"radius": 1.8, "seconds": 1.5, "grace": 4},
+  "desc": "쓰러질 때 반경 1.8칸의 타워를 1.5초 마비시킵니다. 연속 마비에는 4초 보호가 적용됩니다."},
+ "xtruck": {"id": "xtruck", "name": "수송 트럭", "hp": 360, "shield": 120, "speed": 0.78, "color": "#6fb7b2", "codex": "doom", "native": true, "shape": "carrier", "dot": false,
+  "deathSpawn": [{"kind": "xtrooper", "count": 4}, {"kind": "xscout", "count": 2}],
+  "desc": "보호막 120. 부서지면 병사 4기와 척후병 2기가 뛰어내립니다."},
+ "xlancer": {"id": "xlancer", "name": "돌격병", "hp": 60, "speed": 2.9, "color": "#f2b48c", "codex": "doom", "native": true, "shape": "arrow", "dot": false,
+  "desc": "번개처럼 빠른 적. 병사의 세 배 가까운 속도로 달립니다."},
+ "steel": {"id": "steel", "name": "강철병", "hp": 80, "speed": 0.85, "color": "#b9b2a4", "codex": "doom", "native": true, "shape": "shield", "armor": 6, "dot": false,
   "desc": "방어력 6. 모든 공격의 피해가 6 줄어들고, 6 이하의 공격은 1만 들어갑니다. 차량 충돌은 막지 못합니다."},
- "plated": {"id": "plated", "name": "중장갑병", "hp": 180, "speed": 0.62, "color": "#8c9bb4", "codex": "doom", "native": true, "shape": "shield", "armorPct": 0.4,
+ "plated": {"id": "plated", "name": "중장갑병", "hp": 180, "speed": 0.62, "color": "#8c9bb4", "codex": "doom", "native": true, "shape": "shield", "armorPct": 0.4, "dot": false,
   "desc": "받는 모든 피해가 40% 줄어듭니다. 차량 충돌은 막지 못합니다."},
- "warder": {"id": "warder", "name": "방벽술사", "hp": 600, "speed": 0.7, "color": "#7cc6e6", "codex": "doom", "native": true, "shape": "beacon",
+ "warder": {"id": "warder", "name": "방벽술사", "hp": 600, "speed": 0.7, "color": "#7cc6e6", "codex": "doom", "native": true, "shape": "beacon", "dot": false,
   "aura": {"radius": 2, "period": 5, "pct": 0.35, "cap": 600},
   "desc": "5초마다 반경 2칸 안의 아군에게 최대 체력의 35%만큼 보호막을 씌웁니다(최대 600). 보호막이 있는 적은 정지·화상 감속에 면역입니다. 체력바 보스에게는 씌우지 못합니다."},
- "berserker": {"id": "berserker", "name": "폭주체", "hp": 900, "speed": 0.45, "color": "#e4715c", "codex": "doom", "native": true, "shape": "arrow",
+ "berserker": {"id": "berserker", "name": "폭주체", "hp": 900, "speed": 0.45, "color": "#e4715c", "codex": "doom", "native": true, "shape": "arrow", "dot": false,
   "accel": {"rate": 0.06, "max": 2.8}, "desc": "체력이 높고, 등장한 뒤로 시간이 갈수록 빨라져 약 30초 뒤 처음 속도의 2.8배로 달립니다."},
- "overgrowth": {"id": "overgrowth", "name": "과성장체", "hp": 440, "speed": 0.7, "color": "#9fd45a", "codex": "doom", "native": true, "shape": "split",
+ "overgrowth": {"id": "overgrowth", "name": "과성장체", "hp": 440, "speed": 0.7, "color": "#9fd45a", "codex": "doom", "native": true, "shape": "split", "dot": false,
   "regen": {"rate": 0.04, "over": 2}, "desc": "매초 최대 체력의 4%를 회복하며, 최대 체력의 두 배까지 계속 자라납니다. 회복한 체력에서는 캐시가 나오지 않습니다."},
- "archsummoner": {"id": "archsummoner", "name": "대소환사", "hp": 3200, "speed": 0.42, "color": "#5f9a7e", "codex": "doom", "native": true, "shape": "star",
-  "summons": {"kind": "necro", "count": 1, "period": 9, "stopAt": 0.7}, "desc": "9초마다 소환사를 불러냅니다. 도로의 70%를 지나면 소환을 멈춥니다."},
- "mothership": {"id": "mothership", "name": "대형 수송체", "hp": 2400, "shield": 600, "speed": 0.5, "color": "#4fa3a6", "codex": "doom", "native": true, "shape": "carrier",
-  "deathSpawn": [{"kind": "drone", "count": 6}, {"kind": "runner", "count": 4}, {"kind": "goo", "count": 4}],
-  "desc": "보호막 600. 파괴되면 추격체 6기, 돌진병 4기, 작은 분열체 4기를 한꺼번에 쏟아냅니다."},
- "guardianPrime": {"id": "guardianPrime", "name": "가디언 프라임", "hp": 8000, "speed": 0.3, "color": "#c9a2ff", "codex": "doom", "native": true, "shape": "guardian",
-  "boss": true, "bar": true, "stunImmune": true, "slowImmune": true, "armorPct": 0.2, "line": true,
+// -- C: 정예·보스 (black armour, neon #ff4d6d) --
+ "xvanguard": {"id": "xvanguard", "name": "보스 5", "hp": 170, "speed": 0.8, "color": "#ff4d6d", "codex": "doom", "native": true, "shape": "boss", "boss": true, "dot": false,
+  "desc": "외계 군대의 선봉에 서는 첫 보스."},
+ "xjugger": {"id": "xjugger", "name": "보스 6", "hp": 1300, "speed": 0.55, "color": "#ff4d6d", "codex": "doom", "native": true, "shape": "boss", "boss": true, "dot": false,
+  "desc": "이동은 매우 느리지만 체력이 높은 중장갑 보스."},
+ "xcloak": {"id": "xcloak", "name": "은폐 지휘관", "hp": 480, "shield": 160, "speed": 1.1, "color": "#ff4d6d", "codex": "doom", "native": true, "shape": "boss", "boss": true, "camo": true, "dot": false,
+  "desc": "히든과 보호막 160. 감지와 보호막 제거를 함께 요구합니다."},
+ "xraider": {"id": "xraider", "name": "보스 7", "hp": 1200, "speed": 1.6, "color": "#ff4d6d", "codex": "doom", "native": true, "shape": "arrow", "boss": true, "dot": false,
+  "desc": "빠른 중형 보스. 다른 적 뒤에서 추월해 방어선을 돌파합니다."},
+ "xwarlord": {"id": "xwarlord", "name": "보스 8", "hp": 3800, "speed": 1, "color": "#ff4d6d", "codex": "doom", "native": true, "shape": "boss", "boss": true, "armor": 3, "dot": false,
+  "desc": "방어력 3. 빠르고 매우 단단한 대형 보스. 차량 충돌은 막지 못합니다."},
+ "xdropship": {"id": "xdropship", "name": "강습선", "hp": 7000, "shield": 1200, "speed": 0.62, "color": "#ff4d6d", "codex": "doom", "native": true, "shape": "carrier", "boss": true, "dot": false,
+  "thresholdSpawn": {"fractions": [0.75, 0.5, 0.25], "kind": "xelite", "count": 3},
+  "desc": "보호막 1,200. 체력이 75%·50%·25%로 떨어질 때마다 정예병 3기를 내려놓습니다."},
+ "xcommand": {"id": "xcommand", "name": "지휘관", "hp": 5200, "speed": 0.5, "color": "#ff4d6d", "codex": "doom", "native": true, "shape": "star", "boss": true, "dot": false,
+  "summons": {"kind": "xlancer", "count": 2, "period": 8, "stopAt": 0.85},
+  "desc": "8초마다 돌격병 2기를 불러냅니다. 도로의 85%를 지나면 부르지 않습니다."},
+ "xguard": {"id": "xguard", "name": "친위대", "hp": 7000, "shield": 1800, "speed": 0.6, "color": "#ff4d6d", "codex": "doom", "native": true, "shape": "guardian", "boss": true,
+  "stunImmune": true, "slowImmune": true, "dot": false,
+  "desc": "보호막 1,800. 최종 보스를 지키는 호위병이며 정지·화상 감속에 면역입니다."},
+ "archsummoner": {"id": "archsummoner", "name": "대소환사", "hp": 3200, "speed": 0.42, "color": "#ff4d6d", "codex": "doom", "native": true, "shape": "star", "dot": false,
+  "summons": {"kind": "xengineer", "count": 1, "period": 9, "stopAt": 0.7}, "desc": "9초마다 공병을 불러냅니다. 도로의 70%를 지나면 부르지 않습니다."},
+ "mothership": {"id": "mothership", "name": "대형 수송체", "hp": 2400, "shield": 600, "speed": 0.5, "color": "#ff4d6d", "codex": "doom", "native": true, "shape": "carrier", "dot": false,
+  "deathSpawn": [{"kind": "xdrone", "count": 6}, {"kind": "xlancer", "count": 4}, {"kind": "xtrooper", "count": 4}],
+  "desc": "보호막 600. 파괴되면 드론 6기, 돌격병 4기, 병사 4기를 한꺼번에 쏟아냅니다."},
+ "guardianPrime": {"id": "guardianPrime", "name": "가디언 프라임", "hp": 6500, "speed": 0.3, "color": "#ff4d6d", "codex": "doom", "native": true, "shape": "guardian",
+  "boss": true, "bar": true, "stunImmune": true, "slowImmune": true, "armorPct": 0.2, "line": true, "dot": false,
   "jammer": {"shot": {"first": 3, "period": 8, "range": 3, "count": 2, "stun": 4, "grace": 3}, "jam": {"first": 10, "period": 24, "seconds": 7, "mul": 0.6}},
   "desc": "14웨이브의 중간 보스. 받는 피해 20% 감소. 8초마다 반경 3칸 안의 가장 가까운 지상 타워 2개를 쏴서 4초 기절시키고, 24초마다 맵 위 모든 타워의 공격 속도를 7초 동안 40% 떨어뜨립니다. 정지·화상 감속에 면역입니다."},
- "maxwell": {"id": "maxwell", "name": "맥스웰", "hp": 90000, "speed": 0.34, "color": "#ff8a3d", "codex": "doom", "native": true, "shape": "boss",
-  "boss": true, "bar": true, "stunImmune": true, "slowImmune": true, "armor": 12, "line": true,
+ "maxwell": {"id": "maxwell", "name": "맥스웰", "hp": 60000, "speed": 0.34, "color": "#ff4d6d", "codex": "doom", "native": true, "shape": "boss",
+  "boss": true, "bar": true, "stunImmune": true, "slowImmune": true, "armor": 10, "line": true, "dot": false,
   "revive": {"down": 3.5, "hp": 0.3, "speed": 4},
-  "desc": "27웨이브의 중간 보스. 방어력 12. 쓰러뜨리면 3.5초 뒤 체력 30%로 다시 일어나 4배 빠르게 전선을 질주합니다. 정지·화상 감속에 면역입니다."},
- "doombringer": {"id": "doombringer", "name": "파멸자", "hp": 320000, "speed": 0.2, "color": "#ff4d6d", "codex": "doom", "native": true, "shape": "final",
-  "boss": true, "finalBoss": true, "stunImmune": true, "slowImmune": true, "armor": 10, "line": true,
-  "summons": {"pool": ["charger", "giant", "warden"], "count": 1, "extra": 1, "period": 24, "stopAt": 0.7, "back": 1.5},
+  "desc": "27웨이브의 중간 보스. 방어력 10. 쓰러뜨리면 3.5초 뒤 체력 30%로 다시 일어나 4배 빠르게 전선을 질주합니다. 정지·화상 감속에 면역입니다."},
+ "doombringer": {"id": "doombringer", "name": "파멸자", "hp": 220000, "speed": 0.2, "color": "#ff4d6d", "codex": "doom", "native": true, "shape": "final",
+  "boss": true, "finalBoss": true, "stunImmune": true, "slowImmune": true, "armor": 8, "line": true, "dot": false,
+  "summons": {"pool": ["xraider", "xwarlord", "xjugger"], "count": 1, "extra": 1, "period": 24, "stopAt": 0.7, "back": 1.5},
   "phases": {"at": [0.66, 0.33], "jam": {"seconds": 8, "mul": 0.5}, "shield": 0.06, "kind": "berserker", "count": 3},
-  "desc": "파멸적 난이도의 마지막 보스. 방어력 10. 등장 충격파와 최대 5회의 마비 공격으로 지상 타워를 6초 멈춥니다. 24초마다 보스 3·보스 4·중장 보스 중 1~2기를 불러냅니다. 체력 66%와 33%에서 최대 체력 6%의 보호막을 두르고, 모든 타워의 공격 속도를 8초 동안 절반으로 떨어뜨리며 폭주체 3기를 부릅니다. 정지·화상 감속에 면역입니다."}
+  "desc": "파멸적 난이도의 마지막 보스. 방어력 8. 등장 충격파와 최대 5회의 마비 공격으로 지상 타워를 6초 멈춥니다. 24초마다 보스 6·보스 7·보스 8 중 1~2기를 불러냅니다. 체력 66%와 33%에서 최대 체력 6%의 보호막을 두르고, 모든 타워의 공격 속도를 8초 동안 절반으로 떨어뜨리며 폭주체 3기를 부릅니다. 정지·화상 감속에 면역입니다."}
 };
 // Waves are written by hand, group by group: [kind, count, seconds between members, pause before
 // the group]. `hold` = how far along the path every group walks before an uncleared wave rolls over.
@@ -3400,11 +3463,43 @@ const WAVE_SCRIPTS={"normal":[
 {"hold":0.8,"g":[["lava",12,0.8,0],["runner",12,0.4,4],["hiddenboss",4,3,5],["lava",12,0.8,5],["runner",12,0.4,4],["hiddenboss",4,3,5],["charger",4,3.5,9]]},
 {"hold":0.8,"g":[["mystery2",8,0.9,0],["boss2",3,4,5],["mystery2",8,0.9,5],["boss2",3,4,5],["giant",1,0,9],["necroboss",1,0,12]]},
 {"hold":0.8,"g":[["runner",15,0.35,0],["mystery2",10,0.8,4],["charger",2,4,5],["giant",1,0,7],["runner",15,0.35,6],["mystery2",10,0.8,4],["charger",2,4,5],["giant",1,0,7],["necroboss",3,8,10]]},
-{"final":true,"g":[["runner",10,0.4,0],["guardian",2,4,4],["mystery2",8,0.8,10],["overlord",1,0,16],["hiddenboss",4,3,22],["giant",2,6,30],["charger",3,3,42],["necroboss",3,8,52],["runner",10,0.4,72],["mystery2",8,0.8,78]]}],"doom":[{"hold":0.5,"g":[["normal",5,1.4,0],["fast",3,0.8,5],["normal",3,1.1,4]]},{"hold":0.5,"g":[["normal",4,1.2,0],["regen",1,0,4],["fast",4,0.7,4],["normal",3,1.1,4]]},{"hold":0.5,"g":[["fast",6,0.6,0],["regen",2,1.4,5],["slow",2,1.8,4],["fast",4,0.5,4]]},{"hold":0.55,"g":[["slow",3,1.8,0],["normal",5,0.8,4],["regen",3,1.1,4],["fast",5,0.5,4]]},{"hold":0.6,"g":[["camo",4,0.7,0],["slow",3,1.5,4],["regen",3,0.9,4],["boss1",1,0,5]]},{"hold":0.5,"g":[["fast",12,0.3,0],["camo",3,0.4,1.5],["regen",3,0.5,1.5]]},{"hold":0.6,"g":[["mystery",8,0.9,0],["slow",4,1.4,4],["boss1",1,0,5],["regen",5,0.7,4],["camo",4,0.6,4]]},{"hold":0.6,"g":[["slow",4,1.4,0],["normal",8,0.6,4],["shell",2,3,4],["fast",8,0.5,4],["regen",5,0.8,4],["boss1",1,0,5]]},{"hold":0.5,"g":[["camo",8,0.35,0],["fast",12,0.25,1.5],["boss1",2,1.5,1.5]]},{"hold":0.65,"g":[["necro",1,0,0],["plated",2,2,3],["regen",6,0.6,4],["boss1",2,2,5],["plated",1,0,4],["mystery",6,0.8,4],["normal",8,0.5,4]]},{"hold":0.65,"g":[["shell",2,2.5,0],["steel",2,1.4,4],["conductor",1,0,3],["normal",8,0.5,2],["regen",6,0.6,4],["steel",2,1.4,4]]},{"hold":0.65,"g":[["warder",1,0,0],["lava",3,1,2],["boss1",2,2.5,4],["lava",3,1,4],["boss1",2,2,5],["plated",2,1.5,4]]},{"hold":0.7,"g":[["berserker",1,0,0],["mystery",8,0.7,4],["plated",2,1.5,4],["necro",1,0,4],["boss1",2,2,5],["boss2",1,0,4],["steel",3,0.9,4]]},{"hold":0.8,"g":[["steel",4,1,0],["warder",1,0,3],["guardianPrime",1,0,4],["plated",4,1.6,6],["shell",2,2,5],["regen",8,0.5,4],["boss2",1,0,6],["hiddenboss",2,4,6],["steel",4,0.8,5]]},{"hold":0.7,"g":[["overgrowth",2,2.5,0],["runner",6,0.45,4],["boss2",2,4,4],["overgrowth",2,2.5,5],["slime",2,2,4],["boss1",4,2,4],["plated",5,1.2,4]]},{"hold":0.75,"g":[["archsummoner",1,0,0],["builder",2,4,4],["lava",8,0.8,4],["charger",1,0,6],["steel",8,0.9,4],["necro",2,3,4],["hiddenboss",2,3,5]]},{"hold":0.6,"g":[["runner",11,0.3,0],["charger",2,1.5,1],["hiddenboss",2,1,1],["fast",13,0.2,1]]},{"hold":0.75,"g":[["mothership",1,0,0],["mystery2",6,1,4],["steel",10,0.9,4],["mothership",1,0,6],["warder",2,3,4],["mystery2",6,1,4],["plated",8,1,4]]},{"hold":0.8,"g":[["giant",1,0,0],["warder",2,2.5,3],["plated",8,1.2,4],["berserker",2,3,5],["overgrowth",4,2,5],["giant",1,0,8],["boss2",3,3,4],["steel",12,0.7,4]]},{"hold":0.8,"g":[["necroboss",1,0,0],["overgrowth",6,1.5,5],["hiddenboss",4,2.5,4],["disruptor",4,2,4],["archsummoner",1,0,5],["charger",2,4,6],["steel",12,0.7,4],["berserker",3,2.5,5]]},{"hold":0.8,"g":[["phantom",3,3,0],["shade",10,0.5,4],["archsummoner",1,0,4],["charger",2,3,4],["plated",8,1,4],["warder",2,2,3],["giant",1,0,6],["mystery2",8,0.8,5],["overgrowth",6,1.4,5]]},{"hold":0.65,"g":[["charger",3,1.2,0],["runner",20,0.25,1],["giant",1,0,2],["drone",10,0.3,1]]},{"hold":0.8,"g":[["bastion",1,0,0],["warden",3,3,4],["warder",3,2,3],["steel",14,0.7,4],["berserker",3,3,5],["carrier",2,3,5],["boss2",4,2.5,5],["hiddenboss",4,2,5],["plated",10,0.9,4]]},{"hold":0.85,"g":[["guardian",1,0,0],["berserker",4,2.5,5],["mothership",2,4,5],["mystery2",10,0.7,5],["plated",10,1,4],["overgrowth",6,1.5,5],["charger",3,3,5],["warder",3,2,4],["steel",14,0.6,4]]},{"hold":0.85,"g":[["giant",2,5,0],["necroboss",1,0,5],["overgrowth",8,1.2,5],["warder",3,2,4],["archsummoner",2,5,5],["steel",16,0.6,4],["slime",6,1.5,5],["hiddenboss",5,2,5],["berserker",4,2.5,5]]},{"hold":0.85,"g":[["sentinel",1,0,0],["archsummoner",2,4,4],["plated",12,0.9,4],["charger",4,2.5,5],["berserker",4,2,5],["warder",3,2,4],["giant",2,5,6],["mothership",2,4,5],["steel",16,0.6,4]]},{"hold":0.9,"g":[["steel",12,0.7,0],["warder",3,2,3],["plated",10,1,4],["maxwell",1,0,5],["berserker",3,3,8],["charger",4,2,6],["overgrowth",8,1.2,5],["giant",2,5,6],["hiddenboss",6,1.5,6],["mothership",2,4,5]]},{"hold":0.7,"g":[["runner",30,0.2,0],["charger",5,1,1],["giant",2,2,1],["drone",16,0.2,1]]},{"hold":0.9,"g":[["bastion",2,6,0],["mothership",3,4,5],["warder",4,2,4],["berserker",6,2,5],["necroboss",2,6,5],["plated",14,0.8,5],["giant",3,4,6],["overgrowth",10,1,5],["steel",18,0.5,4]]},{"hold":0.9,"g":[["steel",16,0.5,0],["warder",3,2,3],["overlord",1,0,4],["archsummoner",3,4,6],["charger",6,1.5,5],["sentinel",2,6,6],["berserker",6,2,5],["mystery2",14,0.6,5],["giant",3,4,6],["hiddenboss",8,1.2,5]]},{"hold":0.9,"g":[["sentinel",2,5,0],["berserker",8,1.5,4],["mothership",3,3,5],["giant",4,3,5],["archsummoner",3,3,5],["charger",8,1.2,5],["plated",16,0.6,4],["bastion",2,5,6],["overgrowth",12,0.8,5],["warder",4,2,4]]},{"final":true,"g":[["runner",12,0.3,0],["warder",4,2,4],["doombringer",1,0,12],["berserker",6,2,20],["mothership",2,6,32],["giant",3,6,45],["charger",6,2,60],["sentinel",2,8,75],["archsummoner",2,8,90],["runner",20,0.25,110],["plated",14,0.8,120],["hiddenboss",8,1.5,135],["overgrowth",10,1,150]]}]};
+{"final":true,"g":[["runner",10,0.4,0],["guardian",2,4,4],["mystery2",8,0.8,10],["overlord",1,0,16],["hiddenboss",4,3,22],["giant",2,6,30],["charger",3,3,42],["necroboss",3,8,52],["runner",10,0.4,72],["mystery2",8,0.8,78]]}],"doom":[
+{"hold":0.5,"g":[["xtrooper",6,1.4,0],["xscout",3,0.8,5],["xtrooper",4,1.1,4]]},
+{"hold":0.5,"g":[["xtrooper",5,1.2,0],["regen",1,0,4],["xscout",5,0.6,4],["xtrooper",4,1,4]]},
+{"hold":0.5,"g":[["xscout",8,0.5,0],["xheavy",2,1.8,4],["regen",2,1.4,4],["xscout",6,0.45,4]]},
+{"hold":0.55,"g":[["xheavy",3,1.6,0],["xtrooper",6,0.8,4],["regen",3,1.1,4],["xscout",6,0.5,4]]},
+{"hold":0.6,"g":[["xstalker",4,0.7,0],["xheavy",3,1.5,4],["regen",2,1,4],["xvanguard",1,0,5]]},
+{"hold":0.5,"g":[["xscout",14,0.28,0],["xstalker",4,0.4,1.5],["regen",3,0.5,1.5]]},
+{"hold":0.6,"g":[["xpod",8,0.9,0],["xheavy",4,1.4,4],["xvanguard",1,0,5],["regen",4,0.7,4],["xstalker",4,0.6,4]]},
+{"hold":0.6,"g":[["xshield",2,3,0],["xtrooper",10,0.5,4],["xheavy",4,1.3,4],["xscout",8,0.45,4],["regen",4,0.8,4],["xstalker",4,0.6,4],["xvanguard",2,2.5,5]]},
+{"hold":0.5,"g":[["xstalker",8,0.35,0],["xscout",14,0.25,1.5],["xvanguard",2,1.5,1.5]]},
+{"hold":0.65,"g":[["xengineer",1,0,0],["plated",2,2,3],["regen",6,0.6,4],["xvanguard",2,2,5],["xpod",6,0.8,4],["xtrooper",10,0.5,4]]},
+{"hold":0.65,"g":[["xshield",3,2.5,0],["steel",3,1.4,4],["xleader",1,0,3],["xtrooper",10,0.5,2],["regen",6,0.6,4],["steel",2,1.4,4]]},
+{"hold":0.65,"g":[["xelite",3,1.2,0],["warder",1,0,4],["xvanguard",2,2.5,4],["xheavy",6,1,4],["xelite",2,1.2,4],["plated",2,1.5,4]]},
+{"hold":0.7,"g":[["berserker",1,0,0],["xpod",8,0.7,4],["xemp",2,2,4],["xengineer",1,0,4],["xelite",3,1,5],["steel",3,0.9,4]]},
+{"hold":0.8,"g":[["steel",3,1,0],["warder",1,0,3],["guardianPrime",1,0,4],["plated",4,1.6,6],["xshield",2,2,5],["regen",6,0.5,4],["xjugger",1,0,6],["xcloak",1,0,6],["steel",3,0.8,5]]},
+{"hold":0.7,"g":[["overgrowth",2,2.5,0],["xlancer",6,0.45,4],["xjugger",2,4,4],["overgrowth",2,2.5,5],["xtruck",2,3,4],["xvanguard",4,2,4],["plated",5,1.2,4]]},
+{"hold":0.75,"g":[["archsummoner",1,0,0],["xengineer",2,4,4],["xheavy",8,0.8,4],["xraider",1,0,6],["steel",8,0.9,4],["xelite",3,1.5,4],["xcloak",2,3,5]]},
+{"hold":0.6,"g":[["xlancer",12,0.3,0],["xraider",2,1.5,1],["xcloak",2,1,1],["xscout",14,0.2,1]]},
+{"hold":0.75,"g":[["mothership",1,0,0],["xpod",10,0.8,4],["steel",10,0.9,4],["mothership",1,0,6],["warder",2,3,4],["xemp",3,1.5,4],["xelite",6,1,4],["xtruck",2,3,4],["plated",8,1,4]]},
+{"hold":0.8,"g":[["xwarlord",1,0,0],["warder",2,2.5,3],["plated",8,1.2,4],["berserker",2,3,5],["overgrowth",4,2,5],["xwarlord",1,0,8],["xjugger",2,3,4],["steel",10,0.7,4]]},
+{"hold":0.8,"g":[["xcommand",1,0,0],["overgrowth",6,1.5,5],["xcloak",4,2.5,4],["xemp",4,2,4],["archsummoner",1,0,5],["xraider",2,4,6],["steel",10,0.7,4],["berserker",3,2.5,5]]},
+{"hold":0.8,"g":[["xcloak",3,3,0],["xstalker",12,0.5,4],["archsummoner",1,0,4],["xraider",2,3,4],["plated",8,1,4],["warder",2,2,3],["xwarlord",2,5,6],["xpod",8,0.8,5],["overgrowth",6,1.4,5]]},
+{"hold":0.65,"g":[["xraider",3,1.2,0],["xlancer",20,0.25,1],["xwarlord",1,0,2],["xdrone",10,0.3,1]]},
+{"hold":0.8,"g":[["xdropship",1,0,0],["xjugger",3,3,4],["warder",3,2,3],["steel",14,0.7,4],["berserker",3,3,5],["xtruck",2,3,5],["xcloak",4,2,5],["plated",10,0.9,4]]},
+{"hold":0.85,"g":[["xguard",1,0,0],["berserker",4,2.5,5],["mothership",2,4,5],["xpod",10,0.7,5],["plated",10,1,4],["overgrowth",6,1.5,5],["xraider",3,3,5],["warder",3,2,4],["steel",14,0.6,4]]},
+{"hold":0.85,"g":[["xwarlord",2,5,0],["xcommand",1,0,5],["overgrowth",8,1.2,5],["warder",3,2,4],["archsummoner",2,5,5],["steel",16,0.6,4],["xtruck",3,2,5],["xcloak",5,2,5],["berserker",4,2.5,5]]},
+{"hold":0.85,"g":[["xguard",1,0,0],["archsummoner",2,4,4],["plated",12,0.9,4],["xraider",4,2.5,5],["berserker",4,2,5],["warder",3,2,4],["xwarlord",2,5,6],["mothership",2,4,5],["steel",16,0.6,4]]},
+{"hold":0.9,"g":[["steel",12,0.7,0],["warder",3,2,3],["plated",10,1,4],["maxwell",1,0,5],["berserker",3,3,8],["xraider",4,2,6],["overgrowth",8,1.2,5],["xwarlord",2,5,6],["xcloak",6,1.5,6],["mothership",2,4,5]]},
+{"hold":0.7,"g":[["xlancer",30,0.2,0],["xraider",5,1,1],["xwarlord",2,2,1],["xdrone",16,0.2,1]]},
+{"hold":0.9,"g":[["xdropship",2,6,0],["mothership",3,4,5],["warder",4,2,4],["berserker",6,2,5],["xcommand",2,6,5],["plated",14,0.8,5],["xwarlord",3,4,6],["overgrowth",10,1,5],["steel",18,0.5,4]]},
+{"hold":0.9,"g":[["steel",16,0.5,0],["warder",3,2,3],["overlord",1,0,4],["archsummoner",3,4,6],["xraider",6,1.5,5],["xguard",2,6,6],["berserker",6,2,5],["xpod",14,0.6,5],["xwarlord",3,4,6],["xcloak",8,1.2,5]]},
+{"hold":0.9,"g":[["xguard",2,5,0],["berserker",8,1.5,4],["mothership",3,3,5],["xwarlord",4,3,5],["archsummoner",3,3,5],["xraider",8,1.2,5],["plated",16,0.6,4],["xdropship",2,5,6],["overgrowth",12,0.8,5],["warder",4,2,4]]},
+{"final":true,"g":[["xlancer",12,0.3,0],["warder",4,2,4],["doombringer",1,0,12],["berserker",6,2,20],["mothership",2,6,32],["xwarlord",3,6,45],["xraider",6,2,60],["xguard",2,8,75],["archsummoner",2,8,90],["xlancer",20,0.25,110],["plated",14,0.8,120],["xcloak",8,1.5,135],["overgrowth",10,1,150]]}]};
 // Rosters (kind and count per wave) follow from the scripts.
 const WAVES=Object.fromEntries(Object.entries(WAVE_SCRIPTS).map(([mode,list])=>[mode,list.map(w=>{const out=new Map();for(const[k,n]of w.g)out.set(k,(out.get(k)??0)+n);return[...out];})]));
 // Display identities in encounter order, including each parent's children.
-for(const [k,r] of Object.entries({charger:.7,giant:.6,necroboss:.6,guardian:.5,siege:.5,overlord:.5,guardianPrime:.5,maxwell:.5,doombringer:.5}))if(ENEMIES[k])ENEMIES[k].cashRate=r;
+for(const [k,r] of Object.entries({charger:.7,giant:.6,necroboss:.6,guardian:.5,siege:.5,overlord:.5,guardianPrime:.5,maxwell:.5,doombringer:.5,xraider:.7,xwarlord:.6,xdropship:.6,xcommand:.6,xguard:.5}))if(ENEMIES[k])ENEMIES[k].cashRate=r;
 const CODEX_GROUPS={normal:[],hard:[],doom:[]};
 for(const mode of ['normal','hard','doom']){
  const visited=new Set();const visit=kind=>{if(visited.has(kind))return;visited.add(kind);const d=ENEMIES[kind];if(d.codex===mode)CODEX_GROUPS[mode].push(kind);for(const child of [d.summons?.kind,...(d.summons?.pool??[]),...[d.deathSpawn??[]].flat().map(x=>x.kind),d.phases?.kind,d.thresholdSpawn?.kind,...(d.deathPool??[])].filter(Boolean))visit(child);};
@@ -3938,56 +4033,152 @@ const SHAPE_FRONT={arrow:0,carrier:0,guardian:-Math.PI/2,fortress:-Math.PI/2,shi
 //   data-t="x"      a plate filled with the colour moved toward white (x>0) or black (x<0)
 //   data-s="x" data-w="w"   a line of width w in such a tone
 // Raised parts are lighter, sunken ones darker; the dark dot in the middle stays on top.
+// 4.6 alien army palette: one dark armour, its rim, a deeper line, black elite armour, its raised
+// panel and the one neon. Honest neutral greys, no tint.
+const AK='#1c1c1c',AR='#474747',AD='#070707',XB='#1e1e1e',XP='#2a2a2a',XN='#ff4d6d';
+const dA=d=>`<path d="${d}" fill="${AK}" stroke="${AR}" stroke-width="1.2"/>`,dB=d=>`<path d="${d}" fill="${AK}" stroke="${AR}" stroke-width="1"/>`,
+ dC=d=>`<path d="${d}" fill="${XB}" stroke="${XN}" stroke-width="1.6"/>`,dL=(d,w=1.8)=>`<path d="${d}" fill="none" stroke="${AD}" stroke-width="${w}"/>`,
+ nL=(d,w=.9)=>`<path d="${d}" fill="none" stroke="${XN}" stroke-width="${w}"/>`;
 const BOSS_ART={
-// ---- 파멸적 (4.5) ----
- // 재생병: a round body with a light healing cross
- regen:'<circle r="10"/>'+
-  '<path d="M-1.8-6.4H1.8V-1.8H6.4V1.8H1.8V6.4H-1.8V1.8H-6.4V-1.8H-1.8Z" data-t=".5"/>',
- // 강철병: a riveted steel block with a dark visor slit
- steel:'<path d="M-11.4-11.4H11.4V11.4H-11.4Z"/>'+
-  '<path d="M-8-8H8V8H-8Z" data-t=".22"/>'+
-  '<path d="M-6.4-6.4H6.4V-3.4H-6.4Z" data-t="-.5"/>'+
-  '<path d="M-10.4-10.4H-8.2V-8.2H-10.4Z M8.2-10.4H10.4V-8.2H8.2Z M-10.4 8.2H-8.2V10.4H-10.4Z M8.2 8.2H10.4V10.4H8.2Z" data-t="-.45"/>',
- // 중장갑병: a rounded shell of overlapping armour bands
- plated:'<path d="M-12-6C-12-11-6-13.4 0-13.4 6-13.4 12-11 12-6V8C12 11.4 9 13.4 6 13.4H-6C-9 13.4-12 11.4-12 8Z"/>'+
-  '<path d="M-9.4-8.6H9.4V-4.6H-9.4Z M-9.4-1.6H9.4V2.4H-9.4Z M-9.4 5.4H9.4V9.4H-9.4Z" data-t=".28"/>'+
-  '<path d="M-9.4-4.6H9.4M-9.4 2.4H9.4" data-s="-.45" data-w="1.4"/>',
- // 방벽술사: a robed caster inside the ring of the shield it casts
- warder:'<path d="M0-11 8.4 10.6H-8.4Z"/>'+
-  '<path d="M-3.2-7.4A3.2 3.2 0 1 0 3.2-7.4 3.2 3.2 0 1 0-3.2-7.4Z" data-t=".45"/>'+
-  '<path d="M-4 2H4V5H-4Z" data-t="-.4"/>'+
-  '<circle r="14" data-s=".35" data-w="1.6"/>',
- // 폭주체: a horned ram leaning forward, a dark wedge down its back
- berserker:'<path d="M0-15 6.6-6.4 12.4-10 10.4 1.6 13 12.4 0 7.4-13 12.4-10.4 1.6-12.4-10-6.6-6.4Z"/>'+
-  '<path d="M0-8.4 5-1.4 0 2.6-5-1.4Z" data-t="-.45"/>'+
-  '<path d="M-7.4 5.4 0 2.6 7.4 5.4" data-s=".3" data-w="1.6"/>',
- // 과성장체: a lumpy growth with pale buds bursting out of it
- overgrowth:'<path d="M-4-12C1-16 9-12 9-7 14-6 15 2 11 5 12 11 5 14 0 11-5 15-12 11-11 5-15 2-14-6-9-7-9-11-6-12-4-12Z"/>'+
-  '<path d="M-1.4-8.4A2.6 2.6 0 1 0 3.8-8.4 2.6 2.6 0 1 0-1.4-8.4Z M6.6 1.4A2.2 2.2 0 1 0 11 1.4 2.2 2.2 0 1 0 6.6 1.4Z M-9.6 3A2.4 2.4 0 1 0-4.8 3 2.4 2.4 0 1 0-9.6 3Z M-2 6.2A1.8 1.8 0 1 0 1.6 6.2 1.8 1.8 0 1 0-2 6.2Z" data-t=".42"/>',
- // 대소환사: a hooded summoner under a crown of three orbs
- archsummoner:'<path d="M0-11 8.6-4C11 0 11 5.4 9 10L6.4 14H-6.4L-9 10C-11 5.4-11 0-8.6-4Z"/>'+
-  '<path d="M0-6.4 4.4-2C5.6.6 4.6 3.6 2.4 4.8H-2.4C-4.6 3.6-5.6.6-4.4-2Z" data-t="-.42"/>'+
-  '<path d="M-9.6-11.4A2.2 2.2 0 1 0-5.2-11.4 2.2 2.2 0 1 0-9.6-11.4Z M-2.4-15A2.4 2.4 0 1 0 2.4-15 2.4 2.4 0 1 0-2.4-15Z M5.2-11.4A2.2 2.2 0 1 0 9.6-11.4 2.2 2.2 0 1 0 5.2-11.4Z" data-t=".45"/>',
- // 대형 수송체: a long carrier hull with three dark hangar bays
- mothership:'<path d="M-8-15.4H8L13-8.4V12L8 15.4H-8L-13 12V-8.4Z"/>'+
-  '<path d="M-8.6-9.4H8.6V11H-8.6Z" data-t=".2"/>'+
-  '<path d="M-6.2-6.4H6.2V-3.6H-6.2Z M-6.2-.6H6.2V2.2H-6.2Z M-6.2 5.2H6.2V8H-6.2Z" data-t="-.48"/>',
- // 가디언 프라임: a war shield carrying two gun barrels and a glowing core
- guardianPrime:'<path d="M-6.4-17.4H-3.4V-9H-6.4Z M3.4-17.4H6.4V-9H3.4Z" data-t="-.35"/>'+
-  '<path d="M-13-9C-6-13.6 6-13.6 13-9V1C13 8.4 7 13.4 0 16-7 13.4-13 8.4-13 1Z"/>'+
-  '<path d="M-9.4-6.8C-4.4-9.6 4.4-9.6 9.4-6.8V1C9.4 6 5.4 9.6 0 11.8-5.4 9.6-9.4 6-9.4 1Z" data-t=".22"/>'+
-  '<path d="M0-5.4 3.6-1.6 0 2.2-3.6-1.6Z" data-t="-.5"/>'+
-  '<path d="M0-3.8 1.9-1.6 0 .6-1.9-1.6Z" data-t=".6"/>',
- // 맥스웰: a sleek sprinting chassis, dark cockpit, thrusters at the back
- maxwell:'<path d="M0-16.4 8-8 12.4 6 7.4 14.4H-7.4L-12.4 6-8-8Z"/>'+
-  '<path d="M0-10.6 4.2-5.2V.4H-4.2V-5.2Z" data-t="-.45"/>'+
-  '<path d="M-12.4 8.4H-8.4V14.4H-12.4Z M8.4 8.4H12.4V14.4H8.4Z" data-t=".3"/>'+
-  '<path d="M0 2.6V12" data-s=".4" data-w="1.8"/>',
- // 파멸자: a horned crown over a heavy body, one long dark eye slit
- doombringer:'<path d="M0-8C10-8 16-2 16 6 16 12 10 16 0 16-10 16-16 12-16 6-16-2-10-8 0-8Z M-13.4-4.6-17-17.4-7.6-8.6Z M13.4-4.6 17-17.4 7.6-8.6Z M-3.6-8 0-17.4 3.6-8Z"/>'+
-  '<path d="M-12.4-3.4H12.4V-.2H-12.4Z" data-t=".32"/>'+
-  '<path d="M-9.4 3H9.4V6.6H-9.4Z" data-t="-.5"/>'+
-  '<path d="M-3 3.6H3V6H-3Z" data-t=".55"/>',
+// ---- 파멸적 (4.6): 외계 정규군 ----
+// One army in three steps, all facing up (-y), all sharing the same dark armour and one neon:
+//  A 잡몹   dark armour (rimmed so it reads on the road) with the unit's colour as a shape on top
+//  B 중형   the unit's colour is the body; dark armour pieces are bolted around it
+//  C 정예·보스  black armour with a neon outline; pairs of darker lines with a neon line between them
+ // A · 병사: a hex helmet-shell, a round core, a lit visor at the front
+ xtrooper:dA('M0-12.4 9.6-7V5L6 11H-6L-9.6 5V-7Z')+
+  '<path d="M-4.4-9.2H4.4V-7.4H-4.4Z" data-t=".35"/>'+
+  '<circle r="5.4" data-t="0"/>',
+ // A · 척후병: a thin dart, a small arrow core
+ xscout:dA('M0-13.4 8.6 8 3.6 11.4H-3.6L-8.6 8Z')+
+  '<path d="M0-7 4.8 4.2 0 1.8-4.8 4.2Z" data-t="0"/>',
+ // A · 중화기병: a wide block with a gun barrel on the right shoulder, a square core
+ xheavy:dA('M5.2-15.4H8.8V-7H5.2Z')+dA('M-11.6-7H11.6V7L8.6 11H-8.6L-11.6 7Z')+
+  '<path d="M-5.2-5.2H5.2V5.2H-5.2Z" data-t="0"/>'+
+  '<path d="M-11.6-1H-8.4M11.6-1H8.4" data-s="-.75" data-w="1.4"/>',
+ // A · 은폐병: a long diamond, a diamond core
+ xstalker:dA('M0-13.4 9.8 0 0 13.4-9.8 0Z')+
+  '<path d="M0-6.6 6 0 0 6.6-6 0Z" data-t="0"/>',
+ // A · 강하 포드: an octagonal pod with four thruster tabs, a diamond core
+ xpod:dA('M-12.8-9.6-9.6-12.8-7-10.2-10.2-7Z M12.8-9.6 9.6-12.8 7-10.2 10.2-7Z M-12.8 9.6-9.6 12.8-7 10.2-10.2 7Z M12.8 9.6 9.6 12.8 7 10.2 10.2 7Z')+
+  dA('M-4.6-11H4.6L11-4.6V4.6L4.6 11H-4.6L-11 4.6V-4.6Z')+
+  '<path d="M0-6.2 6.2 0 0 6.2-6.2 0Z" data-t="0"/>',
+ // A · 드론: an X frame with four rotors, a round core
+ xdrone:'<path d="M-9-9 9 9M9-9-9 9" fill="none" stroke="'+AK+'" stroke-width="4.2"/>'+
+  dA('M-5.2-9A3.8 3.8 0 1 0-12.8-9 3.8 3.8 0 1 0-5.2-9Z M12.8-9A3.8 3.8 0 1 0 5.2-9 3.8 3.8 0 1 0 12.8-9Z M-5.2 9A3.8 3.8 0 1 0-12.8 9 3.8 3.8 0 1 0-5.2 9Z M12.8 9A3.8 3.8 0 1 0 5.2 9 3.8 3.8 0 1 0 12.8 9Z')+
+  '<circle r="5" data-t="0"/>',
+ // A · 재생병: a round shell, a healing cross as the core
+ regen:'<circle r="11.4" fill="'+AK+'" stroke="'+AR+'" stroke-width="1.2"/>'+
+  '<path d="M-2.2-7.4H2.2V-2.2H7.4V2.2H2.2V7.4H-2.2V2.2H-7.4V-2.2H-2.2Z" data-t="0"/>',
+ // A · 방패병: a body behind a wide front shield; a lit bar across the shield, a round core
+ xshield:dA('M-8.6-4H8.6V7L5 11H-5L-8.6 7Z')+dA('M-12.8-11.6H12.8V-6.6L9.4-3.4H-9.4L-12.8-6.6Z')+
+  '<path d="M-7.4-8.8H7.4V-6.4H-7.4Z" data-t="0"/>'+
+  '<circle r="4" data-t="0"/>',
+ // B · 정예병: a hexagonal body, dark pauldrons and a dark crested helmet, a visor slit
+ xelite:'<path d="M0-8.6 7.8-4.4V4.4L0 8.6-7.8 4.4V-4.4Z"/>'+
+  dB('M-8-6.4-13.6-3.4V5L-8 6.6Z M8-6.4 13.6-3.4V5L8 6.6Z M-4.8-13.6H4.8L3-8.4H-3Z')+
+  dL('M-4.2-1.4H4.2',2),
+ // B · 분대장: a round body over a wide dark cape, a dark crest at the front, rank chevrons
+ xleader:dB('M-8.6 0.6H8.6L12.4 12.4H-12.4Z')+
+  '<circle r="7.8"/>'+
+  dB('M-3.2-13.4H3.2L2.2-7.4H-2.2Z')+
+  dL('M-4-0.8 0-3.8 4-0.8M-4 3.4 0 0.4 4 3.4',1.6),
+ // B · 공병: a square body, two dark claws reaching forward, a dark backpack, a gear ring
+ xengineer:'<path d="M-7.6-7H7.6V8H-7.6Z"/>'+
+  dB('M-7.6-7-10.4-14.4H-6.4L-5-7Z M7.6-7 10.4-14.4H6.4L5-7Z M-6 8H6V13.4H-6Z')+
+  dL('M-3.2 0.6A3.2 3.2 0 1 0 3.2 0.6 3.2 3.2 0 1 0-3.2 0.6Z',1.6),
+ // B · EMP병: a round body inside four dark coil segments, a dark spark in the middle
+ xemp:'<circle r="7"/>'+
+  dB('M-5.4-9.2H5.4L7-12.8H-7Z M9.2-5.4V5.4L12.8 7V-7Z M-5.4 9.2H5.4L7 12.8H-7Z M-9.2-5.4V5.4L-12.8 7V-7Z')+
+  dL('M1.4-4.6-2 0.6H2L-1.4 4.8',1.6),
+ // B · 수송 트럭: a coloured cargo box, a dark cab with a lit windscreen, six dark wheels
+ xtruck:dB('M-10.2-11.4H-7.4V-7.2H-10.2Z M7.4-11.4H10.2V-7.2H7.4Z M-10.2-0.6H-7.4V3.6H-10.2Z M7.4-0.6H10.2V3.6H7.4Z M-10.2 7.4H-7.4V11.6H-10.2Z M7.4 7.4H10.2V11.6H7.4Z')+
+  '<path d="M-7-5H7V13.4H-7Z"/>'+
+  dB('M-6.8-13.8H6.8V-6.2H-6.8Z')+
+  '<path d="M-4.6-11.6H4.6V-9.6H-4.6Z" data-t=".3"/>'+
+  dL('M-7 1.4H7M-7 6.6H7',1.2),
+ // B · 돌격병: a slim arrow body, dark fins swept back, a dark lance tip
+ xlancer:'<path d="M0-11 5.4 5 0 2.4-5.4 5Z"/>'+
+  dB('M-3.6 1-11 11.4-4.6 8.2Z M3.6 1 11 11.4 4.6 8.2Z M-1.6-11 0-17 1.6-11Z'),
+ // B · 엄폐물: a slanted coloured barricade with dark hazard stripes, on two dark legs
+ xcover:dB('M-10.4 4-12.4 11H-8.2L-7 4Z M7 4 8.2 11H12.4L10.4 4Z')+
+  '<path d="M-13.4-3.6H13.4L11.4 4.4H-11.4Z"/>'+
+  dL('M-8.4-3.6-10.4 4.4M-3.4-3.6-5.4 4.4M1.6-3.6-0.4 4.4M6.6-3.6 4.6 4.4M11.6-3.6 9.6 4.4',2),
+ // B · 강철병: a coloured steel block held by four dark corner brackets, a dark visor slit
+ steel:'<path d="M-8.4-8.4H8.4V8.4H-8.4Z"/>'+
+  dB('M-12.4-12.4H-4.6V-9.4H-9.4V-4.6H-12.4Z M12.4-12.4H4.6V-9.4H9.4V-4.6H12.4Z M-12.4 12.4H-4.6V9.4H-9.4V4.6H-12.4Z M12.4 12.4H4.6V9.4H9.4V4.6H12.4Z')+
+  dL('M-5-4H5',2.4),
+ // B · 중장갑병: a rounded coloured shell, stacked dark plates down both sides, a dark band across
+ plated:'<path d="M-7.6-6C-7.6-9-4.6-10.4 0-10.4 4.6-10.4 7.6-9 7.6-6V7C7.6 9 5.6 10.4 0 10.4-5.6 10.4-7.6 9-7.6 7Z"/>'+
+  dB('M-7.6-7.6-12.8-5.6V-1.4L-7.6-1.4Z M-7.6 0.8-12.8 2.8V7L-7.6 7Z M7.6-7.6 12.8-5.6V-1.4L7.6-1.4Z M7.6 0.8 12.8 2.8V7L7.6 7Z M-7.6-2.2H7.6V1.2H-7.6Z'),
+ // B · 방벽술사: a coloured robe inside the ring it casts, three dark emitter prongs on the ring
+ warder:'<circle r="13" data-s=".35" data-w="1.4"/>'+
+  '<path d="M0-9.4 7.4 8.4H-7.4Z"/>'+
+  dB('M0-16.2 3-13 0-9.8-3-13Z M11.3 3.6 14.3 6.6 11.3 9.6 8.3 6.6Z M-11.3 3.6-8.3 6.6-11.3 9.6-14.3 6.6Z')+
+  dL('M-2.6 1.6H2.6',1.8),
+ // B · 폭주체: a coloured wedge, dark horns sweeping forward, dark plates down the spine
+ berserker:'<path d="M0-10 7-2 5.4 9.4H-5.4L-7-2Z"/>'+
+  dB('M-4.6-6.4-12.4-8.4-11.4-16-7.6-9.2Z M4.6-6.4 12.4-8.4 11.4-16 7.6-9.2Z M-2.2-2.4H2.2V0.8H-2.2Z M-2.2 3H2.2V6.2H-2.2Z'),
+ // B · 과성장체: a coloured core bursting out between four cracked dark plates
+ overgrowth:'<circle r="9"/>'+
+  dB('M-12.6-3-9.4-10-3-12.6-4-8.4-8.2-6Z M3-12.6 10-9.4 12.6-3 8.4-4 6-8.2Z M12.6 3 9.4 10 3 12.6 4 8.4 8.2 6Z M-3 12.6-10 9.4-12.6 3-8.4 4-6 8.2Z'),
+ // C · 보스 5: an angular helmet; two dark chevrons with a neon chevron between
+ xvanguard:dC('M0-14 11-7V6L5 12H-5L-11 6V-7Z')+
+  dL('M-7-1 0-7 7-1M-7 3.4 0-2.6 7 3.4',2.2)+nL('M-7 1.2 0-4.8 7 1.2'),
+ // C · 보스 6: a head between two raised shoulder pads; one groove down the centre, thin lines on the pads
+ xjugger:dC('M-5.4-13.4H5.4L7.4-9.4H13.4L14.4-4V6L10.4 12.4H-10.4L-14.4 6V-4L-13.4-9.4H-7.4Z')+
+  '<path d="M-13.4-8.4H-7.8V3.6H-13.4Z M7.8-8.4H13.4V3.6H7.8Z" fill="'+XP+'" stroke="none"/>'+
+  dL('M-1.8-11.4V10.4M1.8-11.4V10.4',2.2)+nL('M0-11.4V10.8')+dL('M-13.4-2.4H-7.8M7.8-2.4H13.4',1.2),
+ // C · 은폐 지휘관: a stealth wing; dark chevrons with a neon chevron between
+ xcloak:dC('M0-12.4 14.6 6.4H8.4L4.4 10.6 0 7.4-4.4 10.6-8.4 6.4H-14.6Z')+
+  dL('M-8.6 2.8 0-5 8.6 2.8M-7 5.2 0-0.6 7 5.2',2.2)+nL('M-7.8 4 0-2.8 7.8 4'),
+ // C · 보스 7: a swept-wing raider; a dark spine pair with neon between
+ xraider:dC('M0-15.4 5-4.6 12.6 8.4 5 6.2 3 12.4H-3L-5 6.2-12.6 8.4-5-4.6Z')+
+  dL('M-1.6-9V8.4M1.6-9V8.4',2)+nL('M0-10.4V9.6'),
+ // C · 보스 8: a crested warlord; a raised chest plate with a V-shaped groove like a collar
+ xwarlord:dC('M0-15.4 5-11.2 12-12.4 14.4-3 12.4 9 6.4 14.4H-6.4L-12.4 9-14.4-3-12-12.4-5-11.2Z')+
+  '<path d="M-8.6-6.4H8.6V6L4.4 10.4H-4.4L-8.6 6Z" fill="'+XP+'" stroke="none"/>'+
+  dL('M-8.6-3.6 0 2.4 8.6-3.6M-8.6 1 0 7 8.6 1',2.2)+nL('M-8.6-1.3 0 4.7 8.6-1.3'),
+ // C · 강습선: a fuselage with straight wings and engine pods; dark spine pair, neon between
+ xdropship:dC('M0-16.4 4.2-10.4V-2.4L16.4 4V8.4L4.2 6.4V10.4L2 14.4H-2L-4.2 10.4V6.4L-16.4 8.4V4L-4.2-2.4V-10.4Z')+
+  '<path d="M-15.4 8.6H-10.6V12.6H-15.4Z M10.6 8.6H15.4V12.6H10.6Z" fill="'+XP+'" stroke="'+XN+'" stroke-width="1"/>'+
+  dL('M-1.5-9.6V9.6M1.5-9.6V9.6',1.8)+nL('M0-10.6V10.6',.8)+dL('M-13 5.6H-6M6 5.6H13',1.4),
+ // C · 지휘관: a caped officer with raised epaulets, a neon star; dark bands with neon between
+ xcommand:dC('M0-13.4 8-8.4 12.4 4.4 8.4 13.4H-8.4L-12.4 4.4-8-8.4Z')+
+  '<path d="M-12.4-6.6-6-9.6V-4.4L-12.4-1.4Z M12.4-6.6 6-9.6V-4.4L12.4-1.4Z" fill="'+XP+'" stroke="'+XN+'" stroke-width="1"/>'+
+  '<path d="M0-7.4 1.6-3.6H5.4L2.4-1.2 3.4 2.8 0 0.6-3.4 2.8-2.4-1.2-5.4-3.6H-1.6Z" fill="'+XN+'" stroke="none"/>'+
+  dL('M-6.6 5.7H6.6M-6.6 10.1H6.6',2.2)+nL('M-6.6 7.9H6.6'),
+ // C · 친위대: a tower shield in front of a heavy body; dark pairs with neon between on both
+ xguard:dC('M-10-6.4H10V10L6 14.4H-6L-10 10Z')+dC('M-13.4-15.4H13.4V-8.4L9.4-5H-9.4L-13.4-8.4Z')+
+  dL('M-10.4-12.8H10.4M-10.4-8.4H10.4',2.2)+nL('M-10.4-10.6H10.4')+
+  dL('M-2.2-2V10.4M2.2-2V10.4',2.2)+nL('M0-2V11'),
+ // C · 대소환사: a hooded caster inside a summoning ring (dark, neon, dark)
+ archsummoner:'<circle r="13.6" fill="none" stroke="'+AD+'" stroke-width="1.8"/><circle r="16.6" fill="none" stroke="'+AD+'" stroke-width="1.8"/><circle r="15.1" fill="none" stroke="'+XN+'" stroke-width=".9"/>'+
+  dC('M0-11.4 7.4-4.8C9.6 0 9.6 5 7.4 9.6L5.6 12.4H-5.6L-7.4 9.6C-9.6 5-9.6 0-7.4-4.8Z')+
+  '<path d="M-3.4-4.6H3.4V0.6H-3.4Z" fill="'+AD+'" stroke="none"/>'+nL('M-2.4-2H-0.8M0.8-2H2.4',1.2)+
+  dL('M-5 5H5M-5 9H5',1.6)+nL('M-5 7H5',.8),
+ // C · 대형 수송체: a long hull between two engine nacelles; three dark hangar bays with neon between them
+ mothership:'<path d="M-15.4-7H-12.4V9H-15.4Z M12.4-7H15.4V9H12.4Z" fill="'+XP+'" stroke="'+XN+'" stroke-width="1"/>'+
+  dC('M-7-16.4H7L12.4-9.4V11L7 16.4H-7L-12.4 11V-9.4Z')+
+  '<path d="M-7.4-9.4H7.4V-4.8H-7.4Z M-7.4-1.4H7.4V3.2H-7.4Z M-7.4 6.6H7.4V11.2H-7.4Z" fill="'+AD+'" stroke="none"/>'+
+  nL('M-7.4-3.1H7.4M-7.4 4.9H7.4')+nL('M-3-13.4H3',1.2),
+ // C · 가디언 프라임: a shield-mech with twin barrels and a neon core; dark chevrons with neon between
+ guardianPrime:dC('M-6.8-17.8H-3.6V-10H-6.8Z M3.6-17.8H6.8V-10H3.6Z')+
+  dC('M-12.4-9 0-13.4 12.4-9V3C12.4 10 6.4 14.4 0 16.4-6.4 14.4-12.4 10-12.4 3Z')+
+  '<circle r="5.2" fill="'+AD+'" stroke="none"/><circle r="2.8" fill="'+XN+'" stroke="none"/>'+
+  dL('M-8.4 6.4 0 11.6 8.4 6.4M-8.4 2 0 7.2 8.4 2',2.4)+nL('M-8.4 4.2 0 9.4 8.4 4.2'),
+ // C · 맥스웰: a sprinting chassis, a dark cockpit with a neon strip, thrusters, side speed lines
+ maxwell:'<path d="M-8.4 14H-3V17.6H-8.4Z M3 14H8.4V17.6H3Z" fill="'+XP+'" stroke="'+XN+'" stroke-width="1"/>'+
+  dC('M0-16.4 7.4-9 12.4 5.4 8.4 14.4H-8.4L-12.4 5.4-7.4-9Z')+
+  '<path d="M-3.6-9.4H3.6L2.6-2.4H-2.6Z" fill="'+AD+'" stroke="none"/>'+nL('M-2-6.4H2',1.2)+
+  dL('M-9.6 4.6-6.4-3.4M-6.4 8.6-3.2 0.6M9.6 4.6 6.4-3.4M6.4 8.6 3.2 0.6',1.8)+nL('M-8 6.6-4.8-1.4M8 6.6 4.8-1.4'),
+  // C · 파멸자: a five-spike crown over a dreadnought; a dark eye band with a bright slit, two jaw plates
+ // split by a groove (strong slit, medium groove, weak jaw lines)
+ doombringer:dC('M-12.4-6-15.4-15.4-8.4-9.4Z M12.4-6 15.4-15.4 8.4-9.4Z M-6-9.6-6.6-18-2.2-10.6Z M6-9.6 6.6-18 2.2-10.6Z M-1.6-10.8 0-18.8 1.6-10.8Z')+
+  dC('M0-11 9-9.4 15.6-2 16.6 7.4 11.4 15.6H-11.4L-16.6 7.4-15.6-2-9-9.4Z')+
+  '<path d="M-11-4.6H11V0.4H-11Z" fill="'+AD+'" stroke="none"/>'+nL('M-8.6-2.1H8.6',1.4)+
+  '<path d="M-11.4 3.4H-3V14.4H-9.4L-13.6 8Z M3 3.4H11.4L13.6 8 9.4 14.4H3Z" fill="'+XP+'" stroke="none"/>'+
+  dL('M-1.8 3V15M1.8 3V15',2.2)+nL('M0 3V15.4')+dL('M-11.4 7.6H-3M3 7.6H11.4',1.2),
  // 보스 1: a grown-up normal enemy with a raised dome
  boss1:'<circle r="12"/><circle r="7.5" data-t=".22"/>',
  // 보스 2: a heavy beetle; head plate, two wing cases, a dark seam
@@ -4045,7 +4236,7 @@ const BOSS_ART={
   '<path d="M-13 9.6C-8 6.4 8 6.4 13 9.6" data-s=".35" data-w="2.2"/>'
 };
 // How big each boss is drawn (normal enemies .85): the stronger, the bigger.
-const BOSS_SIZE={boss1:1.05,hiddenboss:1.1,phantom:1.12,boss2:1.2,warden:1.22,charger:1.25,giant:1.35,necroboss:1.4,sentinel:1.45,bastion:1.5,guardian:1.55,siege:1.62,overlord:1.85,regen:.8,steel:.92,plated:.95,warder:.9,berserker:1,overgrowth:.95,archsummoner:1.15,mothership:1.25,guardianPrime:1.62,maxwell:1.62,doombringer:2.05};
+const BOSS_SIZE={xtrooper:.85,xscout:.8,xheavy:.9,xstalker:.85,xpod:.85,xdrone:.62,xshield:.9,xelite:.95,xleader:.95,xengineer:.95,xcover:.72,xemp:.92,xtruck:1,xlancer:.9,xvanguard:1.05,xcloak:1.12,xjugger:1.2,xraider:1.25,xwarlord:1.35,xcommand:1.4,xguard:1.45,xdropship:1.5,boss1:1.05,hiddenboss:1.1,phantom:1.12,boss2:1.2,warden:1.22,charger:1.25,giant:1.35,necroboss:1.4,sentinel:1.45,bastion:1.5,guardian:1.55,siege:1.62,overlord:1.85,regen:.8,steel:.92,plated:.95,warder:.9,berserker:1,overgrowth:.95,archsummoner:1.15,mothership:1.25,guardianPrime:1.62,maxwell:1.62,doombringer:2.05};
 // Steps of an enemy's own colour. Darker steps keep the hue and get richer (lightness down,
 // saturation up): a deep green on a green enemy, not a muddy one. Lighter steps move toward white.
 const TONES=new Map();
@@ -4076,7 +4267,7 @@ function enemyShape(kind){const d=ENEMIES[kind];if(BOSS_ART[kind])return BOSS_AR
 
 // the dot in the middle of an enemy: a darker version of its own colour (30% toward black)
 const dark=c=>'#'+[1,3,5].map(i=>Math.round(parseInt(c.slice(i,i+2),16)*.7).toString(16).padStart(2,'0')).join('');
-function enemyIcon(kind,cls='enemy-icon',raw=false){const low=!raw&&LOWRES.get('e:'+kind);if(low)return `<img class="${cls} lowres" src="${low}" alt="" aria-hidden="true" draggable="false">`;const d=ENEMIES[kind];return `<svg class="${cls}" viewBox="-18 -18 36 36" aria-hidden="true"><g transform="rotate(${BOSS_ART[kind]?0:Math.round((Math.PI/2-enemyFront(kind))*180/Math.PI)})" fill="${d.color}" fill-opacity="${d.camo?.5:.9}" stroke="${d.color}" stroke-width="2">${toneSVG(enemyShape(kind),d.color)}</g><circle r="3" fill="${enemyTone(d.color,-.5)}"/>${d.shield?'<circle r="16" fill="none" stroke="#ffd700" stroke-width="1.2"/>':''}${d.camo?'<path d="m-14 12 28-24" stroke="#dddddd" stroke-width="2"/>':''}</svg>`;}
+function enemyIcon(kind,cls='enemy-icon',raw=false){const low=!raw&&LOWRES.get('e:'+kind);if(low)return `<img class="${cls} lowres" src="${low}" alt="" aria-hidden="true" draggable="false">`;const d=ENEMIES[kind];return `<svg class="${cls}" viewBox="-18 -18 36 36" aria-hidden="true"><g transform="rotate(${BOSS_ART[kind]?0:Math.round((Math.PI/2-enemyFront(kind))*180/Math.PI)})" fill="${d.color}" fill-opacity="${d.camo?.5:.9}" stroke="${d.color}" stroke-width="2">${toneSVG(enemyShape(kind),d.color)}</g>${d.dot===false?'':`<circle r="3" fill="${enemyTone(d.color,-.5)}"/>`}${d.shield?'<circle r="16" fill="none" stroke="#ffd700" stroke-width="1.2"/>':''}${d.camo?'<path d="m-14 12 28-24" stroke="#dddddd" stroke-width="2"/>':''}</svg>`;}
 
 Object.defineProperty(exports,"BOSS_SIZE",{enumerable:true,get:()=>BOSS_SIZE});
 Object.defineProperty(exports,"enemyTone",{enumerable:true,get:()=>enemyTone});
