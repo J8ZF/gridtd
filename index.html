@@ -686,7 +686,7 @@ document.addEventListener('click',e=>{if(performance.now()-swipeAt<400&&e.target
 // a slot that cannot be used says why on release, unless the finger swiped across the slots
 function warnTap(e,msg){const id=e.pointerId,x=e.clientX,up=ev=>{if(ev.pointerId!==id)return;window.removeEventListener('pointerup',up);if(Math.abs(ev.clientX-x)<30)warn(msg);};window.addEventListener('pointerup',up);}
 
-function home(){fitLoadout(profile);if(game&&!game.ended){game.paused=true;savedRun=game.snapshot();}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p>버전 4.4.2</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
+function home(){fitLoadout(profile);if(game&&!game.ended){game.paused=true;savedRun=game.snapshot();}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p>버전 4.4.3</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
 function openDialog(title,body,buttons,kind='dialog'){if(kind!=='result')sound(kind.startsWith('msg')?'question':'open');dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2><span>${title}</span>${button('dialog-x','<i>×</i>','xp-x','aria-label="닫기"')}</h2>${body}<div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('.dialog').classList.toggle('msgbox',kind.startsWith('msg'));(modal.querySelector('.xp-yes')??modal.querySelector('.dialog-actions button')??modal.querySelector('button'))?.focus();backNavigation?.sync?.();}
 // Yes/no question in a Windows message box: icon, text, then [예] [아니요] on the right.
 const QUESTION='<svg class="xp-qicon" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="14" fill="#2f6fd8" stroke="#fff" stroke-width="2"/><text x="16" y="22.5" text-anchor="middle" font-size="19" font-weight="700" fill="#fff">?</text></svg>';
@@ -1954,6 +1954,8 @@ function icuTruck(lv) {
     t += R(cx - cell / 2, cy - cell / 2, cell, cell, "c-76") + P([cx - cell * .28, cy - cell * .28, cx + cell * .12, cy - cell * .28, cx + cell * .3, cy, cx + cell * .12, cy + cell * .28, cx - cell * .28, cy + cell * .28], "c+30") + R(cx + cell * .02, cy - .7, 1.4, 1.4, "c!");
   }
   if (mk2) t += R(x0 + w - 1, -h / 2 - 1.4, 3.2, h + 2.8, "c-40");
+  // a neon outline around the whole truck so it reads on the dark road
+  p += P(mk2 ? cut(-26.4, -17.4, 31.4, 17.4, 3) : cut(-23.4, -17, 25.8, 17, 3), "none", NEON(.9));
   return p + G("turret", t, ' data-pivot="-5,0"');
 }
 
@@ -1986,43 +1988,67 @@ function icuTank() {
   for (const x of [-.6, 1.8, 4.2]) t += P([x, -12, x + 1.6, -12, x + 3, -9.4, x + 1.4, -9.4], "c-88");
   t += P([-11.4, -3, -9.2, -5.2, -5.6, -5.2, -3.4, -3, -3.4, 3, -5.6, 5.2, -9.2, 5.2, -11.4, 3], "c-44") + L(-9.2, 5.2, -5.6, 5.2, "c!", .9);
   t += R(-16.6, 7.4, 6, 1, "c!") + R(-1, 9, 5, 1, "c!");
+  // a neon outline around tracks and hull: the dark tank has to read on the dark road
+  low += P(cut(-30, -26, 30, 26, 4), "none", NEON(1.1));
   return hull + G("treadA", a) + G("treadB", b, ' data-off="1"') + low + G("turret", t, ' data-pivot="-4,0"');
 }
 
-// 리콘 정비선 (after Bliss of Finality, seen from above): a wide stern with stacked thrusters and
-// two pairs of swept wings, the hull narrowing over two black cannons into a long spine with a
-// cyan railgun inset, prongs at the nose. White steps, black panels, neon only on edges and lights.
-// Drawn huge: about 130 units long (the board scales it to about 44 cells).
+// 리콘 정비선 (after Bliss of Finality, seen from above), built the way this game builds things:
+// a white body, brighter raised plates on it, black seams on the plates and neon running between
+// the black seams. A wide stern with three thrusters and two pairs of swept wings; the hull
+// narrows into a long spine with prongs at the nose. Its weapons are turrets that turn to what
+// they shoot: two heavy machine guns on the waist, the flash cannon on the stern, the railgun on
+// the spine (groups mgL, mgR, flash, rail; o gives their angles relative to the hull).
+// About 130 units long; the board draws it 6.8× (about 44 cells).
 function icuShip() {
   const N = NEON(.7);
   let p = "";
+  // black seam pair with a neon line between them, along a straight run
+  const seam = (x1, y1, x2, y2, gap, w = .8) => {
+    const dx = x2 - x1, dy = y2 - y1, l = Math.hypot(dx, dy), nx = -dy / l * gap, ny = dx / l * gap;
+    return L(x1 + nx, y1 + ny, x2 + nx, y2 + ny, "c-86", w) + L(x1 - nx, y1 - ny, x2 - nx, y2 - ny, "c-86", w) + L(x1, y1, x2, y2, "c!", w * .8);
+  };
   for (const s of [-1, 1]) {
-    const W = (pts) => pts.map((v, i) => (i % 2 ? v * s : v));
-    // big rear wings, swept back; a dark panel inside a wide white margin, the tip glows
-    p += P(W([-32.6, 14, -42.6, 39, -51.4, 39, -47.6, 14]), "c+30", N);
-    p += P(W([-36.6, 18.6, -42.4, 33, -46.2, 33, -44.6, 18.6]), "c-84");
-    p += P(W([-42, 36.6, -51, 36.6, -51.4, 39, -42.6, 39]), "c!");
+    const W = (pts) => pts.map((v, i) => (i % 2 ? v * s : v)), y = (v) => v * s;
+    // big rear wings: body, a raised plate, a black panel split by a neon line, the lit tip
+    p += P(W([-32.6, 14, -42.6, 39, -51.4, 39, -47.6, 14]), "c+12", N);
+    p += P(W([-35.4, 16, -43.4, 36, -49, 36, -45.8, 16]), "c+36");
+    p += P(W([-38.6, 20.4, -42.8, 31, -46.2, 31, -44.6, 20.4]), "c-86") + L(-41.6, y(20.4), -44.5, y(31), "c!", .8);
+    p += R(-50.8, s > 0 ? 36.8 : -38.4, 8, 1.6, "c!") + L(-50.4, y(35.4), -43, y(35.4), "c-86", .7);
     // small forward wings
-    p += P(W([-19.4, 14, -23.6, 26, -29.6, 26, -28.6, 14]), "c+30", N);
-    p += P(W([-21.8, 16.8, -24.4, 22.6, -26.8, 22.6, -26.4, 16.8]), "c-84");
-    p += P(W([-23.2, 24.4, -29.4, 24.4, -29.6, 26, -23.6, 26]), "c!");
-    // engine housings at the stern corners, glowing exhausts
-    p += P(W([-64, 7, -52, 7, -50, 9, -50, 16, -64, 16]), "c+36", N) + R(-66, s > 0 ? 8.6 : -14.6, 2, 6, "c!");
-    // black cannons over the narrowing hull
-    p += R(-12, s > 0 ? 8.2 : -10.8, 17, 2.6, "c-88") + R(4.4, s > 0 ? 8.2 : -10.8, 1.4, 2.6, "c-40");
+    p += P(W([-19.4, 14, -23.6, 26, -29.6, 26, -28.6, 14]), "c+12", N);
+    p += P(W([-21.4, 15.6, -24.4, 23.8, -28.2, 23.8, -27.4, 15.6]), "c+36");
+    p += P(W([-23, 17.4, -24.8, 22, -26.8, 22, -26.2, 17.4]), "c-86") + R(-29, s > 0 ? 24.6 : -26, 5.6, 1.4, "c!");
+    // engine housings at the stern corners
+    p += P(W([-64, 7, -52, 7, -50, 9, -50, 16, -64, 16]), "c+12", N) + P(W([-62.4, 8.6, -53, 8.6, -51.6, 10, -51.6, 14.4, -62.4, 14.4]), "c+36");
+    p += L(-60, y(11.5), -54, y(11.5), "c-86", .8) + R(-66, s > 0 ? 9 : -15, 2, 6, "c!");
   }
-  // stern block and the three stacked thrusters
-  p += P(cut(-62, -15.6, -26, 15.6, 2, 3), "c+14", N);
-  for (const y of [-7, 0, 7]) p += P([-63.4, y, -58, y - 2.8, -32, y - 2.8, -28.6, y, -32, y + 2.8, -58, y + 2.8], "c+34") + R(-56, y - .4, 22, .8, "c-30");
-  // vent slots along both flanks, between the wings
-  for (const y of [10.4, 12.6]) for (const sy of [-1, 1]) p += R(-46, sy > 0 ? y : -y - 1, 17, 1, "c-84");
-  // middle hull narrowing into the spine
-  p += P([-27, -15.6, -14, -15.6, -3.6, -5, -3.6, 5, -14, 15.6, -27, 15.6], "c+24", N) + P([-25, -13, -15, -13, -7.2, -5, -7.2, 5, -15, 13, -25, 13], "c+38");
-  // the spine: railgun inset in cyan, a dark keel line, prongs at the nose
-  p += P([-8, -4.6, 54, -4.6, 57, -1.8, 57, 2.2, 54, 5, -8, 5], "c+30", N);
-  p += R(-9, -1.9, 38, 3.8, "c!") + R(-4.6, -.7, 32, 1.4, "c+44") + R(46, 1.4, 8, 1, "c!");
-  p += R(30, -4.6, 24, 1, "c-84") + R(-1, 4, 44, 1, "c-84");
-  for (const [y, len] of [[-2.4, 12], [-.8, 16.5], [.8, 16.5], [2.4, 12]]) p += R(57, y - .3, len, .6, "c+40");
+  // stern block: two raised plates with seams, a black channel with a neon core between them
+  p += P(cut(-62, -15.6, -26, 15.6, 2, 3), "c+12", N);
+  for (const s of [-1, 1]) {
+    p += P(cut(-59.4, s > 0 ? 4 : -13.4, -29, s > 0 ? 13.4 : -4, 1.6), "c+36");
+    for (const x of [-52, -43, -34]) p += L(x, s * 5, x, s * 12.4, "c-86", .8);
+    for (const x of [-57.6, -55.2]) p += R(x, s > 0 ? 6 : -11.4, 1.2, 5.4, "c-86");
+  }
+  p += R(-61, -2.8, 32, 5.6, "c-86") + R(-59, -.5, 28, 1, "c!");
+  for (const y of [-9, 0, 9]) p += R(-64.4, y - 2, 2.4, 4, "c-60") + R(-65.6, y - 1.4, 1.2, 2.8, "c!"); // thrusters
+  // waist: narrows into the spine; seams follow both slopes
+  p += P([-27, -15.6, -14, -15.6, -3.6, -5, -3.6, 5, -14, 15.6, -27, 15.6], "c+12", N) + P([-25, -13.4, -15, -13.4, -6.6, -5, -6.6, 5, -15, 13.4, -25, 13.4], "c+36");
+  for (const s of [-1, 1]) p += seam(-14.6, s * 11.6, -8, s * 5, 1);
+  p += R(-24.6, -.4, 14, .8, "c-86");
+  // spine: a raised plate, the long black channel with its neon core, a black keel at the nose
+  p += P([-8, -4.6, 54, -4.6, 57, -1.8, 57, 2.2, 54, 5, -8, 5], "c+12", N) + P(cut(-5.6, -3.4, 52, 3.6, 1.6), "c+36");
+  p += seam(-4, .1, 50, .1, 1.5, .9);
+  for (const x of [8, 26, 44]) p += L(x, -3.4, x, -2.2, "c-86", .8) + L(x, 2.4, x, 3.6, "c-86", .8);
+  for (const [yy, len] of [[-2.4, 12], [-.8, 16.5], [.8, 16.5], [2.4, 12]]) p += R(57, yy - .3, len, .6, "c+40") + R(57 + len - 1.6, yy - .3, 1.6, .6, "c!");
+  // turrets: dark so the weapons stand out on the white hull, a neon rim on each
+  const mg = (side) => G(side > 0 ? "mgR" : "mgL", P(cut(-3.4, -3, 3.4, 3, 1.2), "c-80", NEON(.5)) + R(2.4, -1.6, 9, .9, "c-86") + R(2.4, .7, 9, .9, "c-86") + R(10.4, -.5, 1.2, 1, "c!"),
+    ` transform="translate(-16.4 ${side * 9.4})" data-pivot="0,0"`);
+  p += mg(-1) + mg(1);
+  p += G("flash", P(cut(-6.6, -6.6, 6.6, 6.6, 2.2), "c-80", NEON(.6)) + P(cut(-4.6, -4.6, 3, 4.6, 1.4), "c-66") + R(4, -4.4, 5, 8.8, "c-86") + R(7.6, -3.4, 1.4, 6.8, "c!") + R(-3, -.5, 5, 1, "c!"),
+    ' transform="translate(-44 0)" data-pivot="0,0"');
+  p += G("rail", P(cut(-6, -4.6, 6, 4.6, 1.6), "c-80", NEON(.6)) + R(4, -2.6, 27, 1.6, "c-70") + R(4, 1, 27, 1.6, "c-70") + R(6, -.5, 23, 1, "c!") + R(29.6, -3.2, 2, 6.4, "c-86"),
+    ' transform="translate(20 0)" data-pivot="0,0"');
   return p;
 }
 
@@ -2236,11 +2262,11 @@ function drawTower(g, kind, level, o = {}) {
   return true;
 }
 const UNITS = { robot: robotUnit, spawner: carUnit, skeleton: skeletonUnit, knight: knightUnit, icuTrooper: icuTrooper, icuTruck: icuTruck, icuTank: icuTank };
-function drawShip(g) {
+function drawShip(g, o = {}) {
   const parts = list('icu:ship', TOWER.icu.color, icuShip);
   g.save();
   g.scale(0.05, 0.05);
-  run(g, parts, {});
+  run(g, parts, { mgL: { rotate: o.mgL ?? 0 }, mgR: { rotate: o.mgR ?? 0 }, flash: { rotate: o.flash ?? 0 }, rail: { rotate: o.rail ?? 0 } });
   g.restore();
 }
 function drawUnit(g, kind, level, o = {}) {
@@ -2423,7 +2449,7 @@ function createBoard(canvas,map){
  // a missile: a short silver body with a lit tail and a fading trail
  function icuMissiles(game){const px=1/scale;for(const m of game.missiles??[]){const cx=Math.cos(m.a),sy=Math.sin(m.a);ctx.save();ctx.globalAlpha=.35;ctx.strokeStyle='#cfdcea';ctx.lineWidth=2*px;ctx.beginPath();ctx.moveTo(m.x-cx*2.2,m.y-sy*2.2);ctx.lineTo(m.x,m.y);ctx.stroke();ctx.globalAlpha=1;
   ctx.translate(m.x,m.y);ctx.rotate(m.a);ctx.fillStyle='#e4ecf4';ctx.fillRect(-.55,-.16,1.1,.32);ctx.fillStyle='#5aa2ea';ctx.fillRect(-.8,-.12,.3,.24);ctx.restore();}}
- function icuShips(game){for(const t of game.towers)if(t.kind==='icu'&&t.level>=5&&game.icuShipPos){const p=game.icuShipPos(t);ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.angle);ctx.scale(6.8,6.8);ART.drawShip(ctx);ctx.restore();}}
+ function icuShips(game){for(const t of game.towers)if(t.kind==='icu'&&t.level>=5&&game.icuShipPos){const p=game.icuShipPos(t);ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.angle);ctx.scale(6.8,6.8);ART.drawShip(ctx,t.ship?.aim);ctx.restore();}}
  // the laser: beams from the ship flicker over every enemy while the whole field slowly turns white
  function icuStorm(game){const st=game.storm;if(!st)return;const p=1-st.left/st.total,ship=game.towers.find(t=>t.id===st.source),c0=ship&&game.icuShipPos?game.icuShipPos(ship):{x:45,y:-20,angle:0},o={x:c0.x+Math.cos(c0.angle)*20.4,y:c0.y+Math.sin(c0.angle)*20.4};
   ctx.save();ctx.lineCap='butt';let n=0;for(const e of game.enemies){if(e.dead||n++>70)continue;if(Math.random()<.45)continue;ctx.globalAlpha=.25+Math.random()*.5;ctx.strokeStyle=Math.random()<.5?'#ffffff':'#a8d2ff';ctx.lineWidth=(1+Math.random()*2.4)/scale;ctx.beginPath();ctx.moveTo(o.x,o.y);ctx.lineTo(e.x,e.y);ctx.stroke();}
@@ -2636,7 +2662,7 @@ const TOWERS=[{"id": "soldier", "name": "군인", "tier": 1, "color": "#7ce4be",
   "trooper": {"period": 50, "hp": [150, 300, 600, 600, 600], "gun": [3, 5, 8, 8, 8], "gunPeriod": [0.12, 0.12, 0.1, 0.1, 0.1], "range": [16, 16, 20, 20, 20], "grenade": [20, 35, 60, 60, 60], "grenadePeriod": 2.5, "grenadeRadius": 4, "speed": 3.2, "camo": 2, "count": [1, 1, 2, 2, 2]},
   "truck": {"period": [0, 65, 65, 55, 55], "hp": [0, 250, 600, 600, 600], "missile": [0, 60, 120, 120, 120], "radius": 3, "reload": 3, "stock": 4, "range": [0, 24, 0, 0, 0], "speed": 4},
   "tank": {"period": 120, "hp": 5000, "rail": 800, "railPeriod": 2, "range": 28, "width": 1.4, "speed": 2.4, "takes": 0.7},
-  "ship": {"lap": 90, "gun": 80, "gunPeriod": 0.2, "flash": 600, "flashRadius": 12, "flashPeriod": 3, "rail": 3000, "railPct": 0.1, "railCap": 10000, "railPeriod": 8, "laserCooldown": 60, "laserTime": 4, "laserTick": 0.3, "laserMin": 100, "laserMax": 3000}
+  "ship": {"lap": 90, "gun": 80, "gunPeriod": 0.2, "flash": 600, "flashRadius": 12, "flashPeriod": 3, "rail": 3000, "railPct": 0.1, "railCap": 10000, "railPeriod": 8, "laserCooldown": 165, "laserTime": 4, "laserTick": 0.3, "laserMin": 100, "laserMax": 3000}
  }}];
 const TOWER=Object.fromEntries(TOWERS.map(t=>[t.id,t]));
 // Hidden levels (myth modules): soldier Lv.4 and the garage's Lv.5 tank. They sit at the end of the
@@ -3700,21 +3726,33 @@ Object.assign(Game.prototype, {
     const a = t.ship?.a ?? -Math.PI / 2;
     return { x: ICU_SHIP.x + Math.cos(a) * ICU_SHIP.rx, y: ICU_SHIP.y + Math.sin(a) * ICU_SHIP.ry, angle: Math.atan2(Math.cos(a) * ICU_SHIP.ry, -Math.sin(a) * ICU_SHIP.rx) };
   },
-  // the ship picks for itself: guns and flash cannon on the enemy furthest along, the railgun on the strongest
+  // the ship picks for itself: machine guns and flash cannon on the enemy furthest along, the railgun on
+  // the strongest. Each weapon is a turret on the hull that turns toward its target and fires once it
+  // faces it; with nothing to shoot they turn back to the bow.
   icuShip(t, dt) {
-    const S = TOWER.icu.units.ship, sh = t.ship ??= { a: -Math.PI / 2, gun: 0, flash: 1, rail: 2 };
+    const S = TOWER.icu.units.ship, sh = t.ship ??= { a: -Math.PI / 2, gun: 0, flash: 1, rail: 2 }, aim = sh.aim ??= { mgL: 0, mgR: 0, flash: 0, rail: 0 };
     sh.a += dt * Math.PI * 2 / S.lap;
-    sh.gun -= dt; sh.flash -= dt; sh.rail -= dt;
-    const live = this.enemies.filter(e => !e.dead && e.hp > 0);
-    if (!live.length) { sh.gun = Math.max(0, sh.gun); sh.flash = Math.max(0, sh.flash); sh.rail = Math.max(0, sh.rail); return; }
-    const o = this.icuShipPos(t), k = ICU_SHIP.k, nose = icuAt(o, o.angle, 60 * k, 0), first = live.reduce((a, b) => b.progress > a.progress ? b : a);
-    // the two black cannons take turns
-    if (sh.gun <= 0) { sh.side = -(sh.side || 1); this.hit(first, S.gun, t); this.fx('shot', icuAt(o, o.angle, 6 * k, sh.side * 9.5 * k), { x2: first.x, y2: first.y, color: '#e6f0fa', life: .1, ship: true }); sh.gun += S.gunPeriod; }
-    if (sh.flash <= 0) { this.fx('shot', nose, { x2: first.x, y2: first.y, color: '#eef5fc', life: .3, heavy: true, ship: true }); this.fx('flash', first, { r: S.flashRadius, color: '#eef5fc', life: .55 }); this.splash(first, S.flash, S.flashRadius, t); sh.flash = S.flashPeriod; }
-    if (sh.rail <= 0) {
-      const big = live.reduce((a, b) => this.durability(b) > this.durability(a) ? b : a);
+    sh.gun = Math.max(-S.gunPeriod, sh.gun - dt); sh.flash = Math.max(0, sh.flash - dt); sh.rail = Math.max(0, sh.rail - dt);
+    const live = this.enemies.filter(e => !e.dead && e.hp > 0), o = this.icuShipPos(t), k = ICU_SHIP.k;
+    const first = live.length ? live.reduce((a, b) => b.progress > a.progress ? b : a) : null, big = live.length ? live.reduce((a, b) => this.durability(b) > this.durability(a) ? b : a) : null;
+    // turret pivots on the hull and barrel lengths, in art units
+    const W = { mgL: [-16.4, -9.4, 11.6, first], mgR: [-16.4, 9.4, 11.6, first], flash: [-44, 0, 9, first], rail: [20, 0, 31.6, big] }, ready = {}, muzzle = {};
+    for (const [id, [px, py, len, e]] of Object.entries(W)) {
+      const pv = icuAt(o, o.angle, px * k, py * k), want = e ? angleDiff(Math.atan2(e.y - pv.y, e.x - pv.x), o.angle) : 0, step = 5 * dt;
+      aim[id] += Math.max(-step, Math.min(step, angleDiff(want, aim[id])));
+      ready[id] = !!e && Math.abs(angleDiff(want, aim[id])) < .2;
+      muzzle[id] = icuAt(pv, o.angle + aim[id], len * k, 0);
+    }
+    if (!live.length) return;
+    if (sh.gun <= 0) {
+      // the two guns take turns; if the other one isn't on target yet, the same one fires again
+      const next = sh.side === 'mgL' ? 'mgR' : 'mgL', side = ready[next] ? next : ready[sh.side] ? sh.side : null;
+      if (side) { sh.side = side; this.hit(first, S.gun, t); this.fx('shot', muzzle[side], { x2: first.x, y2: first.y, color: '#e6f0fa', life: .1, ship: true }); sh.gun += S.gunPeriod; }
+    }
+    if (sh.flash <= 0 && ready.flash) { this.fx('shot', muzzle.flash, { x2: first.x, y2: first.y, color: '#eef5fc', life: .3, heavy: true, ship: true }); this.fx('flash', first, { r: S.flashRadius, color: '#eef5fc', life: .55 }); this.splash(first, S.flash, S.flashRadius, t); sh.flash = S.flashPeriod; }
+    if (sh.rail <= 0 && ready.rail) {
       this.hit(big, S.rail + Math.min(S.railCap, S.railPct * (big.maxHp + (big.maxShield ?? 0))), t);
-      this.fx('rail', nose, { x2: big.x, y2: big.y, color: '#9fd3ff', life: .5, ship: true });
+      this.fx('rail', muzzle.rail, { x2: big.x, y2: big.y, color: '#9fd3ff', life: .5, ship: true });
       sh.rail = S.railPeriod;
     }
   },
