@@ -685,7 +685,7 @@ document.addEventListener('click',e=>{if(performance.now()-swipeAt<400&&e.target
 // a slot that cannot be used says why on release, unless the finger swiped across the slots
 function warnTap(e,msg){const id=e.pointerId,x=e.clientX,up=ev=>{if(ev.pointerId!==id)return;window.removeEventListener('pointerup',up);if(Math.abs(ev.clientX-x)<30)warn(msg);};window.addEventListener('pointerup',up);}
 
-function home(){fitLoadout(profile);if(game&&!game.ended){game.paused=true;savedRun=game.snapshot();}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p>버전 4.3.15</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
+function home(){fitLoadout(profile);if(game&&!game.ended){game.paused=true;savedRun=game.snapshot();}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p>버전 4.3.16</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
 function openDialog(title,body,buttons,kind='dialog'){if(kind!=='result')sound(kind.startsWith('msg')?'question':'open');dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2><span>${title}</span>${button('dialog-x','<i>×</i>','xp-x','aria-label="닫기"')}</h2>${body}<div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('.dialog').classList.toggle('msgbox',kind.startsWith('msg'));(modal.querySelector('.xp-yes')??modal.querySelector('.dialog-actions button')??modal.querySelector('button'))?.focus();backNavigation?.sync?.();}
 // Yes/no question in a Windows message box: icon, text, then [예] [아니요] on the right.
 const QUESTION='<svg class="xp-qicon" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="14" fill="#2f6fd8" stroke="#fff" stroke-width="2"/><text x="16" y="22.5" text-anchor="middle" font-size="19" font-weight="700" fill="#fff">?</text></svg>';
@@ -1162,7 +1162,7 @@ function openMenu(id){const drop=$('#menu-drop'),bar=$('.xp-menubar');if(!drop||
  drop.style.left=Math.max(0,Math.min(btn.offsetLeft,bar.clientWidth-190))+'px';drop.style.top=(bar.offsetTop+bar.offsetHeight)+'px';drop.hidden=false;}
 function closeMenu(){menuOpen='';const drop=$('#menu-drop');if(drop){drop.hidden=true;drop.innerHTML='';}for(const b of document.querySelectorAll('.xp-menu.open'))b.classList.remove('open');}
 document.addEventListener('pointerdown',e=>{if(menuOpen&&!e.target.closest?.('#menu-drop,.xp-menubar'))closeMenu();},true);
-function about(){openDialog('그리드 타워 디펜스 정보','<p>그리드 타워 디펜스 4.3.15<br>보더랜드 · 일반 25웨이브 · 어려움 30웨이브</p><p class="muted small">효과음: Kenney UI Audio (CC0) · KDE Ocean 사운드, Guilherme Marçal Silva (CC BY-SA 4.0)</p>',button('close-dialog','확인','primary'));}
+function about(){openDialog('그리드 타워 디펜스 정보','<p>그리드 타워 디펜스 4.3.16<br>보더랜드 · 일반 25웨이브 · 어려움 30웨이브</p><p class="muted small">효과음: Kenney UI Audio (CC0) · KDE Ocean 사운드, Guilherme Marçal Silva (CC BY-SA 4.0)</p>',button('close-dialog','확인','primary'));}
 function pauseMenu(){if(!game||game.ended)return;game.paused=true;save();openDialog('일시정지',`<p>${game.map.name} · ${game.config.name}<br>웨이브 ${game.wave} / ${game.config.count} · ${seconds(game.time)}</p>`,(game.started?button('run','계속하기','primary'):button('close-dialog','닫기','primary'))+button('guide','조작 안내')+button('battle-settings','설정')+button('battle-home','메인 메뉴로 돌아가기'),'pause');updateBattleUI();}
 function requestExit(){if(game&&!game.ended)game.paused=true;save();msgBox('그리드 타워 디펜스','<p>정말 나가시겠습니까?</p>','confirm-exit','','msg-exit');}
 function handleAppBack(){
@@ -3344,10 +3344,9 @@ const BOSS_ART={
  boss2:'<path d="M0-12C8-12 13-7 13 1 13 9 8 14 0 14-8 14-13 9-13 1-13-7-8-12 0-12Z M-5-11H5L3.4-15.6H-3.4Z"/>'+
   '<path d="M-1.2-8C-7-8-10.4-3.6-10.4 2.6-10.4 8-6.4 11.4-1.2 11.4Z M1.2-8C7-8 10.4-3.6 10.4 2.6 10.4 8 6.4 11.4 1.2 11.4Z" data-t=".2"/>'+
   '<path d="M-3-14.6H3" data-s="-.45" data-w="1.4"/>',
- // 히든 보스: a hooded ghost with a ragged hem, eyes in the dark of the hood
+ // 히든 보스: a hooded ghost with a ragged hem and a dark hood
  hiddenboss:'<path d="M0-14C8-14 12-8 12-1V10L9 14 6 10 3 14 0 10-3 14-6 10-9 14-12 10V-1C-12-8-8-14 0-14Z"/>'+
-  '<path d="M0-10.4C5-10.4 7.4-6.4 7.4-2 7.4 2.4 4.4 5 0 5-4.4 5-7.4 2.4-7.4-2-7.4-6.4-5-10.4 0-10.4Z" data-t="-.38"/>'+
-  '<path d="M-5.2-4.6H-1.4V-2.8H-5.2Z M1.4-4.6H5.2V-2.8H1.4Z" data-t=".55"/>',
+  '<path d="M0-10.4C5-10.4 7.4-6.4 7.4-2 7.4 2.4 4.4 5 0 5-4.4 5-7.4 2.4-7.4-2-7.4-6.4-5-10.4 0-10.4Z" data-t="-.38"/>',
  // 잠복 지휘체: the same kind of ghost with a crown and a longer hem
  phantom:'<path d="M-9-9-7.6-16.4-3.8-11.6 0-17 3.8-11.6 7.6-16.4 9-9C11.2-5.4 12-1.6 12 2V10L8 14.6 4 10 0 14.6-4 10-8 14.6-12 10V2C-12-1.6-11.2-5.4-9-9Z"/>'+
   '<path d="M-7-10.6H7V-8.2H-7Z" data-t=".3"/>'+
@@ -3361,10 +3360,9 @@ const BOSS_ART={
  warden:'<path d="M-12-8C-6-14 6-14 12-8V10C12 13 10 14.4 7 14.4H-7C-10 14.4-12 13-12 10Z"/>'+
   '<path d="M-8.4-6C-4.4-10 4.4-10 8.4-6V8.4C8.4 10.4 7.2 11.4 5.2 11.4H-5.2C-7.2 11.4-8.4 10.4-8.4 8.4Z" data-t=".2"/>'+
   '<path d="M-7-4.4H-4.8V-2.2H-7Z M4.8-4.4H7V-2.2H4.8Z M-7 7.2H-4.8V9.4H-7Z M4.8 7.2H7V9.4H4.8Z" data-t="-.45"/>',
- // 네크로맨서 보스: a pointed hood and robe, a dark face with pale eyes, a staff with a glowing orb
+ // 네크로맨서 보스: a pointed hood and robe, a dark face, a staff with a glowing orb
  necroboss:'<path d="M0-15 8-8C11-4 12 2 11 8L8 14H-8L-11 8C-12 2-11-4-8-8Z"/>'+
   '<path d="M0-10.6 5-5.4C6.2-2.4 5.4.8 3.2 3H-3.2C-5.4.8-6.2-2.4-5-5.4Z" data-t="-.42"/>'+
-  '<path d="M-3.2-4.4H-1.2V-2.4H-3.2Z M1.2-4.4H3.2V-2.4H1.2Z" data-t=".5"/>'+
   '<path d="M13.4-10V13" data-s="-.3" data-w="1.8"/>'+
   '<path d="M10.6-12.6A2.8 2.8 0 1 0 16.2-12.6 2.8 2.8 0 1 0 10.6-12.6Z" data-t=".45"/>',
  // 돌격 보스: a spearhead; a lighter chevron rides the front
