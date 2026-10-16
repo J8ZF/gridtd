@@ -686,7 +686,7 @@ document.addEventListener('click',e=>{if(performance.now()-swipeAt<400&&e.target
 // a slot that cannot be used says why on release, unless the finger swiped across the slots
 function warnTap(e,msg){const id=e.pointerId,x=e.clientX,up=ev=>{if(ev.pointerId!==id)return;window.removeEventListener('pointerup',up);if(Math.abs(ev.clientX-x)<30)warn(msg);};window.addEventListener('pointerup',up);}
 
-function home(){fitLoadout(profile);if(game&&!game.ended){game.paused=true;savedRun=game.snapshot();}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p>버전 4.3.20</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
+function home(){fitLoadout(profile);if(game&&!game.ended){game.paused=true;savedRun=game.snapshot();}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p>버전 4.3.21</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
 function openDialog(title,body,buttons,kind='dialog'){if(kind!=='result')sound(kind.startsWith('msg')?'question':'open');dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2><span>${title}</span>${button('dialog-x','<i>×</i>','xp-x','aria-label="닫기"')}</h2>${body}<div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('.dialog').classList.toggle('msgbox',kind.startsWith('msg'));(modal.querySelector('.xp-yes')??modal.querySelector('.dialog-actions button')??modal.querySelector('button'))?.focus();backNavigation?.sync?.();}
 // Yes/no question in a Windows message box: icon, text, then [예] [아니요] on the right.
 const QUESTION='<svg class="xp-qicon" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="14" fill="#2f6fd8" stroke="#fff" stroke-width="2"/><text x="16" y="22.5" text-anchor="middle" font-size="19" font-weight="700" fill="#fff">?</text></svg>';
@@ -1740,38 +1740,53 @@ TOWERS.gauss = (lv) => {
   return { base: b };
 };
 
-// Laser 3x3: a railgun turret. Capacitors at the back, an armoured body cut at 45°,
-// two rails held by insulator braces. Lv2 과출력 축전지: a second capacitor row,
-// Lv3 집속 렌즈: a lens block where the rails leave the body, Lv4 죽음의 광선: long
-// heavy rails with three coil collars and side armour.
+// Laser 3x3: a railgun turret. Capacitor bars across the back, an armoured body cut at
+// 45°, two rails held by braces. Lv2 과출력 축전지: a second capacitor bar, Lv3 집속 렌즈:
+// a lens at the muzzle, Lv4 죽음의 광선: long heavy rails, three braces and side armour,
+// and the whole gun goes dark so only its lights carry the tower color.
 TOWERS.laser = (lv) => {
   const base = pad(3, 3) + P(cut(-22, -22, 22, 22, 7), "floor") + P(cut(-20.4, -20.4, 20.4, 20.4, 6.4), "none", ' stroke="steel" stroke-width="1.4"');
+  const dark = lv >= 4;
+  // tones: [outline, body, top, brace edge, brace face, capacitor, slot/bore, rail, rail edge]
+  const [kO, kB, kT, bO, bF, kC, kS, kR, kRh] = dark
+    ? ["rubber", "hull", "steel", "rubber", "hull", "rubber", "hole", "plate", "steelHi"]
+    : ["c-44", "c-16", "c+8", "c-30", "c+14", "c-52", "c-72", "steelHi", "gunHi"];
   let t = "";
-  // capacitor bank at the back: three cells per column, a small charge light on each
-  const cols = lv >= 2 ? 2 : 1, cx0 = -11 - cols * 5.2;
-  t += P(cut(cx0 - 1.4, -12.4, -9, 12.4, 0, 2.2), "c-52");
-  for (let k = 0; k < cols; k++) for (const y of [-10.8, -3.4, 4]) t += R(cx0 + k * 5.2, y, 4.4, 6.8, "c-72") + R(cx0 + k * 5.2 + 2.8, y + 2.4, 1.2, 2, "c!");
-  // hull: the turret core, a squat block with its corners cut
-  const hx = lv >= 4 ? 6 : 5;
-  t += P(cut(-11, -12, hx, 12, 3.4, 2), "c-44") + P(cut(-9.4, -10.4, hx - 1.6, 10.4, 2.6, 1.4), "c-16") + P(cut(-7.4, -7, 0.6, 7, 1.4), "c+8");
-  t += R(-6, -5.6, 3.6, 3.6, "c-30") + R(-5.2, -4.8, 2, 2, "c+30"); // hatch
-  if (lv >= 4) for (const s of [-1, 1]) t += P(s < 0 ? [-9.4, -12, 2, -12, 0, -14.6, -7.4, -14.6] : [-9.4, 12, 2, 12, 0, 14.6, -7.4, 14.6], "c-22");
+  // capacitor bars laid across the back: terminals at both ends on a shared strap,
+  // a lit charge strip down the middle of each
+  const bars = lv >= 2 ? 2 : 1, bw = 4.6, x0 = -11.4 - bars * (bw + 0.6);
+  for (const y of [-13, 11.2]) t += R(x0 - 0.4, y, bars * (bw + 0.6) + 0.6, 1.8, "steel");
+  for (let k = 0; k < bars; k++) {
+    const x = x0 + k * (bw + 0.6);
+    t += R(x, -11.4, bw, 22.8, kC) + R(x + 1.3, -8.6, 2, 17.2, kS) + R(x + 1.7, -7.8, 1.2, 15.6, "c!");
+  }
+  // hull: the turret core, a squat block with its corners cut, a hatch on top
+  const hx = dark ? 6 : 5;
+  if (dark) for (const s of [-1, 1]) t += P(s < 0 ? [-9.4, -12, 2, -12, 0, -14.6, -7.4, -14.6] : [-9.4, 12, 2, 12, 0, 14.6, -7.4, 14.6], "hull");
+  t += P(cut(-11, -12, hx, 12, 3.4, 2), kO) + P(cut(-9.4, -10.4, hx - 1.6, 10.4, 2.6, 1.4), kB) + P(cut(-7.4, -7, 0.6, 7, 1.4), kT);
+  t += R(-6, -5.6, 3.6, 3.6, dark ? "rubber" : "c-30") + R(-5.2, -4.8, 2, 2, dark ? "c!" : "c+30");
   // rails, tips cut like blades, the bore between them
-  const end = lv >= 4 ? 34 : 28, rw = lv >= 4 ? 4.2 : 3.6, gap = 2.2;
-  t += R(hx - 1, -gap, end - hx - 2, gap * 2, "c-72");
+  const end = dark ? 34 : 28, rw = dark ? 4.2 : 3.6, gap = 2.2;
+  t += R(hx - 1, -gap, end - hx - 2, gap * 2, kS);
   for (const s of [-1, 1]) {
     const yi = s * gap, yo = s * (gap + rw);
-    t += P([hx - 1, yi, end, yi, end - rw * 1.2, yo, hx - 1, yo], "steelHi") + P([hx - 1, s * (gap + 0.5), end - 1.4, s * (gap + 0.5), end - 2.4, s * (gap + 1.5), hx - 1, s * (gap + 1.5)], "gunHi");
+    t += P([hx - 1, yi, end, yi, end - rw * 1.2, yo, hx - 1, yo], kR) + P([hx - 1, s * (gap + 0.5), end - 1.4, s * (gap + 0.5), end - 2.4, s * (gap + 1.5), hx - 1, s * (gap + 1.5)], kRh);
   }
-  // braces over the rails: a big one at the root, a smaller one further out
-  const brace = (x, w, out) => R(x, -gap - rw - out, w, (gap + rw + out) * 2, "c-30") + R(x + 0.7, -gap - rw - out + 0.8, w - 1.4, (gap + rw + out - 0.8) * 2, "c+14");
-  if (lv < 4) t += brace(hx + 1.6, 4, 1.6) + brace(hx + 11, 2.6, 0.8);
+  // braces over the rails: a big one at the root, smaller ones further out;
+  // on the dark gun each carries two small lights where it grips the rails
+  const brace = (x, w, out) => {
+    const h = gap + rw + out;
+    let r = R(x, -h, w, h * 2, bO) + R(x + 0.7, -h + 0.8, w - 1.4, (h - 0.8) * 2, bF);
+    if (dark) for (const s of [-1, 1]) r += R(x + w / 2 - 0.7, s * (h - 1.9) - 0.7, 1.4, 1.4, "c!");
+    return r;
+  };
+  if (!dark) t += brace(hx + 1.6, 4, 1.6) + brace(hx + 11, 2.6, 0.8);
   else t += brace(hx + 1.6, 4.4, 2.2) + brace(hx + 9.4, 3.6, 1.8) + brace(hx + 16.4, 3, 1.4);
   // Lv3: a focusing lens at the muzzle, a frame wider than the rails around a lit pane;
   // before that the slug glows in the bore
   if (lv >= 3) {
     const lx = end - 9.4, ly = gap + rw + 2.4;
-    t += P(cut(lx, -ly, lx + 5.4, ly, 1.4), "c-44") + P(cut(lx + 0.9, -ly + 0.9, lx + 4.5, ly - 0.9, 1), "plate") + P(cut(lx + 1.5, -gap - 0.4, lx + 3.9, gap + 0.4, 0.6), "c!");
+    t += P(cut(lx, -ly, lx + 5.4, ly, 1.4), kO) + P(cut(lx + 0.9, -ly + 0.9, lx + 4.5, ly - 0.9, 1), dark ? "hull" : "plate") + P(cut(lx + 1.5, -gap - 0.4, lx + 3.9, gap + 0.4, 0.6), "c!");
   } else t += R(end - 7, -1, 4, 2, "c!");
   return { base, turret: t };
 };
