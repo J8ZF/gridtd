@@ -455,6 +455,7 @@ img.tower-icon,img.enemy-icon{flex-shrink:0}
 /* skip: grey while it cannot be pressed yet, the normal green button once it can */
 .skip-offer button.primary.arming{background:var(--go);border-color:#0e3e0e;color:#fff;text-shadow:1px 1px #144414;box-shadow:inset 0 1px 0 #8fd08f;animation:skip-arm 1s step-end forwards}
 @keyframes skip-arm{from{background:var(--btn);border-color:#000;color:#9a9a9a;text-shadow:none;box-shadow:none}}
+.map-list{flex:1 1 auto;align-content:start}
 </style>
 <div id="app"></div><div id="modal-root"></div><div id="toast" role="status" aria-live="polite"></div><input id="import-file" type="file" accept="application/json,.json" hidden><script>
 (()=>{
@@ -684,14 +685,14 @@ document.addEventListener('click',e=>{if(performance.now()-swipeAt<400&&e.target
 // a slot that cannot be used says why on release, unless the finger swiped across the slots
 function warnTap(e,msg){const id=e.pointerId,x=e.clientX,up=ev=>{if(ev.pointerId!==id)return;window.removeEventListener('pointerup',up);if(Math.abs(ev.clientX-x)<30)warn(msg);};window.addEventListener('pointerup',up);}
 
-function home(){fitLoadout(profile);if(game&&!game.ended){game.paused=true;savedRun=game.snapshot();}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p>버전 4.3.11</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
+function home(){fitLoadout(profile);if(game&&!game.ended){game.paused=true;savedRun=game.snapshot();}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p>버전 4.3.12</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
 function openDialog(title,body,buttons,kind='dialog'){if(kind!=='result')sound(kind.startsWith('msg')?'question':'open');dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2><span>${title}</span>${button('dialog-x','<i>×</i>','xp-x','aria-label="닫기"')}</h2>${body}<div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('.dialog').classList.toggle('msgbox',kind.startsWith('msg'));(modal.querySelector('.xp-yes')??modal.querySelector('.dialog-actions button')??modal.querySelector('button'))?.focus();backNavigation?.sync?.();}
 // Yes/no question in a Windows message box: icon, text, then [예] [아니요] on the right.
 const QUESTION='<svg class="xp-qicon" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="14" fill="#2f6fd8" stroke="#fff" stroke-width="2"/><text x="16" y="22.5" text-anchor="middle" font-size="19" font-weight="700" fill="#fff">?</text></svg>';
 function msgBox(title,text,yes,extra='',kind='msg'){openDialog(title,`<div class="xp-msg">${QUESTION}<div>${text}</div></div>`,button(yes,'<span>예(<u>Y</u>)</span>','xp-yes',extra)+button('close-dialog','<span>아니요(<u>N</u>)</span>','xp-no'),kind);}
 function closeDialog(){dialogKind='';modal.innerHTML='';backNavigation?.sync?.();}
 function play(){if((game&&!game.ended)||savedRun){openDialog('진행 중인 전투',`<p>${MAPS.find(m=>m.id===(game?.map.id??savedRun.mapId)).name} · ${DIFFICULTIES[game?.difficulty??savedRun.difficulty].name}<br>웨이브 ${game?.wave??savedRun.wave}</p>`,button('resume-saved','이어하기','primary')+button('new-game','새 게임')+button('close-dialog','취소','flat'));}else pickMap();}
-function pickMap(){closeDialog();if(MAPS.length>1)maps();else difficulty(MAPS[0]);}
+function pickMap(){closeDialog();maps();}
 // Small static picture of the map for the menus.
 let BANNER='',LOGO='';
 function logoImage(){if(LOGO)return LOGO;try{const c=document.createElement('canvas');c.width=c.height=20;const g=c.getContext('2d');
@@ -705,7 +706,7 @@ function mapSVG(map){const pts=a=>a.map(p=>p.join(',')).join(' '),road=map.point
  return `<svg viewBox="0 ${map.viewTop} ${COLS} ${ROWS-map.viewTop}" aria-hidden="true"><rect x="-10" y="-10" width="${COLS+20}" height="${ROWS+20}" fill="#000000"/><polygon points="${pts(map.ground)}" fill="#202020" stroke="#2e2e2e" stroke-width=".6"/>${map.features.map(f=>f.circle?`<circle cx="${f.circle[0]}" cy="${f.circle[1]}" r="${f.circle[2]}" fill="#333333"/>`:`<polygon points="${pts(f.poly)}" fill="${tone[f.kind]??'#333333'}"/>`).join('')}<polyline points="${road}" fill="none" stroke="#4f4f4f" stroke-width="3" stroke-linejoin="miter"/><polyline points="${road}" fill="none" stroke="#363636" stroke-width="2.6" stroke-linejoin="miter"/><polyline points="${road}" fill="none" stroke="${map.color}" stroke-width=".4" stroke-dasharray="1.2 2.4"/><circle cx="3" cy="${map.points[1][1]+.5}" r="1.8" fill="${map.color}"/><rect x="${end[0]-1.5}" y="${end[1]-2.5}" width="4" height="4" fill="none" stroke="#ea7f90" stroke-width=".7"/></svg>`;}
 
 function maps(){closeDialog();setScreen('maps',header('맵 선택')+`<div class="scroll map-list">${MAPS.map(m=>button('choose-map',`<div class="map-thumb">${mapSVG(m,true)}</div><div class="map-label"><div><h3>${m.name}</h3><div class="muted">${m.difficulty} · ${makePath(m.points).length-1}칸</div></div><span class="rate">×${fmtN(m.mult)}</span></div>`,'map-card',`data-map="${m.id}"`)).join('')}</div>`);}
-function difficulty(map){chosenMap=map;setScreen('difficulty',header(map.name,MAPS.length>1?'maps':'home')+`<div class="scroll"><div class="difficulty-preview">${BANNER?`<img src="${BANNER}" alt="">`:mapSVG(map)}</div>${Object.entries(DIFFICULTIES).map(([id,d])=>{const first=!profile.clears[`${map.id}:${id}`],reward=Math.round(d.reward*map.mult*100*(first?1.2:1));return button('start-game',`<div><strong>${d.name}</strong><p>${d.count} 웨이브</p></div><div><div class="reward">${icon('coin')}<span>${money(reward)}</span></div><div class="first-clear">${first?'첫 클리어 +20%':'클리어 완료'}</div></div>`,'difficulty-card',`data-difficulty="${id}"`);}).join('')}</div>`);}
+function difficulty(map){chosenMap=map;setScreen('difficulty',header(map.name,'maps')+`<div class="scroll"><div class="difficulty-preview">${BANNER?`<img src="${BANNER}" alt="">`:mapSVG(map)}</div>${Object.entries(DIFFICULTIES).map(([id,d])=>{const first=!profile.clears[`${map.id}:${id}`],reward=Math.round(d.reward*map.mult*100*(first?1.2:1));return button('start-game',`<div><strong>${d.name}</strong><p>${d.count} 웨이브</p></div><div><div class="reward">${icon('coin')}<span>${money(reward)}</span></div><div class="first-clear">${first?'첫 클리어 +20%':'클리어 완료'}</div></div>`,'difficulty-card',`data-difficulty="${id}"`);}).join('')}</div>`);}
 let invSel=null,invMore=false,invTap={kind:null,at:0};
 const fmtN=v=>String(+(+v).toFixed(2));
 // One line of key numbers for a tower at a level (lobby only, no buffs).
@@ -1161,7 +1162,7 @@ function openMenu(id){const drop=$('#menu-drop'),bar=$('.xp-menubar');if(!drop||
  drop.style.left=Math.max(0,Math.min(btn.offsetLeft,bar.clientWidth-190))+'px';drop.style.top=(bar.offsetTop+bar.offsetHeight)+'px';drop.hidden=false;}
 function closeMenu(){menuOpen='';const drop=$('#menu-drop');if(drop){drop.hidden=true;drop.innerHTML='';}for(const b of document.querySelectorAll('.xp-menu.open'))b.classList.remove('open');}
 document.addEventListener('pointerdown',e=>{if(menuOpen&&!e.target.closest?.('#menu-drop,.xp-menubar'))closeMenu();},true);
-function about(){openDialog('그리드 타워 디펜스 정보','<p>그리드 타워 디펜스 4.3.11<br>보더랜드 · 일반 25웨이브 · 어려움 30웨이브</p><p class="muted small">효과음: Kenney UI Audio (CC0) · KDE Ocean 사운드, Guilherme Marçal Silva (CC BY-SA 4.0)</p>',button('close-dialog','확인','primary'));}
+function about(){openDialog('그리드 타워 디펜스 정보','<p>그리드 타워 디펜스 4.3.12<br>보더랜드 · 일반 25웨이브 · 어려움 30웨이브</p><p class="muted small">효과음: Kenney UI Audio (CC0) · KDE Ocean 사운드, Guilherme Marçal Silva (CC BY-SA 4.0)</p>',button('close-dialog','확인','primary'));}
 function pauseMenu(){if(!game||game.ended)return;game.paused=true;save();openDialog('일시정지',`<p>${game.map.name} · ${game.config.name}<br>웨이브 ${game.wave} / ${game.config.count} · ${seconds(game.time)}</p>`,(game.started?button('run','계속하기','primary'):button('close-dialog','닫기','primary'))+button('guide','조작 안내')+button('battle-settings','설정')+button('battle-home','메인 메뉴로 돌아가기'),'pause');updateBattleUI();}
 function requestExit(){if(game&&!game.ended)game.paused=true;save();msgBox('그리드 타워 디펜스','<p>정말 나가시겠습니까?</p>','confirm-exit','','msg-exit');}
 function handleAppBack(){
@@ -1174,7 +1175,7 @@ function handleAppBack(){
  if(screen==='balance'){sound('close');settings('settings');return;}
  if(screen==='modules'&&modulesBack())return;
  sound('close');
- if(screen==='difficulty'){if(MAPS.length>1)maps();else home();return;}
+ if(screen==='difficulty'){maps();return;}
  home();
 }
 function finishBattle(won){if(battleSettled)return;battleSettled=true;const key=`${game.map.id}:${game.difficulty}`,first=won&&!profile.clears[key];let bonus=0;if(won){profile.stats.wins++;profile.stats[game.difficulty==='hard'?'hardWins':'normalWins']++;if(first){bonus=Math.round(game.config.reward*game.map.mult*100*.2);profile.coins+=bonus;}profile.clears[key]=true;}savedRun=null;save();sound(won?'win':'lose');openDialog(won?'방어 성공':'방어 종료',`<div class="result-row"><span>웨이브</span><b>${game.completed} / ${game.config.count}</b></div><div class="result-row"><span>시간</span><span>${seconds(game.time)}</span></div><div class="result-row"><span>획득 크레딧</span><span>${money(game.rewardCents)}</span></div>${first?`<div class="result-row"><span>첫 클리어 +20%</span><span>${money(bonus)}</span></div>`:''}<div class="result-row big"><span>${icon('coin')}</span><span>${money(game.rewardCents+bonus)}</span></div>`,button('retry','다시 도전','primary')+button('result-home','메인 화면'),'result');vibrate(won?35:20);}
@@ -2057,7 +2058,7 @@ Object.assign(exports, { drawTower, drawUnit, drawPlane, towerSVG, iconSVG, hasA
 },
 "board.js":function(require,exports){
 const {COLS,ROWS,TOWER,ENEMIES,stat,dims}=require("data.js");
-const {GLYPHS,enemyShape,enemyFront}=require("icons.js");
+const {GLYPHS,enemyShape,enemyFront,BOSS_SIZE}=require("icons.js");
 const ART=require("art.js");const MODS=require("modules.js");let artGame=null,artTime=0;
 // Canvas battlefield. World units are cells (1 cell = 1 stud). Flat top-down art:
 // height reads as brightness (lighter = higher), never as shadows.
@@ -2071,8 +2072,8 @@ const SPIN=new Set(['farm','commander','gauss','plane','spawner','robot']);
 const glyphCache={},shapeCache={};
 function glyphPaths(kind){return glyphCache[kind]??=[...GLYPHS[kind].matchAll(/ d="([^"]+)"/g)].map(m=>new Path2D(m[1]));}
 function shapeParts(kind){if(shapeCache[kind])return shapeCache[kind];const parts=[];
- for(const m of enemyShape(kind).matchAll(/<(path|circle|polygon)([^>]*)\/>/g)){const a=m[2],stroke=(a.match(/stroke="([^"]+)"/)||[])[1];let p;
-  if(m[1]==='path')p=new Path2D(a.match(/ d="([^"]+)"/)[1]);else if(m[1]==='circle'){p=new Path2D();p.arc(0,0,+a.match(/r="([^"]+)"/)[1],0,Math.PI*2);}else p=new Path2D('M'+a.match(/points="([^"]+)"/)[1]+'Z');parts.push({p,stroke});}
+ for(const m of enemyShape(kind).matchAll(/<(path|circle|polygon)([^>]*)\/>/g)){const a=m[2],stroke=(a.match(/ stroke="([^"]+)"/)||[])[1],tA=a.match(/data-t="([^"]+)"/),sA=a.match(/data-s="([^"]+)"/),wA=a.match(/data-w="([^"]+)"/);let p;
+  if(m[1]==='path')p=new Path2D(a.match(/ d="([^"]+)"/)[1]);else if(m[1]==='circle'){p=new Path2D();p.arc(0,0,+a.match(/r="([^"]+)"/)[1],0,Math.PI*2);}else p=new Path2D('M'+a.match(/points="([^"]+)"/)[1]+'Z');parts.push({p,stroke,t:tA?+tA[1]:null,s:sA?+sA[1]:null,w:wA?+wA[1]:2});}
  return shapeCache[kind]=parts;}
 function planePosition(t){const R=(artGame?.stat?artGame.stat(t):stat(t)).range,dir=(t.r??0)*Math.PI/2-Math.PI/2,ux=Math.cos(dir),uy=Math.sin(dir),f=t.flight??TAKEOFF,L=Math.max(t.w,t.h)/2;
  // roll down the runway, climb out along it, then join the ring at the runway heading
@@ -2149,8 +2150,8 @@ function createBoard(canvas,map){
   tower.stun(t);}
  tower.stun=t=>{if(t.disabled>0){ctx.strokeStyle='#f2f2f2';ctx.lineWidth=Math.max(.2,2.5/scale);const m=Math.min(t.w,t.h)*.3;ctx.beginPath();ctx.moveTo(t.x-m,t.y-m);ctx.lineTo(t.x+m,t.y+m);ctx.moveTo(t.x+m,t.y-m);ctx.lineTo(t.x-m,t.y+m);ctx.stroke();}};
  function aircraft(t){const f=t.flight??TAKEOFF,s=f<1.4?1:f<TAKEOFF?1+.6*(f-1.4)/(TAKEOFF-1.4):1.6,fly=p=>{ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.ang);ctx.scale(s,s);ART.drawPlane(ctx,t.level,{time:artTime});ctx.restore();};fly(planePosition(t));if(artGame?.mods?.['wing@plane']&&(t.flight??TAKEOFF)>=TAKEOFF)fly(planePosition({...t,orbit:t.orbit+Math.PI}));}
- function enemy(e){const d=ENEMIES[e.kind],k=(d.finalBoss?1.6:d.boss?1.15:d.child?.65:.85)*UNIT;ctx.save();ctx.translate(e.x,e.y);ctx.scale(k,k);
-  ctx.save();ctx.rotate((e.angle??0)-enemyFront(e.kind));ctx.globalAlpha=d.camo&&!e.revealed?.35:.95;ctx.lineWidth=2;for(const{p,stroke}of shapeParts(e.kind)){if(stroke){ctx.strokeStyle=stroke;ctx.stroke(p);}else{ctx.fillStyle=d.color;ctx.strokeStyle=d.color;ctx.fill(p);ctx.stroke(p);}}ctx.restore();
+ function enemy(e){const d=ENEMIES[e.kind],k=(BOSS_SIZE[e.kind]??(d.finalBoss?1.6:d.boss?1.15:d.child?.65:.85))*UNIT;ctx.save();ctx.translate(e.x,e.y);ctx.scale(k,k);
+  ctx.save();ctx.rotate((e.angle??0)-enemyFront(e.kind));ctx.globalAlpha=d.camo&&!e.revealed?.35:.95;ctx.lineWidth=2;for(const{p,stroke,t,s:ts,w}of shapeParts(e.kind)){if(ts!=null){ctx.strokeStyle=ART.tone(d.color,ts);ctx.lineWidth=w;ctx.stroke(p);ctx.lineWidth=2;}else if(t!=null){ctx.fillStyle=ART.tone(d.color,t);ctx.fill(p);}else if(stroke){ctx.strokeStyle=stroke;ctx.stroke(p);}else{ctx.fillStyle=d.color;ctx.strokeStyle=d.color;ctx.fill(p);ctx.stroke(p);}}ctx.restore();
   ctx.lineWidth=1.2;if(e.shield>0){ctx.strokeStyle='#ffd700';ctx.beginPath();ctx.arc(0,0,16,0,Math.PI*2);ctx.stroke();}
   if(e.hasteRemaining>0){ctx.strokeStyle='#ffe49a';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-8,16);ctx.lineTo(-3,13);ctx.lineTo(-8,10);ctx.moveTo(-2,16);ctx.lineTo(3,13);ctx.lineTo(-2,10);ctx.stroke();}
   ctx.fillStyle=ART.tone(d.color,-.55);ctx.beginPath();ctx.arc(0,0,3,0,Math.PI*2);ctx.fill();
@@ -3330,13 +3331,86 @@ const FINAL_BOSS_OUTLINE=[[-18,0],[-6,-9],[-9,-14],[11,-12],[14,-6],[14,6],[11,1
 // the carrier face right; the final bosses face left. On the board each enemy is turned so its
 // front points along the road.
 const SHAPE_FRONT={arrow:0,carrier:0,guardian:-Math.PI/2,fortress:-Math.PI/2,shield:-Math.PI/2,beacon:-Math.PI/2,boss:-Math.PI/2,star:-Math.PI/2};
-function enemyFront(kind){const d=ENEMIES[kind];return d.finalBoss?Math.PI:SHAPE_FRONT[d.shape]??0;}
-function enemyShape(kind){const d=ENEMIES[kind];if(d.finalBoss)return `<polygon points="${FINAL_BOSS_OUTLINE.map(p=>p.join(',')).join(' ')}"/>`;switch(d.shape){
- case 'guardian':return '<path d="m0-14 12 5v12L0 15-12 3V-9Z"/><path d="M-6-2h12M0-8v17" stroke="#1f1f1f"/>';
- case 'fortress':return '<path d="M-13-12h9v5h8v-5h9v24H-13Z"/><path d="M-6 0H6M0-4v12" stroke="#1f1f1f"/>';
- case 'shield':return '<path d="m-11-11 22 0v11L0 13-11 0Z"/><path d="M-7-5H7M0-8v14" stroke="#1f1f1f"/>';
- case 'beacon':return '<path d="m0-14 8 8-5 3 8 13H-11L-3-3-8-6Z"/><path d="M-6 5H6" stroke="#1f1f1f"/>';
- case 'carrier':return '<path d="M-13-9H8L14 0 8 9H-13Z"/><path d="M-6-7v14M1-7v14" stroke="#1f1f1f"/>';
+// Boss art (4.3.12). Every boss has its own silhouette, drawn facing up (-y), inside about ±15.
+// Parts are simple paths so the board stays fast. Tones are steps of the boss's own colour:
+//   plain part      the silhouette: filled and outlined in the colour
+//   data-t="x"      a plate filled with the colour moved toward white (x>0) or black (x<0)
+//   data-s="x" data-w="w"   a line of width w in such a tone
+// Raised parts are lighter, sunken ones darker; the dark dot in the middle stays on top.
+const BOSS_ART={
+ // 1차 보스: a grown-up normal enemy with three horns and a raised dome
+ boss1:'<circle r="12"/><path d="M-2.6-11 0-18 2.6-11Z M-8.6-7.4-13-13.6-5-10.2Z M8.6-7.4 13-13.6 5-10.2Z"/>'+
+  '<circle r="7.5" data-t=".22"/>',
+ // 2차 보스: a heavy beetle; head plate, two wing cases, a dark seam
+ boss2:'<path d="M0-12C8-12 13-7 13 1 13 9 8 14 0 14-8 14-13 9-13 1-13-7-8-12 0-12Z M-5-11H5L3.4-15.6H-3.4Z"/>'+
+  '<path d="M-1.2-8C-7-8-10.4-3.6-10.4 2.6-10.4 8-6.4 11.4-1.2 11.4Z M1.2-8C7-8 10.4-3.6 10.4 2.6 10.4 8 6.4 11.4 1.2 11.4Z" data-t=".2"/>'+
+  '<path d="M-3-14.6H3" data-s="-.45" data-w="1.4"/>',
+ // 히든 보스: a hooded ghost with a ragged hem, eyes in the dark of the hood
+ hiddenboss:'<path d="M0-14C8-14 12-8 12-1V10L9 14 6 10 3 14 0 10-3 14-6 10-9 14-12 10V-1C-12-8-8-14 0-14Z"/>'+
+  '<path d="M0-10.4C5-10.4 7.4-6.4 7.4-2 7.4 2.4 4.4 5 0 5-4.4 5-7.4 2.4-7.4-2-7.4-6.4-5-10.4 0-10.4Z" data-t="-.38"/>'+
+  '<path d="M-5.2-4.6H-1.4V-2.8H-5.2Z M1.4-4.6H5.2V-2.8H1.4Z" data-t=".55"/>',
+ // 잠복 지휘체: the same kind of ghost with a crown and a longer hem
+ phantom:'<path d="M-9-9-7.6-16.4-3.8-11.6 0-17 3.8-11.6 7.6-16.4 9-9C11.2-5.4 12-1.6 12 2V10L8 14.6 4 10 0 14.6-4 10-8 14.6-12 10V2C-12-1.6-11.2-5.4-9-9Z"/>'+
+  '<path d="M-7-10.6H7V-8.2H-7Z" data-t=".3"/>'+
+  '<path d="M0-6.6C4.8-6.6 7-3.2 7 .6 7 4.4 4.2 6.6 0 6.6-4.2 6.6-7 4.4-7 .6-7-3.2-4.8-6.6 0-6.6Z" data-t="-.38"/>'+
+  '<path d="M-5-2.2H-1.4V-.4H-5Z M1.4-2.2H5V-.4H1.4Z" data-t=".55"/>',
+ // 거대 보스: a hulking rock brute; a lighter, raised top with dark cracks running through it
+ giant:'<path d="M-6-14.4 7-13.4 13.4-6 14.4 4 9.4 13.4-4 14.4-12.4 9.4-14.4-2-11.4-10.4Z"/>'+
+  '<path d="M-3.4-9.6 6.2-8.6 10.2-2.4 8.4 6 2.4 10.4-6 8.6-9.6 2.4-8.6-5Z" data-t=".18"/>'+
+  '<path d="M-9.6 2.4-4.4 1-5.4 6.4 M6.2-8.6 3-3.6 7.4-.6" data-s="-.45" data-w="1.4"/>',
+ // 중장 보스: a walking tower shield; raised face, dark rivets
+ warden:'<path d="M-12-8C-6-14 6-14 12-8V10C12 13 10 14.4 7 14.4H-7C-10 14.4-12 13-12 10Z"/>'+
+  '<path d="M-8.4-6C-4.4-10 4.4-10 8.4-6V8.4C8.4 10.4 7.2 11.4 5.2 11.4H-5.2C-7.2 11.4-8.4 10.4-8.4 8.4Z" data-t=".2"/>'+
+  '<path d="M-7-4.4H-4.8V-2.2H-7Z M4.8-4.4H7V-2.2H4.8Z M-7 7.2H-4.8V9.4H-7Z M4.8 7.2H7V9.4H4.8Z" data-t="-.45"/>',
+ // 네크로맨서 보스: a pointed hood and robe, a dark face with pale eyes, a staff with a glowing orb
+ necroboss:'<path d="M0-15 8-8C11-4 12 2 11 8L8 14H-8L-11 8C-12 2-11-4-8-8Z"/>'+
+  '<path d="M0-10.6 5-5.4C6.2-2.4 5.4.8 3.2 3H-3.2C-5.4.8-6.2-2.4-5-5.4Z" data-t="-.42"/>'+
+  '<path d="M-3.2-4.4H-1.2V-2.4H-3.2Z M1.2-4.4H3.2V-2.4H1.2Z" data-t=".5"/>'+
+  '<path d="M13.4-10V13" data-s="-.3" data-w="1.8"/>'+
+  '<path d="M10.6-12.6A2.8 2.8 0 1 0 16.2-12.6 2.8 2.8 0 1 0 10.6-12.6Z" data-t=".45"/>',
+ // 돌격 보스: a spearhead; a lighter chevron rides the front
+ charger:'<path d="M0-15.6 12.4 6 7.2 13.4 0 8.4-7.2 13.4-12.4 6Z"/>'+
+  '<path d="M0-9.4 7.4 3.4 4.2 7.6 0 4.6-4.2 7.6-7.4 3.4Z" data-t=".22"/>',
+ // 가디언: a great heater shield; raised field, a cross on it
+ guardian:'<path d="M-13-10C-6-15 6-15 13-10V0C13 8 7 13 0 16-7 13-13 8-13 0Z"/>'+
+  '<path d="M-9.4-7.8C-4.4-11 4.4-11 9.4-7.8V0C9.4 6 5.4 9.8 0 12.2-5.4 9.8-9.4 6-9.4 0Z" data-t=".2"/>'+
+  '<path d="M0-8V10 M-6-1.6H6" data-s="-.45" data-w="2"/>',
+ // 군주 근위대: a guard in pauldrons with a plumed crest and two crossed halberds
+ sentinel:'<path d="M-15-15-11.6-12.4M15-15 11.6-12.4" data-s="0" data-w="1.6"/>'+
+  '<path d="M-15.6-15.6-12-15-12.8-12.4Z M15.6-15.6 12-15 12.8-12.4Z"/>'+
+  '<path d="M-13.4-13.4 13.4 13.4 M13.4-13.4-13.4 13.4" data-s="-.3" data-w="1.8"/>'+
+  '<path d="M0-13 10-7 12 5 6 13H-6L-12 5-10-7Z"/>'+
+  '<path d="M-2.2-12.4H2.2V11.6H-2.2Z" data-t=".28"/>',
+ // 요새 보스: a square keep with four towers, a sunken courtyard and a gate at the front
+ bastion:'<path d="M-10.4-10.4H10.4V10.4H-10.4Z M-14.4-14.4H-6.8V-6.8H-14.4Z M6.8-14.4H14.4V-6.8H6.8Z M-14.4 6.8H-6.8V14.4H-14.4Z M6.8 6.8H14.4V14.4H6.8Z"/>'+
+  '<path d="M-6.6-6.6H6.6V6.6H-6.6Z" data-t="-.28"/>'+
+  '<path d="M-13-13H-8.2V-8.2H-13Z M8.2-13H13V-8.2H8.2Z M-13 8.2H-8.2V13H-13Z M8.2 8.2H13V13H8.2Z" data-t=".2"/>'+
+  '<path d="M-2.6-11.6H2.6V-6.6H-2.6Z" data-t="-.45"/>',
+ // 공성 보스: a battering ram on wheels; raised roof with a ridge, ram beam out front
+ siege:'<path d="M-10.4-8H10.4V14.4H-10.4Z M-2.8-15H2.8V-8H-2.8Z M-6.4-17.6H6.4V-13.4H-6.4Z"/>'+
+  '<path d="M-13.6-6.4H-10.4V.4H-13.6Z M10.4-6.4H13.6V.4H10.4Z M-13.6 6H-10.4V12.8H-13.6Z M10.4 6H13.6V12.8H10.4Z" data-t="-.42"/>'+
+  '<path d="M-7.8-5.6H7.8V12H-7.8Z" data-t=".2"/>'+
+  '<path d="M0-5.6V12" data-s="-.3" data-w="1.6"/>',
+ // 군주: a crowned king in a round mantle; light crown band with dark jewels, pale fur trim
+ overlord:'<path d="M0-6C9-6 15 0 15 7 15 12 10 15.4 0 15.4-10 15.4-15 12-15 7-15 0-9-6 0-6Z'+
+  ' M-11.4-5V-16.4L-6-10.6 0-17.6 6-10.6 11.4-16.4V-5Z"/>'+
+  '<path d="M-11.4-9.4H11.4V-5.2H-11.4Z" data-t=".32"/>'+
+  '<path d="M-8-8.2H-5.6V-6.2H-8Z M-1.2-8.2H1.2V-6.2H-1.2Z M5.6-8.2H8V-6.2H5.6Z" data-t="-.45"/>'+
+  '<path d="M-13 9.6C-8 6.4 8 6.4 13 9.6" data-s=".35" data-w="2.2"/>'
+};
+// How big each boss is drawn (normal enemies .85): the stronger, the bigger.
+const BOSS_SIZE={boss1:1.05,hiddenboss:1.1,phantom:1.12,boss2:1.2,warden:1.22,charger:1.25,giant:1.35,necroboss:1.4,sentinel:1.45,bastion:1.5,guardian:1.55,siege:1.62,overlord:1.85};
+// a colour moved toward white (t>0) or black (t<0), for tone parts
+function tn(c,t){const n=parseInt(c.slice(1),16),b=t<0?0:255,f=Math.abs(t);return '#'+[16,8,0].map(k=>Math.round(((n>>k)&255)+(b-((n>>k)&255))*f).toString(16).padStart(2,'0')).join('');}
+// tone attributes as plain SVG for icons
+const toneSVG=(svg,c)=>svg.replace(/data-t="([^"]+)"/g,(_,t)=>`fill="${tn(c,+t)}" stroke="none"`).replace(/data-s="([^"]+)" data-w="([^"]+)"/g,(_,t,w)=>`fill="none" stroke="${tn(c,+t)}" stroke-width="${w}"`);
+function enemyFront(kind){const d=ENEMIES[kind];return BOSS_ART[kind]?-Math.PI/2:d.finalBoss?Math.PI:SHAPE_FRONT[d.shape]??0;}
+function enemyShape(kind){const d=ENEMIES[kind];if(BOSS_ART[kind])return BOSS_ART[kind];if(d.finalBoss)return `<polygon points="${FINAL_BOSS_OUTLINE.map(p=>p.join(',')).join(' ')}"/>`;switch(d.shape){
+ case 'guardian':return '<path d="m0-14 12 5v12L0 15-12 3V-9Z"/><path d="M-6-2h12M0-8v17" data-s="-.5" data-w="2"/>';
+ case 'fortress':return '<path d="M-13-12h9v5h8v-5h9v24H-13Z"/><path d="M-6 0H6M0-4v12" data-s="-.5" data-w="2"/>';
+ case 'shield':return '<path d="m-11-11 22 0v11L0 13-11 0Z"/><path d="M-7-5H7M0-8v14" data-s="-.5" data-w="2"/>';
+ case 'beacon':return '<path d="m0-14 8 8-5 3 8 13H-11L-3-3-8-6Z"/><path d="M-6 5H6" data-s="-.5" data-w="2"/>';
+ case 'carrier':return '<path d="M-13-9H8L14 0 8 9H-13Z"/><path d="M-6-7v14M1-7v14" data-s="-.5" data-w="2"/>';
  case 'boss':return '<path d="m0-13 12 7v13L0 14-12 7V-6Z"/>';
  case 'arrow':return '<path d="m-10-10 21 10-21 10 5-10Z"/>';
  case 'split':return '<path d="M-11 8c-4-9 0-20 9-19 7-4 15 3 14 13 1 11-16 13-23 6Z"/>';
@@ -3347,8 +3421,9 @@ function enemyShape(kind){const d=ENEMIES[kind];if(d.finalBoss)return `<polygon 
 
 // 55% toward black: the dot in the middle of an enemy, in its own colour
 const dark=c=>'#'+[1,3,5].map(i=>Math.round(parseInt(c.slice(i,i+2),16)*.45).toString(16).padStart(2,'0')).join('');
-function enemyIcon(kind,cls='enemy-icon',raw=false){const low=!raw&&LOWRES.get('e:'+kind);if(low)return `<img class="${cls} lowres" src="${low}" alt="" aria-hidden="true" draggable="false">`;const d=ENEMIES[kind];return `<svg class="${cls}" viewBox="-18 -18 36 36" aria-hidden="true"><g transform="rotate(${Math.round((Math.PI/2-enemyFront(kind))*180/Math.PI)})" fill="${d.color}" fill-opacity="${d.camo?.5:.9}" stroke="${d.color}" stroke-width="2">${enemyShape(kind)}</g><circle r="3" fill="${dark(d.color)}"/>${d.shield?'<circle r="16" fill="none" stroke="#ffd700" stroke-width="1.2"/>':''}${d.camo?'<path d="m-14 12 28-24" stroke="#dddddd" stroke-width="2"/>':''}</svg>`;}
+function enemyIcon(kind,cls='enemy-icon',raw=false){const low=!raw&&LOWRES.get('e:'+kind);if(low)return `<img class="${cls} lowres" src="${low}" alt="" aria-hidden="true" draggable="false">`;const d=ENEMIES[kind];return `<svg class="${cls}" viewBox="-18 -18 36 36" aria-hidden="true"><g transform="rotate(${BOSS_ART[kind]?0:Math.round((Math.PI/2-enemyFront(kind))*180/Math.PI)})" fill="${d.color}" fill-opacity="${d.camo?.5:.9}" stroke="${d.color}" stroke-width="2">${toneSVG(enemyShape(kind),d.color)}</g><circle r="3" fill="${dark(d.color)}"/>${d.shield?'<circle r="16" fill="none" stroke="#ffd700" stroke-width="1.2"/>':''}${d.camo?'<path d="m-14 12 28-24" stroke="#dddddd" stroke-width="2"/>':''}</svg>`;}
 
+Object.defineProperty(exports,"BOSS_SIZE",{enumerable:true,get:()=>BOSS_SIZE});
 Object.defineProperty(exports,"FINAL_BOSS_OUTLINE",{enumerable:true,get:()=>FINAL_BOSS_OUTLINE});
 Object.defineProperty(exports,"GLYPHS",{enumerable:true,get:()=>GLYPHS});
 Object.defineProperty(exports,"enemyIcon",{enumerable:true,get:()=>enemyIcon});
