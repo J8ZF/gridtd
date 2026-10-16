@@ -610,7 +610,7 @@ const wallet=()=>profile.cheats.coins?'∞':money(profile.coins);
 const seconds=s=>`${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;
 let profile=starterProfile(),savedRun=null,game=null,screen='home',previous='home',selected=null,placing=null,dragPointer=null,board=null,boardObserver=null,legacyRunDropped=false,chosenMap=MAPS[0],controlSignature='',skipDismissed=null,offerArmedAt=0,lastSave=0,lastUI=0,toastTimer,audioContext,lastSound=0,battleSettled=false,dialogKind='';
 let backNavigation,codexTab='normal';
-function sanitizeProfile(p){if(!p||p.version!==1||!Number.isSafeInteger(p.coins)||p.coins<0||p.coins>1e12||!Array.isArray(p.owned)||!Array.isArray(p.loadout))throw Error('지원하지 않는 저장 파일입니다.');const out=starterProfile();out.coins=p.coins;out.owned=[...new Set(p.owned.filter(k=>TOWER[k]))];out.loadout=Array(10).fill(null);const added=new Set();p.loadout.slice(0,10).forEach((k,i)=>{if(out.owned.includes(k)&&!added.has(k)){out.loadout[i]=k;added.add(k);}});out.seen=Object.fromEntries(Object.keys(p.seen??{}).filter(k=>ENEMIES[k]).map(k=>[k,true]));out.clears=Object.fromEntries(MAPS.flatMap(m=>['normal','hard'].map(d=>`${m.id}:${d}`)).filter(k=>p.clears?.[k]).map(k=>[k,true]));for(const k of ['sound','effects','vibration','hidePlanes','levelMode','panelOpen'])if(typeof p.settings?.[k]==='boolean')out.settings[k]=p.settings[k];const count=v=>Math.max(0,Math.min(100000,Math.floor(Number(v))||0));out.stats={played:count(p.stats?.played),wins:count(p.stats?.wins),normalWins:count(p.stats?.normalWins),hardWins:count(p.stats?.hardWins)};out.cheats=normalizeCheats(p.cheats);out.modules=sanitizeModules(p.modules);fitLoadout(out);out.firstVisit=p.firstVisit!==false;return out;}
+function sanitizeProfile(p){if(!p||p.version!==1||!Number.isSafeInteger(p.coins)||p.coins<0||p.coins>1e12||!Array.isArray(p.owned)||!Array.isArray(p.loadout))throw Error('지원하지 않는 저장 파일입니다.');const out=starterProfile();out.coins=p.coins;out.owned=[...new Set(p.owned.filter(k=>TOWER[k]))];out.loadout=Array(10).fill(null);const added=new Set();p.loadout.slice(0,10).forEach((k,i)=>{if(out.owned.includes(k)&&!added.has(k)){out.loadout[i]=k;added.add(k);}});out.seen=Object.fromEntries(Object.keys(p.seen??{}).filter(k=>ENEMIES[k]).map(k=>[k,true]));out.clears=Object.fromEntries(MAPS.flatMap(m=>['normal','hard'].map(d=>`${m.id}:${d}`)).filter(k=>p.clears?.[k]).map(k=>[k,true]));for(const k of ['sound','effects','vibration','hidePlanes','levelMode','panelOpen','autoSkip'])if(typeof p.settings?.[k]==='boolean')out.settings[k]=p.settings[k];const count=v=>Math.max(0,Math.min(100000,Math.floor(Number(v))||0));out.stats={played:count(p.stats?.played),wins:count(p.stats?.wins),normalWins:count(p.stats?.normalWins),hardWins:count(p.stats?.hardWins)};out.cheats=normalizeCheats(p.cheats);out.modules=sanitizeModules(p.modules);fitLoadout(out);out.firstVisit=p.firstVisit!==false;return out;}
 // Module state from a save: known pieces only, open cells always include the starting 3×3,
 // placed pieces must fit (and not outnumber the copies owned); anything else is dropped.
 // 4.1.0 saves had a 7×7 board: their cells and pieces move one cell right and down on 10×10.
@@ -686,7 +686,7 @@ document.addEventListener('click',e=>{if(performance.now()-swipeAt<400&&e.target
 // a slot that cannot be used says why on release, unless the finger swiped across the slots
 function warnTap(e,msg){const id=e.pointerId,x=e.clientX,up=ev=>{if(ev.pointerId!==id)return;window.removeEventListener('pointerup',up);if(Math.abs(ev.clientX-x)<30)warn(msg);};window.addEventListener('pointerup',up);}
 
-function home(){fitLoadout(profile);if(game&&!game.ended){game.paused=true;savedRun=game.snapshot();}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p>버전 4.4</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
+function home(){fitLoadout(profile);if(game&&!game.ended){game.paused=true;savedRun=game.snapshot();}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p>버전 4.4.1</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
 function openDialog(title,body,buttons,kind='dialog'){if(kind!=='result')sound(kind.startsWith('msg')?'question':'open');dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2><span>${title}</span>${button('dialog-x','<i>×</i>','xp-x','aria-label="닫기"')}</h2>${body}<div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('.dialog').classList.toggle('msgbox',kind.startsWith('msg'));(modal.querySelector('.xp-yes')??modal.querySelector('.dialog-actions button')??modal.querySelector('button'))?.focus();backNavigation?.sync?.();}
 // Yes/no question in a Windows message box: icon, text, then [예] [아니요] on the right.
 const QUESTION='<svg class="xp-qicon" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="14" fill="#2f6fd8" stroke="#fff" stroke-width="2"/><text x="16" y="22.5" text-anchor="middle" font-size="19" font-weight="700" fill="#fff">?</text></svg>';
@@ -1019,7 +1019,7 @@ function equip(id){if(!profile.owned.includes(id)||profile.loadout.includes(id))
 
 function codex(tab=codexTab){codexTab=tab==='hard'?'hard':'normal';const ids=CODEX_GROUPS[codexTab],seen=ids.filter(k=>profile.seen[k]).length;setScreen('codex',header('적 도감','home',`<span class="muted small">${seen} / ${ids.length}</span>`)+`${codexTab==='hard'?`<p class="codex-note muted small">쉽지 않음 난이도에서는 모든 적의 체력과 보호막이 ${Math.round((DIFFICULTIES.hard.hpScale-1)*100)}% 많습니다.</p>`:''}<p class="codex-note muted small">입구가 아닌 곳에서 생겨난 적(소환·분열·상자에서 나온 적)은 캐시를 주지 않습니다.</p><nav class="codex-tabs" aria-label="도감 분류">${['normal','hard'].map(id=>button('codex-tab',id==='normal'?'쉬움':'쉽지 않음',id===codexTab?'active':'',`data-kind="${id}" aria-pressed="${id===codexTab}"`)).join('')}</nav><div class="scroll codex-grid">${ids.map(id=>{const e=ENEMIES[id];return profile.seen[id]?`<article class="enemy-card" data-enemy="${id}">${enemyIcon(id)}<h3>${e.name}</h3><div class="enemy-stats"><span>HP ${e.hp.toLocaleString()}</span>${e.shield?`<span class="shield-stat">보호막 ${e.shield.toLocaleString()}</span>`:''}<span>${enemyMoveSpeed(id)>0?fmtN(enemyMoveSpeed(id))+'칸/초':'이동 안 함'}</span>${e.child?'<span class="cash-stat off">캐시 없음</span>':e.cashRate?`<span class="cash-stat">캐시 ${Math.round(e.cashRate*100)}%</span>`:''}</div><p>${e.desc}</p></article>`:`<article class="enemy-card locked">${icon('lock')}<span class="small">미발견</span></article>`;}).join('')}</div>`);}
 
-function settings(from=screen){if(from!=='settings')previous=from;if(game&&!game.ended)game.paused=true;setScreen('settings',header('설정','back-settings','<span></span>')+`<div class="scroll">${[['sound','효과음'],['effects','공격 효과'],['vibration','진동'],['hidePlanes','비행기 숨기기'],['levelMode','타워 레벨 표시']].map(([key,label])=>`<div class="setting-row"><span>${label}</span><button role="switch" aria-checked="${profile.settings[key]}" aria-label="${label}" data-action="toggle-setting" data-key="${key}" class="switch ${profile.settings[key]?'on':''}"></button></div>`).join('')}<div class="section-label"><span>개발 치트</span></div>${[['lives','무한 라이프'],['cash','무한 캐시'],['coins','무한 크레딧']].map(([key,label])=>`<div class="setting-row"><span>${label}</span><button role="switch" aria-checked="${profile.cheats[key]}" aria-label="${label}" data-action="toggle-cheat" data-key="${key}" class="switch ${profile.cheats[key]?'on':''}"></button></div>`).join('')}<p class="cheat-help">전투에도 즉시 적용됩니다. 끄면 기존 잔액을 사용합니다.</p><div class="setting-row"><span>타워·도감 전체 해금</span>${allUnlocked()?'<span class="muted small">해금 완료</span>':button('unlock-all','해금','')}</div><div class="setting-row"><span>모든 모듈 100개씩</span>${button('cheat-modules','받기','')}</div><div class="setting-row"><span>모듈 판 전체 열기</span>${profile.modules.cells.length>=MODS.BOARD*MODS.BOARD?'<span class="muted small">완료</span>':button('cheat-board','열기','')}</div><div class="setting-row"><div>자동 저장<p>현재 기기·브라우저에 저장됩니다.<br>기기를 옮길 때는 저장 파일을 사용하세요.</p></div>${icon('check')}</div><div class="setting-actions">${button('export',`${icon('download')} 내보내기`)}${button('import',`${icon('upload')} 불러오기`)}</div><div class="setting-row">${button('balance','밸런스 기준','flat')}</div><div class="setting-row">${button('guide',`${icon('info')} 조작 안내`,'flat')}</div><div class="section-label"><span>통계</span></div><div class="setting-row"><span>쉬움 승리</span><span class="mono">${profile.stats.normalWins}</span></div><div class="setting-row"><span>쉽지 않음 승리</span><span class="mono">${profile.stats.hardWins}</span></div><div class="setting-row"><span>전체 승리</span><span class="mono">${profile.stats.wins}</span></div></div>`);}
+function settings(from=screen){if(from!=='settings')previous=from;if(game&&!game.ended)game.paused=true;setScreen('settings',header('설정','back-settings','<span></span>')+`<div class="scroll">${[['sound','효과음'],['effects','공격 효과'],['vibration','진동'],['hidePlanes','비행기 숨기기'],['levelMode','타워 레벨 표시'],['autoSkip','자동 스킵']].map(([key,label])=>`<div class="setting-row"><span>${label}</span><button role="switch" aria-checked="${profile.settings[key]}" aria-label="${label}" data-action="toggle-setting" data-key="${key}" class="switch ${profile.settings[key]?'on':''}"></button></div>`).join('')}<div class="section-label"><span>개발 치트</span></div>${[['lives','무한 라이프'],['cash','무한 캐시'],['coins','무한 크레딧']].map(([key,label])=>`<div class="setting-row"><span>${label}</span><button role="switch" aria-checked="${profile.cheats[key]}" aria-label="${label}" data-action="toggle-cheat" data-key="${key}" class="switch ${profile.cheats[key]?'on':''}"></button></div>`).join('')}<p class="cheat-help">전투에도 즉시 적용됩니다. 끄면 기존 잔액을 사용합니다.</p><div class="setting-row"><span>타워·도감 전체 해금</span>${allUnlocked()?'<span class="muted small">해금 완료</span>':button('unlock-all','해금','')}</div><div class="setting-row"><span>모든 모듈 100개씩</span>${button('cheat-modules','받기','')}</div><div class="setting-row"><span>모듈 판 전체 열기</span>${profile.modules.cells.length>=MODS.BOARD*MODS.BOARD?'<span class="muted small">완료</span>':button('cheat-board','열기','')}</div><div class="setting-row"><div>자동 저장<p>현재 기기·브라우저에 저장됩니다.<br>기기를 옮길 때는 저장 파일을 사용하세요.</p></div>${icon('check')}</div><div class="setting-actions">${button('export',`${icon('download')} 내보내기`)}${button('import',`${icon('upload')} 불러오기`)}</div><div class="setting-row">${button('balance','밸런스 기준','flat')}</div><div class="setting-row">${button('guide',`${icon('info')} 조작 안내`,'flat')}</div><div class="section-label"><span>통계</span></div><div class="setting-row"><span>쉬움 승리</span><span class="mono">${profile.stats.normalWins}</span></div><div class="setting-row"><span>쉽지 않음 승리</span><span class="mono">${profile.stats.hardWins}</span></div><div class="setting-row"><span>전체 승리</span><span class="mono">${profile.stats.wins}</span></div></div>`);}
 // Cheat: own every tower and mark every enemy as seen.
 function allUnlocked(){return TOWERS.every(t=>profile.owned.includes(t.id))&&Object.keys(ENEMIES).every(k=>profile.seen[k]);}
 function unlockAll(){profile.owned=[...new Set([...profile.owned,...TOWERS.filter(t=>!t.secret).map(t=>t.id)])];for(const k of Object.keys(ENEMIES))profile.seen[k]=true;save();settings('settings');toast('모든 타워와 도감을 해금했습니다.');}
@@ -1192,7 +1192,7 @@ document.addEventListener('click',e=>{const el=e.target.closest('[data-action]')
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&game&&!game.ended){game.paused=true;save();if(screen==='battle')updateBattleUI();}});
 window.addEventListener('pagehide',()=>{if(game)game.paused=true;save();});
 let lastFrame=0,accumulator=0,lastDraw=0,lastEffectId=0,gainUntil=0;
-function frame(now){const dt=Math.min(.1,(now-lastFrame)/1000);lastFrame=now;if(screen==='battle'&&game&&!document.hidden){if(!game.paused&&!game.ended){accumulator+=dt*game.speed;while(accumulator>=1/60){game.step(1/60);accumulator-=1/60;if(game.ended){accumulator=0;break;}}}else accumulator=0;if(now-lastDraw>=0){drawBattle();lastDraw=now;}if(now-lastUI>120){updateBattleUI();lastUI=now;}if(now-lastSave>4000)save();}requestAnimationFrame(frame);}
+function frame(now){const dt=Math.min(.1,(now-lastFrame)/1000);lastFrame=now;if(screen==='battle'&&game&&!document.hidden){if(!game.paused&&!game.ended){accumulator+=dt*game.speed;while(accumulator>=1/60){game.step(1/60);accumulator-=1/60;if(game.ended){accumulator=0;break;}if(profile.settings.autoSkip&&game.canSkip())game.skip();}}else accumulator=0;if(now-lastDraw>=0){drawBattle();lastDraw=now;}if(now-lastUI>120){updateBattleUI();lastUI=now;}if(now-lastSave>4000)save();}requestAnimationFrame(frame);}
 preventTextSelection();
 const EMBEDDED=(()=>{try{return window.self!==window.top;}catch{return true;}})();
 backNavigation=installBackNavigation(handleAppBack,window,()=>!(EMBEDDED&&screen==='home'&&!dialogKind));
@@ -1957,110 +1957,98 @@ function icuTruck(lv) {
   return p + G("turret", t, ' data-pivot="-5,0"');
 }
 
-// Striker: a railgun tank. Wedge hull on two tracks, a square-cut turret with a capacitor pack at
-// the back and the twin rails the laser tower uses, lights only where the charge runs.
+// Striker (after the reference): a dark, faceted heavy tank. Wide tracks with pale pads on the
+// outer edge, a wedge glacis, louvers on the rear deck, a row of lights along each side skirt,
+// a faceted turret with an octagonal hatch, three slats on its flank and a banded barrel.
+// Dark steps of the tower color only; the lights and the outline are the neon.
+const NEON = (w) => ` stroke="c!" stroke-width="${w}" stroke-linejoin="miter"`;
 function icuTank() {
   let hull = "", a = "", b = "";
   for (const s of [-1, 1]) {
-    const y0 = s > 0 ? 13 : -24;
-    hull += R(-27, y0, 54, 11, "rubber");
-    for (let x = -22.6; x <= 22.61; x += 4.6) a += L(x, y0 + 1.2, x, y0 + 9.8, "steel", 1.6);
-    for (let x = -20.3; x <= 20.31; x += 4.6) b += L(x, y0 + 1.2, x, y0 + 9.8, "steel", 1.6);
+    const y0 = s > 0 ? 13 : -25, edge = s > 0 ? y0 + 9 : y0 + .4;
+    hull += P(cut(-29, y0, 29, y0 + 12, 3.4), "c-86");
+    for (let x = -22; x <= 22.01; x += 8.8) a += P(cut(x - 3, edge, x + 3, edge + 2.6, 1), "c-46");
+    for (let x = -17.6; x <= 17.61; x += 8.8) b += P(cut(x - 3, edge, x + 3, edge + 2.6, 1), "c-46");
   }
-  let low = P(cut(-25, -14.6, 27, 14.6, 8, 3), "c-40") + P(cut(-22.6, -12.2, 23, 12.2, 6.4, 2), "c-14");
-  for (const s of [-1, 1]) low += R(-22, s * 11.4 - .6, 40, 1.2, "c-46") + R(19, s * 6 - .8, 3.6, 1.6, "c!");
-  low += R(-24.4, -4, 2, 8, "c!");
-  let t = P(cut(-17, -9.6, -10, 9.6, 0, 2), "c-62");
-  for (const y of [-6.6, -1.6, 3.4]) t += R(-15.6, y, 4.4, 3.2, "c-78") + R(-14.4, y + 1, 2, 1.2, "c!");
-  t += P(cut(-11, -11, 9, 11, 4.6, 1.6), "c-44") + P(cut(-9.4, -9.4, 7.4, 9.4, 3.6, 1), "c-6") + P(cut(-6.6, -5.6, 1.4, 5.6, 1.2), "c+26");
-  const gap = 2, rw = 3.4, end = 42;
-  t += R(6, -gap, end - 8, gap * 2, "c-76") + R(end - 9, -0.9, 5, 1.8, "c!");
-  for (const s of [-1, 1]) t += P([6, s * gap, end, s * gap, end - rw * 1.2, s * (gap + rw), 6, s * (gap + rw)], "steelHi") + P([6, s * (gap + .5), end - 1.4, s * (gap + .5), end - 2.4, s * (gap + 1.5), 6, s * (gap + 1.5)], "gunHi");
-  for (const [x, w, o] of [[10, 3.6, 1.8], [19, 3, 1.2], [28, 2.4, .8]]) t += R(x, -gap - rw - o, w, (gap + rw + o) * 2, "c-34") + R(x + .7, -gap - rw - o + .8, w - 1.4, (gap + rw + o - .8) * 2, "c+12");
-  return hull + G("treadA", a) + G("treadB", b, ' data-off="1"') + low + G("turret", t);
+  let low = P(cut(-28, -15.4, 27, 15.4, 9, 3), "c-78", NEON(.7));
+  low += P([12, -13.6, 26.4, -6, 26.4, 6, 12, 13.6], "c-68"); // glacis
+  for (let k = 0; k < 6; k++) low += R(-25 + k * 2.6, -7.6, 1.2, 15.2, "c-46"); // rear louvers
+  for (const s of [-1, 1]) {
+    low += P(cut(-22, s > 0 ? 10.6 : -14.2, 10, s > 0 ? 14.2 : -10.6, 1), "c-72");
+    for (const x of [-18.6, -13, -7.4, -1.8, 3.8]) low += R(x, s * 12.4 - .6, 2.4, 1.2, "c!");
+  }
+  // turret, turning about (-4, 0): faceted, an octagonal hatch, three slats on the front flank, a banded barrel
+  let t = R(6, -2.2, 34, 4.4, "c-54", 0, NEON(.6));
+  for (const x of [14, 20, 26]) t += R(x, -2.7, 2.2, 5.4, "c-86");
+  t += R(37, -2.8, 4, 5.6, "c-62", 0, NEON(.5));
+  t += P([-19, -8.4, -13.4, -12.4, 3, -12.4, 9, -6.6, 9, 6.6, 3, 12.4, -13.4, 12.4, -19, 8.4], "c-70", NEON(.7));
+  t += P([-15.4, -6.6, -11.4, -9.6, 1.4, -9.6, 5.8, -5.2, 5.8, 5.2, 1.4, 9.6, -11.4, 9.6, -15.4, 6.6], "c-62");
+  for (const x of [-.6, 1.8, 4.2]) t += P([x, -12, x + 1.6, -12, x + 3, -9.4, x + 1.4, -9.4], "c-88");
+  t += P([-11.4, -3, -9.2, -5.2, -5.6, -5.2, -3.4, -3, -3.4, 3, -5.6, 5.2, -9.2, 5.2, -11.4, 3], "c-44") + L(-9.2, 5.2, -5.6, 5.2, "c!", .9);
+  t += R(-16.6, 7.4, 6, 1, "c!") + R(-1, 9, 5, 1, "c!");
+  return hull + G("treadA", a) + G("treadB", b, ' data-off="1"') + low + G("turret", t, ' data-pivot="-4,0"');
 }
 
-// 리콘 정비선: a long carrier hull with two engine pods, the railgun along its spine, the flash
-// cannon's square lens amidships, a gun turret at the bow and a landing deck at the stern.
+// 리콘 정비선 (after Bliss of Finality, seen from above): a wide stern with stacked thrusters and
+// two pairs of swept wings, the hull narrowing over two black cannons into a long spine with a
+// cyan railgun inset, prongs at the nose. White steps, black panels, neon only on edges and lights.
+// Drawn huge: about 130 units long (the board scales it to about 44 cells).
 function icuShip() {
+  const N = NEON(.7);
   let p = "";
   for (const s of [-1, 1]) {
-    // engine pods on short pylons, their exhausts glow
-    p += P(s > 0 ? [-4, 8, -12, 13, -30, 13, -30, 8] : [-4, -8, -12, -13, -30, -13, -30, -8], "c-50");
-    p += P(cut(-40, s > 0 ? 9.6 : -21, -14, s > 0 ? 21 : -9.6, 3, 2), "c-40") + P(cut(-38.4, s > 0 ? 11.4 : -19.2, -16.6, s > 0 ? 19.2 : -11.4, 2.4, 1.4), "c-12");
-    p += R(-42.4, s > 0 ? 11.6 : -19, 2.4, 7.4, "c!") + R(-36, s * 15.3 - .6, 16, 1.2, "c-48");
+    const W = (pts) => pts.map((v, i) => (i % 2 ? v * s : v));
+    // big rear wings, swept back; a dark panel inside a wide white margin, the tip glows
+    p += P(W([-32.6, 14, -42.6, 39, -51.4, 39, -47.6, 14]), "c+30", N);
+    p += P(W([-36.6, 18.6, -42.4, 33, -46.2, 33, -44.6, 18.6]), "c-84");
+    p += P(W([-42, 36.6, -51, 36.6, -51.4, 39, -42.6, 39]), "c!");
+    // small forward wings
+    p += P(W([-19.4, 14, -23.6, 26, -29.6, 26, -28.6, 14]), "c+30", N);
+    p += P(W([-21.8, 16.8, -24.4, 22.6, -26.8, 22.6, -26.4, 16.8]), "c-84");
+    p += P(W([-23.2, 24.4, -29.4, 24.4, -29.6, 26, -23.6, 26]), "c!");
+    // engine housings at the stern corners, glowing exhausts
+    p += P(W([-64, 7, -52, 7, -50, 9, -50, 16, -64, 16]), "c+36", N) + R(-66, s > 0 ? 8.6 : -14.6, 2, 6, "c!");
+    // black cannons over the narrowing hull
+    p += R(-12, s > 0 ? 8.2 : -10.8, 17, 2.6, "c-88") + R(4.4, s > 0 ? 8.2 : -10.8, 1.4, 2.6, "c-40");
   }
-  p += P([46, 0, 34, -8.4, 4, -11, -30, -9.4, -34, -6, -34, 6, -30, 9.4, 4, 11, 34, 8.4], "c-44");
-  p += P([42, 0, 32, -6.8, 4, -9.2, -28, -7.8, -31.6, -4.8, -31.6, 4.8, -28, 7.8, 4, 9.2, 32, 6.8], "c-8");
-  // landing deck at the stern with its markings
-  p += R(-28, -6, 18, 12, "c-30");
-  for (const x of [-25, -19.6, -14.2]) p += R(x, -.6, 3, 1.2, "c+30");
-  p += R(-28, -6, 1.2, 12, "c!");
-  // spine and railgun
-  const gap = 1.6, rw = 2.4;
-  p += R(4, -gap, 42, gap * 2, "c-76") + R(36, -.7, 6, 1.4, "c!");
-  for (const s of [-1, 1]) p += P([4, s * gap, 50, s * gap, 47.4, s * (gap + rw), 4, s * (gap + rw)], "steelHi") + L(4, s * (gap + .9), 48.6, s * (gap + .9), "gunHi", .8);
-  for (const x of [12, 22, 32]) p += R(x, -5.2, 2.4, 10.4, "c-34") + R(x + .6, -4.4, 1.2, 8.8, "c+14");
-  // flash cannon: a square lens in a heavy frame
-  p += P(cut(-8, -8.4, 2.4, 8.4, 2.4), "c-56") + P(cut(-6.4, -6.8, .8, 6.8, 1.8), "plate") + P(cut(-5, -4.6, -.6, 4.6, 1.2), "c!");
-  // gun turrets either side of the rails
-  for (const s of [-1, 1]) p += P(cut(16, s > 0 ? 4.4 : -9.4, 22, s > 0 ? 9.4 : -4.4, 1.4), "c-40") + R(21.4, s * 7.4 - .6, 6.4, 1.2, "gunHi");
-  // running lights
-  for (const [x, y] of [[40, -2.6], [40, 1.4], [18, -9.2], [18, 8.2], [-10, -9.4], [-10, 8.4]]) p += R(x, y, 1.2, 1.2, "c!");
+  // stern block and the three stacked thrusters
+  p += P(cut(-62, -15.6, -26, 15.6, 2, 3), "c+14", N);
+  for (const y of [-7, 0, 7]) p += P([-63.4, y, -58, y - 2.8, -32, y - 2.8, -28.6, y, -32, y + 2.8, -58, y + 2.8], "c+34") + R(-56, y - .4, 22, .8, "c-30");
+  // vent slots along both flanks, between the wings
+  for (const y of [10.4, 12.6]) for (const sy of [-1, 1]) p += R(-46, sy > 0 ? y : -y - 1, 17, 1, "c-84");
+  // middle hull narrowing into the spine
+  p += P([-27, -15.6, -14, -15.6, -3.6, -5, -3.6, 5, -14, 15.6, -27, 15.6], "c+24", N) + P([-25, -13, -15, -13, -7.2, -5, -7.2, 5, -15, 13, -25, 13], "c+38");
+  // the spine: railgun inset in cyan, a dark keel line, prongs at the nose
+  p += P([-8, -4.6, 54, -4.6, 57, -1.8, 57, 2.2, 54, 5, -8, 5], "c+30", N);
+  p += R(-9, -1.9, 38, 3.8, "c!") + R(-4.6, -.7, 32, 1.4, "c+44") + R(46, 1.4, 8, 1, "c!");
+  p += R(30, -4.6, 24, 1, "c-84") + R(-1, 4, 44, 1, "c-84");
+  for (const [y, len] of [[-2.4, 12], [-.8, 16.5], [.8, 16.5], [2.4, 12]]) p += R(57, y - .3, len, .6, "c+40");
   return p;
 }
 
-// The base, 10×10. Gate on the top edge (the sortie bar fills toward the next trooper), the yard
-// behind it, the HQ at the bottom. Lots fill in by level: Lv.1 barracks, Lv.2 truck garage and a
-// sensor mast, Lv.3 a second barracks, Lv.4 the Striker hangar, Lv.5 the ship's landing pad.
+// The base, 10×10: one big command building in the middle, a parking lot all around it where the
+// units of the current level stand (troopers, then the rocket truck, then the Striker). The gate is
+// on the building's top face; the bar above it fills toward the next trooper.
 TOWERS.icu = (lv) => {
-  let b = R(-100, -100, 200, 200, "hall");
-  // roads: the yard from the gate down to the HQ and a cross road to the side lots
-  b += R(-26, -80, 52, 114, "booth") + R(-93, -9, 186, 18, "booth");
-  for (let y = -72; y < 24; y += 14) b += R(-1, y, 2, 7, "c-62");
-  for (const x of [-86, -70, 62, 78]) b += R(x, -1, 8, 2, "c-62");
-  // the gate: a roll-up door between two guard booths, the sortie bar under it
-  b += R(-34, -100, 68, 20, "c-6");
-  for (const y of [-95, -90.4, -85.8]) b += R(-31, y - .8, 62, 1.6, "c-46");
-  for (const x of [-46, 34]) b += P(cut(x, -98, x + 12, -86, 2), "c-40") + R(x + 2.4, -95.6, 7.2, 7.2, "c-12") + R(x + 5, -88.6, 2, 1.6, "c!");
-  b += R(-34, -79, 68, 2.4, "slot") + G("sortie", R(-34, -79, 68, 2.4, "c!"), ' data-pivot="-34,0"');
-  // an empty lot: a slab with a painted border until its building goes up
-  const lot = (x0, y0, x1, y1) => R(x0, y0, x1 - x0, y1 - y0, "bay") + R(x0 + 2, y0 + 2, x1 - x0 - 4, y1 - y0 - 4, "none", 0, ' stroke="c-56" stroke-width="1.2" stroke-dasharray="4 3"');
-  // barracks: a long hall with a ridge, roof vents and a lit door
-  const barracks = (x0, y0) => {
-    let r = P(cut(x0, y0, x0 + 52, y0 + 38, 3), "c-40") + P(cut(x0 + 2, y0 + 2, x0 + 50, y0 + 36, 2), "c-10") + R(x0 + 2, y0 + 17, 48, 4, "c+22");
-    for (const x of [x0 + 8, x0 + 22, x0 + 36]) r += R(x, y0 + 7, 6, 5, "c-30") + R(x, y0 + 26, 6, 5, "c-30");
-    return r + R(x0 + 50, y0 + 15, 2.4, 8, "c!");
-  };
-  b += barracks(-92, -58);
-  b += lv >= 3 ? barracks(-92, 14) : lot(-92, 14, -40, 52);
-  // Lv.2: truck garage with a rack of spare missiles, and the sensor mast that sees hidden enemies
-  if (lv >= 2) {
-    b += P(cut(40, -58, 92, -20, 3), "c-40") + P(cut(42, -56, 90, -22, 2), "c-14");
-    for (let k = 0; k < 4; k++) b += R(46 + k * 11, -54, 8, 30, "c-30") + R(47 + k * 11, -53, 6, 28, "c+8");
-    b += R(40, -40, 2.4, 8, "c!");
-    for (let k = 0; k < 6; k++) b += R(44 + k * 7.4, -17, 6, 4, "c-56") + R(49.2 + k * 7.4, -16.2, 1.2, 2.4, "c!");
-    b += P(cut(-88, 62, -56, 90, 3), "c-44") + P(cut(-85.6, 64.4, -58.4, 87.6, 2), "c-16") + R(-76, 70, 8, 12, "c-30") + R(-74, 72, 4, 8, "c!");
-    b += R(-73, 54, 2, 16, "steelHi") + R(-81, 52, 18, 2.4, "steelHi") + R(-78, 58, 12, 1.6, "steelHi");
-  } else b += lot(40, -58, 92, -14) + lot(-92, 58, -50, 92);
-  // Lv.4: the Striker hangar and a yard of capacitor bars that charge its railgun
-  if (lv >= 4) {
-    b += P(cut(36, 14, 92, 66, 4), "c-44") + P(cut(38.4, 16.4, 89.6, 63.6, 3), "c-12");
-    for (let k = 0; k < 5; k++) b += R(42 + k * 9.6, 20, 7, 40, k % 2 ? "c+4" : "c+14");
-    b += R(36, 31, 3, 18, "c!") + R(30, 35, 6, 1.6, "steelHi") + R(30, 43.4, 6, 1.6, "steelHi");
-    for (let k = 0; k < 3; k++) b += R(46 + k * 15, 72, 12, 20, "c-58") + R(50.4 + k * 15, 75, 3.2, 14, "c!") + R(46 + k * 15, 70.4, 12, 2, "steel");
-  } else b += lot(40, 14, 92, 66) + lot(42, 70, 92, 94);
-  // HQ: a command block with a lit front; at Lv.5 its roof becomes the ship's landing pad
-  b += P(cut(-36, 32, 36, 94, 5), "c-44") + P(cut(-33, 35, 33, 91, 4), "c-14") + R(-24, 36.4, 48, 1.8, "c!");
-  if (lv < 5) {
-    b += P(cut(-26, 43, 26, 85, 3), "c+16") + R(-20, 50, 12, 12, "c-26") + R(-17.6, 52.4, 7.2, 7.2, "c+36");
-    b += R(13, 47, 2.4, 32, "steelHi") + R(8, 52, 12.4, 1.8, "steelHi") + R(9.6, 62, 9.2, 1.8, "steelHi") + R(13, 46, 2.4, 2.4, "c!");
-  } else {
-    b += P(cut(-26, 43, 26, 85, 3), "c-36") + P(cut(-21, 48, 21, 80, 2), "none", ' stroke="c+30" stroke-width="1.6"');
-    b += R(-12, 62, 24, 4, "c+40") + R(-12, 52, 4, 24, "c+40") + R(8, 52, 4, 24, "c+40");
-    for (const x of [-24.4, 22]) for (const y of [44.6, 81]) b += R(x, y, 2.4, 2.4, "c!");
-  }
-  b += R(-97.6, -97.6, 195.2, 195.2, "none", 0, ' stroke="c" stroke-width="2.8"');
+  let b = R(-100, -100, 200, 200, "hall") + R(-93, -93, 186, 186, "bay");
+  // painted stalls on the four sides
+  let m = "";
+  for (let y = -78; y <= 78; y += 17.3) m += L(-91, y, -64, y, "paint", 1.2) + L(64, y, 91, y, "paint", 1.2);
+  for (let x = -40; x <= 40; x += 20) m += L(x, -91, x, -78, "paint", 1.2) + L(x, 78, x, 91, "paint", 1.2);
+  b += G("", m, ' opacity="0.3"');
+  // the building
+  b += P(cut(-58, -58, 58, 58, 10), "c-46", NEON(1.6)) + P(cut(-52, -52, 52, 52, 8), "c-10") + P(cut(-36, -36, 36, 36, 6), "c+14");
+  b += P(cut(-16, -16, 16, 16, 4), "c-40") + P(cut(-10, -10, 10, 10, 2.6), lv >= 5 ? "c!" : "c-14");
+  for (const s of [-1, 1]) b += R(s > 0 ? 40 : -46, -24, 6, 48, "c-28") + R(-24, s > 0 ? 40 : -46, 48, 6, "c-28");
+  b += R(-26, -60, 52, 12, "c") ;
+  for (const y of [-57, -53.6]) b += R(-24, y, 48, 1.2, "c-46");
+  b += R(-26, -66, 52, 2.4, "slot") + G("sortie", R(-26, -66, 52, 2.4, "c!"), ' data-pivot="-26,0"');
+  // parked units
+  const park = (x, y, rot, k, body) => G("", body, ` transform="translate(${x} ${y}) rotate(${rot}) scale(${k})"`);
+  for (const x of [-40, 0, 40]) b += park(x, 76, -90, .8, icuTrooper(lv));
+  if (lv >= 2) b += park(-77, 0, -90, .82, icuTruck(lv));
+  if (lv >= 4) b += park(77, 0, -90, .7, icuTank());
+  b += R(-97.6, -97.6, 195.2, 195.2, "none", 0, NEON(2.8));
   return { base: b };
 };
 
@@ -2353,10 +2341,10 @@ function createBoard(canvas,map){
  const rows=ROWS-map.viewTop;
  function resize(){const r=canvas.getBoundingClientRect();if(!r.width||!r.height)return;const atFit=!sized||Math.abs(scale-fitScale)<1e-6;DPR=1;W=r.width;H=r.height;canvas.width=Math.round(W*DPR);canvas.height=Math.round(H*DPR);cache.width=Math.max(1,Math.round(canvas.width*MAP_RES));cache.height=Math.max(1,Math.round(canvas.height*MAP_RES));fitScale=Math.min(W/COLS,H/rows);sized=true;if(atFit)fit();else clamp();cacheKey='';}
  function fit(){scale=fitScale;ox=(W-COLS*scale)/2;oy=(H-rows*scale)/2-map.viewTop*scale;cacheKey='';}
- function clamp(){scale=Math.max(fitScale,Math.min(fitScale*6,scale));if(scale<=fitScale+1e-6){fit();return;}const cx=(W/2-ox)/scale,cy=(H/2-oy)/scale,X=Math.max(0,Math.min(COLS,cx)),Y=Math.max(map.viewTop,Math.min(ROWS,cy));ox=W/2-X*scale;oy=H/2-Y*scale;}
- function zoomTo(next,sx=W/2,sy=H/2){const wx=(sx-ox)/scale,wy=(sy-oy)/scale;scale=Math.max(fitScale,Math.min(fitScale*6,next));ox=sx-wx*scale;oy=sy-wy*scale;clamp();}
+ function clamp(){scale=Math.max(fitScale*.4,Math.min(fitScale*10,scale));if(Math.abs(scale-fitScale)<1e-6){fit();return;}const M=scale<fitScale?80:0,cx=(W/2-ox)/scale,cy=(H/2-oy)/scale,X=Math.max(-M,Math.min(COLS+M,cx)),Y=Math.max(map.viewTop-M,Math.min(ROWS+M,cy));ox=W/2-X*scale;oy=H/2-Y*scale;}
+ function zoomTo(next,sx=W/2,sy=H/2){const wx=(sx-ox)/scale,wy=(sy-oy)/scale;scale=Math.max(fitScale*.4,Math.min(fitScale*10,next));ox=sx-wx*scale;oy=sy-wy*scale;clamp();}
  const zoomBy=(f,sx,sy)=>zoomTo(scale*f,sx,sy);
- function pan(dx,dy){if(scale<=fitScale+1e-6)return;ox+=dx;oy+=dy;clamp();}
+ function pan(dx,dy){if(Math.abs(scale-fitScale)<1e-6)return;ox+=dx;oy+=dy;clamp();}
  const toWorld=(sx,sy)=>[(sx-ox)/scale,(sy-oy)/scale];
  const view=()=>({scale,ox,oy,W,H,fitScale});
 
@@ -2428,16 +2416,16 @@ function createBoard(canvas,map){
   if(e.stun>0){ctx.strokeStyle='#d6bfff';ctx.lineWidth=1.2;ctx.setLineDash([3,4]);ctx.beginPath();ctx.arc(0,0,16,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);}
   ctx.restore();}
 // ---- ICU 전선 (4.4) on the board: units, missiles, the ship and its laser ----
- const ICU_UNIT={trooper:['icuTrooper',1.7,2.2,-2.05],truck:['icuTruck',2,3.6,-3],tank:['icuTank',1.6,3.8,-2.75]};
+ const ICU_UNIT={trooper:['icuTrooper',1.7,2.2,-2.05],truck:['icuTruck',2,3.6,-3],tank:['icuTank',1.9,4.4,-3.3]};
  function icuVehicle(v){const [art,k,bw,by]=ICU_UNIT[v.unit]??ICU_UNIT.trooper,c=TOWER.icu.color,body=v.unit==='trooper'&&v.aim?v.gunAngle:v.angle,ga=v.gunAngle===0?v.angle:v.gunAngle;
   ctx.save();ctx.translate(v.x,v.y);ctx.save();ctx.rotate(body);ctx.scale(k,k);ART.drawUnit(ctx,art,v.level,{color:c,gunAngle:ga-body,travel:v.progress});ctx.restore();
   ctx.fillStyle='#2e2e2e';ctx.fillRect(-bw/2,by,bw,.26);ctx.fillStyle=c;ctx.fillRect(-bw/2,by,Math.max(0,v.hp/v.maxHp*bw),.26);ctx.restore();}
  // a missile: a short silver body with a lit tail and a fading trail
  function icuMissiles(game){const px=1/scale;for(const m of game.missiles??[]){const cx=Math.cos(m.a),sy=Math.sin(m.a);ctx.save();ctx.globalAlpha=.35;ctx.strokeStyle='#cfdcea';ctx.lineWidth=2*px;ctx.beginPath();ctx.moveTo(m.x-cx*2.2,m.y-sy*2.2);ctx.lineTo(m.x,m.y);ctx.stroke();ctx.globalAlpha=1;
   ctx.translate(m.x,m.y);ctx.rotate(m.a);ctx.fillStyle='#e4ecf4';ctx.fillRect(-.55,-.16,1.1,.32);ctx.fillStyle='#5aa2ea';ctx.fillRect(-.8,-.12,.3,.24);ctx.restore();}}
- function icuShips(game){for(const t of game.towers)if(t.kind==='icu'&&t.level>=5&&game.icuShipPos){const p=game.icuShipPos(t);ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.angle);ctx.scale(2.4,2.4);ART.drawShip(ctx);ctx.restore();}}
+ function icuShips(game){for(const t of game.towers)if(t.kind==='icu'&&t.level>=5&&game.icuShipPos){const p=game.icuShipPos(t);ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.angle);ctx.scale(6.8,6.8);ART.drawShip(ctx);ctx.restore();}}
  // the laser: beams from the ship flicker over every enemy while the whole field slowly turns white
- function icuStorm(game){const st=game.storm;if(!st)return;const p=1-st.left/st.total,ship=game.towers.find(t=>t.id===st.source),o=ship&&game.icuShipPos?game.icuShipPos(ship):{x:45,y:0};
+ function icuStorm(game){const st=game.storm;if(!st)return;const p=1-st.left/st.total,ship=game.towers.find(t=>t.id===st.source),c0=ship&&game.icuShipPos?game.icuShipPos(ship):{x:45,y:-20,angle:0},o={x:c0.x+Math.cos(c0.angle)*20.4,y:c0.y+Math.sin(c0.angle)*20.4};
   ctx.save();ctx.lineCap='butt';let n=0;for(const e of game.enemies){if(e.dead||n++>70)continue;if(Math.random()<.45)continue;ctx.globalAlpha=.25+Math.random()*.5;ctx.strokeStyle=Math.random()<.5?'#ffffff':'#a8d2ff';ctx.lineWidth=(1+Math.random()*2.4)/scale;ctx.beginPath();ctx.moveTo(o.x,o.y);ctx.lineTo(e.x,e.y);ctx.stroke();}
   const white=p<.7?.55*(p/.7)**2:.55*(1-(p-.7)/.3);ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=Math.max(0,white);ctx.fillStyle='#ffffff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.restore();}
  const icuShake=game=>{const st=game.storm;if(!st)return [0,0];const p=1-st.left/st.total,amp=(p<.15?p/.15:p>.85?(1-p)/.15:1)*5;return [(Math.random()-.5)*amp,(Math.random()-.5)*amp];};
@@ -2638,7 +2626,7 @@ const MAPS=[
 // Rebalance: 1 cell = 1 stud. Soldier, bomb (Fragger), farm, flamethrower, minigun (Commando),
 // shotgun, spawner (Patrol), plane (Aviator), commander and laser (Phaser) use Tower Battles
 // wiki values; sniper, tesla, gauss, agent and robot sit on the same price-to-output curve.
-const TOWERS=[{"id": "soldier", "name": "군인", "tier": 1, "color": "#7ce4be", "unlock": 0, "cost": 200, "upgrades": [125, 1175], "damage": [1, 1, 3], "range": [12, 13, 14], "period": [1.3, 1.2, 1.1], "burst": [3, 4, 6], "shot": 0.13, "camoLevel": 2, "desc": "3발 버스트 · 무난한 기본 화력", "detail": "짧게 연사한 뒤 재장전합니다. Lv.2부터 히든을 감지합니다.", "notes": ["히든 감지 · 4발 버스트 · 사거리 13", "피해 3 · 6발 버스트 · 사거리 14"], "upgradeNames": ["야간 작전", "돌격 분대"]}, {"id": "bomb", "name": "폭탄", "tier": 1, "color": "#ec9a66", "unlock": 0, "cost": 250, "upgrades": [200, 1750], "damage": [3, 4, 10], "range": [8, 8, 9], "period": [2.5, 2.2, 2], "splash": [3, 3.5, 4.5], "centerLevel": 3, "camoLevel": 2, "desc": "근거리 투척 · 광역 폭발", "detail": "폭발 범위 안의 모든 적에게 피해를 줍니다. Lv.2부터 히든을 노리고, Lv.3은 폭발 중심에 가까울수록 최대 75% 추가 피해를 줍니다.", "notes": ["히든 감지 · 피해 4 · 폭발 범위 3.5", "피해 10 · 폭발 범위 4.5 · 중심부 추가 피해"], "upgradeNames": ["야간 고글", "폭파 전문가"]}, {"id": "sniper", "name": "스나이퍼", "tier": 1, "color": "#89b6f7", "unlock": 0, "cost": 275, "upgrades": [175, 450, 2600], "damage": [5, 5, 10, 50], "range": [18, 20, 20, 22], "period": [2.5, 2.5, 2.2, 2], "camoLevel": 2, "desc": "긴 사거리 · 강한 단발", "detail": "느리지만 멀리 쏘는 단발 사격. Lv.2부터 히든을 감지합니다.", "notes": ["히든 감지 · 사거리 20", "피해 10 · 주기 2.2초", "피해 50 · 주기 2초 · 사거리 22"], "upgradeNames": ["장거리 조준경", "강화 탄환", "대물 소총"]}, {"id": "farm", "name": "농장", "tier": 1, "color": "#b4d871", "unlock": 0, "cost": 225, "upgrades": [300, 750], "damage": [0, 0, 0], "range": [0, 0, 0], "period": [8, 8, 8], "income": [8, 20, 50], "placementLimit": 5, "desc": "8초마다 캐시 생산", "detail": "게임 시간 8초마다 캐시를 만듭니다. 한 웨이브를 기준 시간보다 오래 끌면 생산이 점점 느려집니다. 최대 5개까지 배치합니다.", "notes": ["생산량 8 → 20", "생산량 50"], "upgradeNames": ["비료", "과수원"]}, {"id": "flame", "name": "화염방사기", "tier": 2, "color": "#f17459", "unlock": 500, "cost": 450, "upgrades": [450, 2100], "damage": [0, 0, 0], "range": [6, 7, 8], "period": [0.5, 0.5, 0.5], "burn": [1, 1, 5], "burnDuration": [2, 3, 4], "burnInterval": 1, "burnSlow": 0.4, "cone": [0.7, 0.8, 0.9], "desc": "지속 화상 · 이동 속도 40% 감소", "detail": "직접 피해 없이 1초마다 화상 피해를 주고, 화상 중에는 이동 속도가 40% 줄어듭니다. 화상은 겹치지 않고 시간만 갱신됩니다. 최종 보스·가디언·용암병은 감속 면역이고, 히든은 감지하지 못합니다.", "notes": ["화상 지속 3초 · 사거리 7 · 분사각 넓게", "화상 5 · 4초 · 사거리 8"], "upgradeNames": ["연료 증량", "방화광"]}, {"id": "tesla", "name": "테슬라", "tier": 2, "color": "#c095f5", "unlock": 600, "cost": 450, "upgrades": [175, 550, 2800], "damage": [6, 6, 13, 45], "range": [10, 11, 11, 12], "period": [2, 1.8, 1.8, 1.6], "chain": [3, 4, 4, 6], "camoLevel": 3, "desc": "전이 공격 · 피해 무작위 분배", "detail": "한 번의 총 피해를 이어진 적들에게 무작위로 나눕니다. 큰 몫을 맞은 적은 잠깐 멈춥니다. Lv.3부터 히든을 감지합니다.", "notes": ["4명 전이 · 사거리 11 · 주기 1.8초", "히든 감지 · 총 피해 13", "6명 전이 · 총 피해 45 · 사거리 12 · 주기 1.6초"], "upgradeNames": ["고전압 코일", "전파 탐지", "뇌전 폭풍"]}, {"id": "minigun", "name": "미니건", "tier": 2, "color": "#ebd175", "unlock": 900, "cost": 850, "upgrades": [400, 600, 3650], "damage": [1, 1, 1, 3], "range": [14, 15, 16, 16], "period": [0.15, 0.12, 0.09, 0.06], "camoLevel": 3, "desc": "재장전 없는 지속 연사 · 긴 사거리", "detail": "쉬지 않고 연사합니다. Lv.3부터 히든을 감지합니다.", "notes": ["발사 주기 0.12초 · 사거리 15", "히든 감지 · 발사 주기 0.09초 · 사거리 16", "피해 3 · 발사 주기 0.06초"], "upgradeNames": ["손놀림", "야간 고글", "쌍열 기관포"]}, {"id": "shotgun", "name": "샷건", "tier": 2, "color": "#db99ba", "unlock": 400, "cost": 250, "upgrades": [350, 1400], "damage": [4, 6, 16], "spreadDamage": [2, 3, 8], "extra": [1, 1, 2], "cone": 1.22, "range": [6.5, 8, 9], "period": [1.6, 1.3, 1.1], "desc": "근거리 직격 · 주변 적 확산 피해", "detail": "노린 적에게 직격하고, 앞쪽 70° 안의 다른 적에게 확산 피해를 줍니다. 히든은 감지하지 못합니다.", "notes": ["직격 6 · 확산 3 · 사거리 8 · 주기 1.3초", "직격 16 · 확산 8 · 2명 추가 · 사거리 9 · 주기 1.1초"], "upgradeNames": ["속사 개조", "근접 제압"]}, {"id": "spawner", "name": "정비소", "tier": 2, "color": "#84c5bd", "unlock": 700, "cost": 350, "upgrades": [325, 450, 1600], "damage": [0, 0, 0, 0], "range": [0, 0, 0, 0], "period": [40, 40, 40, 40], "hp": [30, 60, 60, 180], "gun": [0, 0, 0, 4], "gunPeriod": [0.15, 0.15, 0.15, 0.15], "gunRange": [16, 16, 16, 16], "explosion": [0, 0, 18, 40], "explosionRadius": 7, "vehicleSpeed": [9.6, 9.6, 9.6, 8], "placementLimit": 5, "desc": "기지에서 출격하는 돌격 차량", "detail": "40초마다 기지에서 차량이 나와 길을 거꾸로 달리며, 남은 체력만큼 적과 충돌합니다. Lv.2 가시 범퍼, Lv.3 파괴 시 폭발, Lv.4 기관총 장갑차. 충돌은 히든에도 통합니다.", "notes": ["체력 30 → 60", "파괴 시 폭발 18 · 반경 7", "체력 180 · 기관총 4 · 폭발 40"], "upgradeNames": ["가시 범퍼", "자폭 임무", "장갑 기관총"]}, {"id": "plane", "name": "비행기", "tier": 3, "color": "#88c5ef", "unlock": 1600, "cost": 600, "upgrades": [500, 450, 4450], "damage": [1, 2, 2, 4], "range": [12, 12, 13, 13], "period": [0.13, 0.13, 0.13, 0.1], "gunRange": [6, 6, 7, 7], "cone": 3.15, "orbitSpeed": [0.57, 0.57, 0.57, 0.57], "bomb": [0, 5, 5, 16], "bombCount": [0, 1, 1, 1], "bombPeriod": 4, "bombRadius": [0, 2.5, 2.5, 4], "missile": [0, 0, 0, 20], "missileCount": 2, "missilePeriod": 2.5, "missileRadius": 3.5, "camoLevel": 3, "revealLevel": 3, "bombScatter": 4, "bombFallSeconds": 0.35, "desc": "궤도 비행 · 기관포와 폭탄", "detail": "활주로에서 이륙해 궤도를 돌며 앞쪽 적을 기관포로 공격합니다. Lv.2부터 4초마다 폭탄, Lv.3 히든 감지·해제, Lv.4 미사일. 보스의 마비 공격에 면역입니다.", "notes": ["기관포 2 · 4초마다 폭탄 5", "히든 감지·해제 · 비행 반경 13", "기관포 4 · 폭탄 16 · 미사일 20×2"], "upgradeNames": ["폭격 장치", "스파이 플레인", "미사일 편대"]}, {"id": "commander", "name": "커맨더", "tier": 3, "color": "#f4d69b", "unlock": 2000, "cost": 600, "upgrades": [1500, 2500], "damage": [0, 0, 0], "range": [10, 10, 11], "period": [1, 1, 1], "boost": [1, 1.2, 1.2], "rangeBoost": [1.2, 1.2, 1.2], "activeDuration": [0, 0, 10], "activeCooldown": 30, "activeFire": [1, 1, 1.5], "activeRange": [1, 1, 1], "desc": "사거리·공격 속도 지원", "detail": "반경 10칸(Lv.3 11칸) 안의 타워 사거리 +20%, Lv.2부터 공속 +20%. Lv.3 콜 투 암즈: 10초간 공속 추가 +50%p, 재사용 30초. 중첩되지 않으며 커맨더는 지원하지 않습니다.", "notes": ["공속 지원 +20%", "10초간 공속 추가 +50%p · 재사용 30초 · 지원 범위 11칸"], "upgradeNames": ["전투 훈련", "콜 투 암즈"]}, {"id": "gauss", "name": "가우스", "tier": 3, "color": "#a8aa5e", "unlock": 2200, "cost": 900, "upgrades": [500, 3200], "damage": [6, 8, 20], "range": [7, 8, 9], "period": [2.4, 2.2, 1.8], "stun": [0.12, 0.16, 0.22], "milestoneDamage": [40, 100, 250], "milestoneIncome": [10, 25, 75], "desc": "주변 충격파 · 피해 수입", "detail": "주변의 앞선 적 여러 명에게 피해와 짧은 정지를 줍니다. Lv.2부터 히든도 맞힙니다. 실제 피해가 쌓이면 캐시를 추가로 얻습니다(Lv.1 피해 40마다 10, Lv.2 100마다 25, Lv.3 250마다 75).", "notes": ["히든 타격 · 피해 8 · 범위 8 · 5명 · 피해 100마다 +25", "피해 20 · 범위 9 · 7명 · 주기 1.8초 · 피해 250마다 +75"], "upgradeNames": ["확장 진동판", "산업용 진동로"], "targets": [4, 5, 7], "camoLevel": 2}, {"id": "laser", "name": "레이저", "tier": 3, "color": "#f184a3", "unlock": 3000, "cost": 2200, "upgrades": [450, 2000, 6500], "damage": [2, 2, 5, 7], "cap": [1.8, 1.8, 2.2, 4], "ramp": [0.04, 0.04, 0.05, 0.08], "range": [16, 18, 18, 21], "period": [2.4, 2.4, 2.4, 2.2], "camoLevel": 1, "desc": "버스트 광선 · 같은 적을 맞힐수록 강해짐", "detail": "여러 발을 빠르게 쏜 뒤 재충전합니다. 같은 적을 연속으로 맞힐 때마다 피해가 오르고, 대상이 바뀌거나 재충전하면 처음부터 다시 오릅니다. 대상은 다른 타워처럼 우선순위로 고르며, 히든을 감지합니다.", "notes": ["28발 버스트 · 사거리 18", "피해 5 · 최대 2.2배", "피해 7 · 36발 · 최대 4배 · 사거리 21"], "upgradeNames": ["과출력 축전지", "집속 렌즈", "죽음의 광선"], "burst": [20, 28, 28, 36], "shot": [0.1, 0.1, 0.1, 0.07]}, {"id": "agent", "name": "에이전트", "tier": 3, "color": "#b0c7d9", "unlock": 1500, "cost": 450, "upgrades": [400, 3000], "damage": [3, 5, 28], "range": [12, 13, 14], "period": [1.2, 1.1, 0.8], "camoLevel": 2, "incomeBonus": [0, 0.15, 0.25], "desc": "단발 사격 · 추가 수입", "detail": "Lv.2부터 히든을 감지하고, 공격으로 얻는 캐시가 15% 늘어납니다. Lv.3에서는 25%로 커집니다.", "notes": ["히든 감지 · 추가 수입 15% · 피해 5 · 사거리 13", "추가 수입 25% · 피해 28 · 주기 0.8초 · 사거리 14"], "upgradeNames": ["야간 장비", "정예 요원"]}, {"id": "robot", "name": "로봇", "tier": 4, "color": "#f5a59b", "unlock": 10000, "cost": 3500, "upgrades": [1800, 5000, 12000], "damage": [0, 0, 0, 0], "range": [0, 0, 0, 0], "period": [60, 60, 60, 60], "hp": [450, 900, 1100, 2800], "gun": [5, 5, 6, 16], "rocket": [0, 0, 30, 100], "gunPeriod": [0.12, 0.12, 0.1, 0.09], "gunRange": [18, 18, 20, 22], "vehicleSpeed": [3.2, 3.2, 3.2, 3.2], "rocketPeriod": 3, "rocketRadius": 6, "placementLimit": 4, "desc": "저속 중무장 병기 · 긴 출격 간격", "detail": "60초마다 기지에서 출격합니다. 자동차보다 느리게 이동하며 원거리 화력을 쏟아붓습니다. Lv.3 로켓 해금. 파괴되어도 재출격이 앞당겨지지 않습니다.", "notes": ["체력 450 → 900", "로켓 해금 · 체력 1,100 · 사거리 20", "체력 2,800 · 사거리 22 · 강화 로켓"], "upgradeNames": ["강화 장갑", "로켓 포드", "최종 병기"]}, {"id": "icu", "name": "ICU 전선", "tier": 5, "secret": true, "color": "#d3dfeb", "unlock": 0, "cost": 2600, "upgrades": [4100, 9800, 26000, 110000],
+const TOWERS=[{"id": "soldier", "name": "군인", "tier": 1, "color": "#7ce4be", "unlock": 0, "cost": 200, "upgrades": [125, 1175], "damage": [1, 1, 3], "range": [12, 13, 14], "period": [1.3, 1.2, 1.1], "burst": [3, 4, 6], "shot": 0.13, "camoLevel": 2, "desc": "3발 버스트 · 무난한 기본 화력", "detail": "짧게 연사한 뒤 재장전합니다. Lv.2부터 히든을 감지합니다.", "notes": ["히든 감지 · 4발 버스트 · 사거리 13", "피해 3 · 6발 버스트 · 사거리 14"], "upgradeNames": ["야간 작전", "돌격 분대"]}, {"id": "bomb", "name": "폭탄", "tier": 1, "color": "#ec9a66", "unlock": 0, "cost": 250, "upgrades": [200, 1750], "damage": [3, 4, 10], "range": [8, 8, 9], "period": [2.5, 2.2, 2], "splash": [3, 3.5, 4.5], "centerLevel": 3, "camoLevel": 2, "desc": "근거리 투척 · 광역 폭발", "detail": "폭발 범위 안의 모든 적에게 피해를 줍니다. Lv.2부터 히든을 노리고, Lv.3은 폭발 중심에 가까울수록 최대 75% 추가 피해를 줍니다.", "notes": ["히든 감지 · 피해 4 · 폭발 범위 3.5", "피해 10 · 폭발 범위 4.5 · 중심부 추가 피해"], "upgradeNames": ["야간 고글", "폭파 전문가"]}, {"id": "sniper", "name": "스나이퍼", "tier": 1, "color": "#89b6f7", "unlock": 0, "cost": 275, "upgrades": [175, 450, 2600], "damage": [5, 5, 10, 50], "range": [18, 20, 20, 22], "period": [2.5, 2.5, 2.2, 2], "camoLevel": 2, "desc": "긴 사거리 · 강한 단발", "detail": "느리지만 멀리 쏘는 단발 사격. Lv.2부터 히든을 감지합니다.", "notes": ["히든 감지 · 사거리 20", "피해 10 · 주기 2.2초", "피해 50 · 주기 2초 · 사거리 22"], "upgradeNames": ["장거리 조준경", "강화 탄환", "대물 소총"]}, {"id": "farm", "name": "농장", "tier": 1, "color": "#b4d871", "unlock": 0, "cost": 225, "upgrades": [300, 750], "damage": [0, 0, 0], "range": [0, 0, 0], "period": [8, 8, 8], "income": [8, 20, 50], "placementLimit": 5, "desc": "8초마다 캐시 생산", "detail": "게임 시간 8초마다 캐시를 만듭니다. 한 웨이브를 기준 시간보다 오래 끌면 생산이 점점 느려집니다. 최대 5개까지 배치합니다.", "notes": ["생산량 8 → 20", "생산량 50"], "upgradeNames": ["비료", "과수원"]}, {"id": "flame", "name": "화염방사기", "tier": 2, "color": "#f17459", "unlock": 500, "cost": 450, "upgrades": [450, 2100], "damage": [0, 0, 0], "range": [6, 7, 8], "period": [0.5, 0.5, 0.5], "burn": [1, 1, 5], "burnDuration": [2, 3, 4], "burnInterval": 1, "burnSlow": 0.4, "cone": [0.7, 0.8, 0.9], "desc": "지속 화상 · 이동 속도 40% 감소", "detail": "직접 피해 없이 1초마다 화상 피해를 주고, 화상 중에는 이동 속도가 40% 줄어듭니다. 화상은 겹치지 않고 시간만 갱신됩니다. 최종 보스·가디언·용암병은 감속 면역이고, 히든은 감지하지 못합니다.", "notes": ["화상 지속 3초 · 사거리 7 · 분사각 넓게", "화상 5 · 4초 · 사거리 8"], "upgradeNames": ["연료 증량", "방화광"]}, {"id": "tesla", "name": "테슬라", "tier": 2, "color": "#c095f5", "unlock": 600, "cost": 450, "upgrades": [175, 550, 2800], "damage": [6, 6, 13, 45], "range": [10, 11, 11, 12], "period": [2, 1.8, 1.8, 1.6], "chain": [3, 4, 4, 6], "camoLevel": 3, "desc": "전이 공격 · 피해 무작위 분배", "detail": "한 번의 총 피해를 이어진 적들에게 무작위로 나눕니다. 큰 몫을 맞은 적은 잠깐 멈춥니다. Lv.3부터 히든을 감지합니다.", "notes": ["4명 전이 · 사거리 11 · 주기 1.8초", "히든 감지 · 총 피해 13", "6명 전이 · 총 피해 45 · 사거리 12 · 주기 1.6초"], "upgradeNames": ["고전압 코일", "전파 탐지", "뇌전 폭풍"]}, {"id": "minigun", "name": "미니건", "tier": 2, "color": "#ebd175", "unlock": 900, "cost": 850, "upgrades": [400, 600, 3650], "damage": [1, 1, 1, 3], "range": [14, 15, 16, 16], "period": [0.15, 0.12, 0.09, 0.06], "camoLevel": 3, "desc": "재장전 없는 지속 연사 · 긴 사거리", "detail": "쉬지 않고 연사합니다. Lv.3부터 히든을 감지합니다.", "notes": ["발사 주기 0.12초 · 사거리 15", "히든 감지 · 발사 주기 0.09초 · 사거리 16", "피해 3 · 발사 주기 0.06초"], "upgradeNames": ["손놀림", "야간 고글", "쌍열 기관포"]}, {"id": "shotgun", "name": "샷건", "tier": 2, "color": "#db99ba", "unlock": 400, "cost": 250, "upgrades": [350, 1400], "damage": [4, 6, 16], "spreadDamage": [2, 3, 8], "extra": [1, 1, 2], "cone": 1.22, "range": [6.5, 8, 9], "period": [1.6, 1.3, 1.1], "desc": "근거리 직격 · 주변 적 확산 피해", "detail": "노린 적에게 직격하고, 앞쪽 70° 안의 다른 적에게 확산 피해를 줍니다. 히든은 감지하지 못합니다.", "notes": ["직격 6 · 확산 3 · 사거리 8 · 주기 1.3초", "직격 16 · 확산 8 · 2명 추가 · 사거리 9 · 주기 1.1초"], "upgradeNames": ["속사 개조", "근접 제압"]}, {"id": "spawner", "name": "정비소", "tier": 2, "color": "#84c5bd", "unlock": 700, "cost": 350, "upgrades": [325, 450, 1600], "damage": [0, 0, 0, 0], "range": [0, 0, 0, 0], "period": [40, 40, 40, 40], "hp": [30, 60, 60, 180], "gun": [0, 0, 0, 4], "gunPeriod": [0.15, 0.15, 0.15, 0.15], "gunRange": [16, 16, 16, 16], "explosion": [0, 0, 18, 40], "explosionRadius": 7, "vehicleSpeed": [9.6, 9.6, 9.6, 8], "placementLimit": 5, "desc": "기지에서 출격하는 돌격 차량", "detail": "40초마다 기지에서 차량이 나와 길을 거꾸로 달리며, 남은 체력만큼 적과 충돌합니다. Lv.2 가시 범퍼, Lv.3 파괴 시 폭발, Lv.4 기관총 장갑차. 충돌은 히든에도 통합니다.", "notes": ["체력 30 → 60", "파괴 시 폭발 18 · 반경 7", "체력 180 · 기관총 4 · 폭발 40"], "upgradeNames": ["가시 범퍼", "자폭 임무", "장갑 기관총"]}, {"id": "plane", "name": "비행기", "tier": 3, "color": "#88c5ef", "unlock": 1600, "cost": 600, "upgrades": [500, 450, 4450], "damage": [1, 2, 2, 4], "range": [12, 12, 13, 13], "period": [0.13, 0.13, 0.13, 0.1], "gunRange": [6, 6, 7, 7], "cone": 3.15, "orbitSpeed": [0.57, 0.57, 0.57, 0.57], "bomb": [0, 5, 5, 16], "bombCount": [0, 1, 1, 1], "bombPeriod": 4, "bombRadius": [0, 2.5, 2.5, 4], "missile": [0, 0, 0, 20], "missileCount": 2, "missilePeriod": 2.5, "missileRadius": 3.5, "camoLevel": 3, "revealLevel": 3, "bombScatter": 4, "bombFallSeconds": 0.35, "desc": "궤도 비행 · 기관포와 폭탄", "detail": "활주로에서 이륙해 궤도를 돌며 앞쪽 적을 기관포로 공격합니다. Lv.2부터 4초마다 폭탄, Lv.3 히든 감지·해제, Lv.4 미사일. 보스의 마비 공격에 면역입니다.", "notes": ["기관포 2 · 4초마다 폭탄 5", "히든 감지·해제 · 비행 반경 13", "기관포 4 · 폭탄 16 · 미사일 20×2"], "upgradeNames": ["폭격 장치", "스파이 플레인", "미사일 편대"]}, {"id": "commander", "name": "커맨더", "tier": 3, "color": "#f4d69b", "unlock": 2000, "cost": 600, "upgrades": [1500, 2500], "damage": [0, 0, 0], "range": [10, 10, 11], "period": [1, 1, 1], "boost": [1, 1.2, 1.2], "rangeBoost": [1.2, 1.2, 1.2], "activeDuration": [0, 0, 10], "activeCooldown": 30, "activeFire": [1, 1, 1.5], "activeRange": [1, 1, 1], "desc": "사거리·공격 속도 지원", "detail": "반경 10칸(Lv.3 11칸) 안의 타워 사거리 +20%, Lv.2부터 공속 +20%. Lv.3 콜 투 암즈: 10초간 공속 추가 +50%p, 재사용 30초. 중첩되지 않으며 커맨더는 지원하지 않습니다.", "notes": ["공속 지원 +20%", "10초간 공속 추가 +50%p · 재사용 30초 · 지원 범위 11칸"], "upgradeNames": ["전투 훈련", "콜 투 암즈"]}, {"id": "gauss", "name": "가우스", "tier": 3, "color": "#a8aa5e", "unlock": 2200, "cost": 900, "upgrades": [500, 3200], "damage": [6, 8, 20], "range": [7, 8, 9], "period": [2.4, 2.2, 1.8], "stun": [0.12, 0.16, 0.22], "milestoneDamage": [40, 100, 250], "milestoneIncome": [10, 25, 75], "desc": "주변 충격파 · 피해 수입", "detail": "주변의 앞선 적 여러 명에게 피해와 짧은 정지를 줍니다. Lv.2부터 히든도 맞힙니다. 실제 피해가 쌓이면 캐시를 추가로 얻습니다(Lv.1 피해 40마다 10, Lv.2 100마다 25, Lv.3 250마다 75).", "notes": ["히든 타격 · 피해 8 · 범위 8 · 5명 · 피해 100마다 +25", "피해 20 · 범위 9 · 7명 · 주기 1.8초 · 피해 250마다 +75"], "upgradeNames": ["확장 진동판", "산업용 진동로"], "targets": [4, 5, 7], "camoLevel": 2}, {"id": "laser", "name": "레이저", "tier": 3, "color": "#f184a3", "unlock": 3000, "cost": 2200, "upgrades": [450, 2000, 6500], "damage": [2, 2, 5, 7], "cap": [1.8, 1.8, 2.2, 4], "ramp": [0.04, 0.04, 0.05, 0.08], "range": [16, 18, 18, 21], "period": [2.4, 2.4, 2.4, 2.2], "camoLevel": 1, "desc": "버스트 광선 · 같은 적을 맞힐수록 강해짐", "detail": "여러 발을 빠르게 쏜 뒤 재충전합니다. 같은 적을 연속으로 맞힐 때마다 피해가 오르고, 대상이 바뀌거나 재충전하면 처음부터 다시 오릅니다. 대상은 다른 타워처럼 우선순위로 고르며, 히든을 감지합니다.", "notes": ["28발 버스트 · 사거리 18", "피해 5 · 최대 2.2배", "피해 7 · 36발 · 최대 4배 · 사거리 21"], "upgradeNames": ["과출력 축전지", "집속 렌즈", "죽음의 광선"], "burst": [20, 28, 28, 36], "shot": [0.1, 0.1, 0.1, 0.07]}, {"id": "agent", "name": "에이전트", "tier": 3, "color": "#b0c7d9", "unlock": 1500, "cost": 450, "upgrades": [400, 3000], "damage": [3, 5, 28], "range": [12, 13, 14], "period": [1.2, 1.1, 0.8], "camoLevel": 2, "incomeBonus": [0, 0.15, 0.25], "desc": "단발 사격 · 추가 수입", "detail": "Lv.2부터 히든을 감지하고, 공격으로 얻는 캐시가 15% 늘어납니다. Lv.3에서는 25%로 커집니다.", "notes": ["히든 감지 · 추가 수입 15% · 피해 5 · 사거리 13", "추가 수입 25% · 피해 28 · 주기 0.8초 · 사거리 14"], "upgradeNames": ["야간 장비", "정예 요원"]}, {"id": "robot", "name": "로봇", "tier": 4, "color": "#f5a59b", "unlock": 10000, "cost": 3500, "upgrades": [1800, 5000, 12000], "damage": [0, 0, 0, 0], "range": [0, 0, 0, 0], "period": [60, 60, 60, 60], "hp": [450, 900, 1100, 2800], "gun": [5, 5, 6, 16], "rocket": [0, 0, 30, 100], "gunPeriod": [0.12, 0.12, 0.1, 0.09], "gunRange": [18, 18, 20, 22], "vehicleSpeed": [3.2, 3.2, 3.2, 3.2], "rocketPeriod": 3, "rocketRadius": 6, "placementLimit": 4, "desc": "저속 중무장 병기 · 긴 출격 간격", "detail": "60초마다 기지에서 출격합니다. 자동차보다 느리게 이동하며 원거리 화력을 쏟아붓습니다. Lv.3 로켓 해금. 파괴되어도 재출격이 앞당겨지지 않습니다.", "notes": ["체력 450 → 900", "로켓 해금 · 체력 1,100 · 사거리 20", "체력 2,800 · 사거리 22 · 강화 로켓"], "upgradeNames": ["강화 장갑", "로켓 포드", "최종 병기"]}, {"id": "icu", "name": "ICU 전선", "tier": 5, "secret": true, "color": "#c8d9f0", "unlock": 0, "cost": 2600, "upgrades": [4100, 9800, 26000, 110000],
  "damage": [0, 0, 0, 0, 0], "range": [0, 0, 0, 0, 0], "period": [50, 50, 50, 50, 50], "placementLimit": 3,
  "desc": "숨겨진 기지 · 어떤 버프도 받지 않음",
  "detail": "모듈 효과도, 커맨더 같은 지원 버프도 전혀 받지 않습니다. 기지에서 카오스 트루퍼가 출격해 길을 거꾸로 걷다가, 적이 사거리에 들어오면 멈춰 서서 미니건과 유탄을 쏩니다. 쓰러지지 않는 한 계속 쌓입니다. Lv.2 히든 감지·로켓 트럭, Lv.3 트루퍼 2명씩·맵 전체를 노리는 로켓 트럭 Mk II, Lv.4 스트라이커 탱크, Lv.5 리콘 정비선(세 기지 중 하나만). 새 종류의 유닛은 강화하자마자 출격합니다.",
@@ -3497,13 +3485,13 @@ class Game{
   if(t.kind==='plane'){origin={x:t.x+Math.cos(t.orbit)*s.range,y:t.y+Math.sin(t.orbit)*s.range,angle:t.orbit+Math.PI/2};range=d.gunRange[i]*buff.range*this.km('plane').range;cone=d.cone;}
   if(t.kind==='gauss'){const victims=this.enemies.filter(e=>!e.dead&&distance(t,e)<=range&&this.visible(e,t)).sort((a,b)=>b.progress-a.progress).slice(0,d.targets?.[i]??99);if(!victims.length)return false;for(const e of victims){this.hit(e,s.damage,t);this.stunEnemy(e,d.stun[i]);}this.fx('pulse',t,{r:range,color:d.color,life:.35});t.cooldown+=s.period;return true;}
   const e=this.select(t,origin,range,cone,true,t.kind==='flame'?e=>e.burn<=d.burnInterval||e.burnDamage<d.burn[i]*(this.enemyData(e).burnResist??1):()=>true);if(!e)return false;t.angle=Math.atan2(e.y-origin.y,e.x-origin.x);
-  if(t.kind==='bomb'){this.fx('shot',t,{x2:e.x,y2:e.y,color:d.color,life:.2,heavy:true});this.splash(e,s.damage,d.splash[i],t,t.level>=d.centerLevel);}
-  else if(t.kind==='flame'){for(const victim of [...this.enemies])if(!victim.dead&&distance(t,victim)<=range&&Math.abs(angleDiff(Math.atan2(victim.y-t.y,victim.x-t.x),t.angle))<d.cone[i])this.ignite(victim,t);this.fx('flame',t,{angle:t.angle,cone:d.cone[i],r:range,color:d.color,life:.3});}
+  if(t.kind==='bomb'){this.fx('shot',this.muzzle(t),{x2:e.x,y2:e.y,color:d.color,life:.2,heavy:true});this.splash(e,s.damage,d.splash[i],t,t.level>=d.centerLevel);}
+  else if(t.kind==='flame'){for(const victim of [...this.enemies])if(!victim.dead&&distance(t,victim)<=range&&Math.abs(angleDiff(Math.atan2(victim.y-t.y,victim.x-t.x),t.angle))<d.cone[i])this.ignite(victim,t);this.fx('flame',this.muzzle(t),{angle:t.angle,cone:d.cone[i],r:range,color:d.color,life:.3});}
   else if(t.kind==='tesla'){const chain=[e],links=d.chain[i]+(this.mods['chain@tesla']??0);while(chain.length<links){const last=chain.at(-1);const next=this.enemies.filter(a=>!a.dead&&!chain.includes(a)&&this.visible(a,t)&&distance(a,last)<=TESLA_JUMP).sort((a,b)=>distance(a,last)-distance(b,last))[0];if(!next)break;chain.push(next);}const weights=chain.map(()=>.1+this.random()),sum=weights.reduce((a,b)=>a+b,0);chain.forEach((victim,j)=>{const share=s.damage*Math.max(1,chain.length/d.chain[i])*weights[j]/sum;this.hit(victim,share,t);if(share/(victim.maxHp+(victim.maxShield??0))>=.04)this.stunEnemy(victim,.1+t.level*.025);const p=j?chain[j-1]:t;this.fx('arc',p,{x2:victim.x,y2:victim.y,color:d.color,life:.2});});}
   else if(t.kind==='shotgun'){ // direct hit, then spread damage to the nearest others inside the 70° cone
    const others=this.enemies.filter(v=>v!==e&&!v.dead&&v.hp>0&&this.visible(v,t)&&distance(t,v)<=range&&Math.abs(angleDiff(Math.atan2(v.y-t.y,v.x-t.x),t.angle))<=d.cone/2).sort((a,b)=>distance(t,a)-distance(t,b)).slice(0,d.extra[i]);
-   this.hit(e,s.damage,t);this.fx('shot',t,{x2:e.x,y2:e.y,color:d.color,life:.14,heavy:true});for(const v of others){this.hit(v,d.spreadDamage[i],t);this.fx('shot',t,{x2:v.x,y2:v.y,color:d.color,life:.14});}}
-  else {let amount=s.damage;if(t.kind==='laser'){if(t.lastTarget!==e.id){t.ramp=1;t.lastTarget=e.id;}amount*=t.ramp;const ov=this.mods['cap@laser']??0;t.ramp=Math.min(d.cap[i]+ov,t.ramp+d.ramp[i]*(ov?(d.cap[i]+ov-1)/(d.cap[i]-1):1));}this.hit(e,amount,t);if(t.kind==='sniper'&&this.mods['pierce@sniper'])this.pierce(t,e,amount,range);this.fx(t.kind==='laser'?'laser':'shot',origin,{x2:e.x,y2:e.y,color:d.color,life:t.kind==='sniper'?.22:.1,air:t.kind==='plane'});}
+   this.hit(e,s.damage,t);const mz=this.muzzle(t);this.fx('shot',mz,{x2:e.x,y2:e.y,color:d.color,life:.14,heavy:true});for(const v of others){this.hit(v,d.spreadDamage[i],t);this.fx('shot',mz,{x2:v.x,y2:v.y,color:d.color,life:.14});}}
+  else {let amount=s.damage;if(t.kind==='laser'){if(t.lastTarget!==e.id){t.ramp=1;t.lastTarget=e.id;}amount*=t.ramp;const ov=this.mods['cap@laser']??0;t.ramp=Math.min(d.cap[i]+ov,t.ramp+d.ramp[i]*(ov?(d.cap[i]+ov-1)/(d.cap[i]-1):1));}this.hit(e,amount,t);if(t.kind==='sniper'&&this.mods['pierce@sniper'])this.pierce(t,e,amount,range);this.fx(t.kind==='laser'?'laser':'shot',origin===t?this.muzzle(t):origin,{x2:e.x,y2:e.y,color:d.color,life:t.kind==='sniper'?.22:.1,air:t.kind==='plane'});}
   if(d.burst){t.ammo--;if(t.ammo<=0){t.cooldown+=s.period;t.ammo=d.burst[i];t.ramp=1;t.lastTarget=null;}else t.cooldown+=(Array.isArray(d.shot)?d.shot[i]:d.shot)/this.km(t.kind).fire;}else t.cooldown+=s.period;
   return true;
  }
@@ -3571,7 +3559,7 @@ class Game{
    if(t.kind==='plane'&&this.mods['wing@plane'])this.wingStep(t,s,buff,dt);
   }
   for(const v of this.vehicles){if(v.hp<=0)continue;if(v.kind==='icu'){this.icuUnit(v,dt);continue;}const d=this.unitData(v),i=v.level-1,source=this.towers.find(t=>t.id===v.source)??{kind:v.kind,damage:0};v.progress-=dt*d.vehicleSpeed[i];Object.assign(v,this.position(v.progress));v.angle+=Math.PI;v.fireWindows=(v.fireWindows??[]).filter(w=>w.until>this.time);const fire=Math.max(v.fireBoost??1,...v.fireWindows.map(w=>w.fire));v.cooldown-=dt*fire;v.rocketCooldown-=dt*fire;
-   const gun=d.gun[i],vm=v.kind==='skeleton'?{range:1,fire:1}:this.km(v.kind);if(gun>0){const range=d.gunRange[i]*vm.range,enemy=this.enemies.filter(e=>!e.dead&&distance(v,e)<=range&&(!this.enemyData(e).camo||e.revealed)).sort((a,b)=>b.progress-a.progress)[0];if(enemy){v.gunAngle=Math.atan2(enemy.y-v.y,enemy.x-v.x);if(v.cooldown<=0){this.hit(enemy,gun,source);this.fx(d.cut?'blast':'shot',d.cut?enemy:v,{x2:enemy.x,y2:enemy.y,r:.4*FX,color:d.color,life:d.cut?.2:.12});v.cooldown+=d.gunPeriod[i]/vm.fire;}if(d.rocket?.[i]&&v.rocketCooldown<=0){this.splash(enemy,d.rocket[i],d.rocketRadius,source);v.rocketCooldown=d.rocketPeriod/vm.fire;}}else{v.cooldown=Math.max(0,v.cooldown);v.rocketCooldown=Math.max(0,v.rocketCooldown);}}
+   const gun=d.gun[i],vm=v.kind==='skeleton'?{range:1,fire:1}:this.km(v.kind);if(gun>0){const range=d.gunRange[i]*vm.range,enemy=this.enemies.filter(e=>!e.dead&&distance(v,e)<=range&&(!this.enemyData(e).camo||e.revealed)).sort((a,b)=>b.progress-a.progress)[0];if(enemy){v.gunAngle=Math.atan2(enemy.y-v.y,enemy.x-v.x);if(v.cooldown<=0){this.hit(enemy,gun,source);this.fx(d.cut?'blast':'shot',d.cut?enemy:this.vmuzzle(v),{x2:enemy.x,y2:enemy.y,r:.4*FX,color:d.color,life:d.cut?.2:.12});v.cooldown+=d.gunPeriod[i]/vm.fire;}if(d.rocket?.[i]&&v.rocketCooldown<=0){this.splash(enemy,d.rocket[i],d.rocketRadius,source);v.rocketCooldown=d.rocketPeriod/vm.fire;}}else{v.cooldown=Math.max(0,v.cooldown);v.rocketCooldown=Math.max(0,v.rocketCooldown);}}
    for(const e of this.enemies.filter(e=>!e.dead&&Math.abs(e.progress-v.progress)<.6*SCALE).sort((a,b)=>b.progress-a.progress)){const amount=Math.min(v.hp,this.durability(e));this.hit(e,amount,source);v.hp-=amount;if(v.hp<=0)break;}
    if(v.hp<=0){if(d.explosion?.[i])this.splash(v,d.explosion[i],d.explosionRadius??1.5*SCALE,source);else this.fx('blast',v,{r:.5*FX,color:d.color,life:.25});}
   }
@@ -3592,7 +3580,10 @@ class Game{
 // Units walk the road backwards from the base like the robot. Troopers and rocket trucks stop while
 // something is in range and fire; the Striker tank keeps rolling. At Lv.5 (one base only) the
 // 리콘 정비선 circles the edge of the map and fires on its own; its laser is a manual skill.
-const ICU_SHIP = { x: 45.5, y: 52, rx: 43, ry: 49 };
+// the ship circles outside the map; it is drawn 6.8× (about 44 cells long), so its parts sit 0.34 cells per art unit apart
+const ICU_SHIP = { x: 45, y: 52.5, rx: 70, ry: 76, k: .34 }, ICU_HOLD = 3;
+// a point on a unit: fx forward, fy to its right, in cells, turned by angle a
+const icuAt = (o, a, fx, fy) => ({ x: o.x + Math.cos(a) * fx - Math.sin(a) * fy, y: o.y + Math.sin(a) * fx + Math.cos(a) * fy });
 Object.assign(Game.prototype, {
   upgradeBlock(t) {
     if (t.kind === 'icu' && t.level === 4 && this.towers.some(o => o !== t && o.kind === 'icu' && o.level >= 5)) return '리콘 정비선은 하나만';
@@ -3630,8 +3621,10 @@ Object.assign(Game.prototype, {
     const seeCamo = v.unit === 'tank' || (v.unit === 'trooper' && v.level >= U.trooper.camo);
     const range = v.unit === 'trooper' ? U.trooper.range[i] : v.unit === 'truck' ? (U.truck.range[i] || Infinity) : U.tank.range;
     const pool = this.enemies.filter(e => !e.dead && e.hp > 0 && (seeCamo || !this.enemyData(e).camo || e.revealed) && distance(v, e) <= range).sort((a, b) => b.progress - a.progress), target = pool[0];
-    // troopers and trucks hold their ground while something is in range; the tank keeps rolling
-    if (!target || v.unit === 'tank') v.progress -= dt * U[v.unit].speed;
+    // troopers and trucks hold their ground while something is in range and for a few seconds after;
+    // the tank keeps rolling
+    v.hold = target ? ICU_HOLD : Math.max(0, (v.hold ?? 0) - dt);
+    if (v.unit === 'tank' || v.hold <= 0) v.progress -= dt * U[v.unit].speed;
     Object.assign(v, this.position(v.progress, v.lane ?? 3));
     v.angle += Math.PI;
     v.aim = !!target;
@@ -3641,8 +3634,9 @@ Object.assign(Game.prototype, {
     if (v.unit === 'trooper') {
       const T = U.trooper;
       if (target) {
-        if (v.cooldown <= 0) { this.hit(target, T.gun[i], src); this.fx('shot', v, { x2: target.x, y2: target.y, color, life: .1 }); v.cooldown += T.gunPeriod[i]; }
-        if (v.rocketCooldown <= 0) { this.fx('shot', v, { x2: target.x, y2: target.y, color, life: .18, heavy: true }); this.splash(target, T.grenade[i], T.grenadeRadius, src); v.rocketCooldown = T.grenadePeriod; }
+        // shots leave the weapons: the minigun in the right hand, the launcher in the left
+        if (v.cooldown <= 0) { this.hit(target, T.gun[i], src); this.fx('shot', icuAt(v, v.gunAngle, 1.67, 1.34), { x2: target.x, y2: target.y, color, life: .1 }); v.cooldown += T.gunPeriod[i]; }
+        if (v.rocketCooldown <= 0) { this.fx('shot', icuAt(v, v.gunAngle, 1.33, -1.34), { x2: target.x, y2: target.y, color, life: .18, heavy: true }); this.splash(target, T.grenade[i], T.grenadeRadius, src); v.rocketCooldown = T.grenadePeriod; }
       } else { v.cooldown = Math.max(0, v.cooldown); v.rocketCooldown = Math.max(0, v.rocketCooldown); }
     } else if (v.unit === 'truck') {
       // missiles stack up to four while nothing is in sight, then all go at once
@@ -3654,7 +3648,7 @@ Object.assign(Game.prototype, {
       }
     } else {
       const T = U.tank;
-      if (target && v.cooldown <= 0) { this.icuRail(v, target, T.rail, T.range, T.width, src, true); v.cooldown = T.railPeriod; }
+      if (target && v.cooldown <= 0) { this.icuRail(icuAt(icuAt(v, v.angle, -.38, 0), v.gunAngle, 4.27, 0), target, T.rail, T.range, T.width, src, true); v.cooldown = T.railPeriod; }
       else if (!target) v.cooldown = Math.max(0, v.cooldown);
     }
     // ramming: the tank's armor takes only part of what it deals
@@ -3679,8 +3673,8 @@ Object.assign(Game.prototype, {
   },
   // homing missiles leave sideways and curve in; one that loses its target flies to the entrance
   icuMissile(v, target, damage, radius, n, of) {
-    const side = n % 2 ? 1 : -1, a = (v.gunAngle || v.angle) + side * (1.1 + .25 * Math.floor(n / 2)) + (this.random() - .5) * .3;
-    (this.missiles ??= []).push({ id: this.nextId++, source: v.source, x: v.x, y: v.y, a, target: target?.id ?? null, damage, radius, age: 0 });
+    const side = n % 2 ? 1 : -1, a = (v.gunAngle || v.angle) + side * (1.1 + .25 * Math.floor(n / 2)) + (this.random() - .5) * .3, o = icuAt(v, v.angle, -.5, 0);
+    (this.missiles ??= []).push({ id: this.nextId++, source: v.source, x: o.x, y: o.y, a, target: target?.id ?? null, damage, radius, age: 0 });
   },
   icuMissiles(dt) {
     if (!this.missiles?.length) return;
@@ -3713,13 +3707,14 @@ Object.assign(Game.prototype, {
     sh.gun -= dt; sh.flash -= dt; sh.rail -= dt;
     const live = this.enemies.filter(e => !e.dead && e.hp > 0);
     if (!live.length) { sh.gun = Math.max(0, sh.gun); sh.flash = Math.max(0, sh.flash); sh.rail = Math.max(0, sh.rail); return; }
-    const o = this.icuShipPos(t), first = live.reduce((a, b) => b.progress > a.progress ? b : a);
-    if (sh.gun <= 0) { this.hit(first, S.gun, t); this.fx('shot', o, { x2: first.x, y2: first.y, color: '#e6f0fa', life: .1, ship: true }); sh.gun += S.gunPeriod; }
-    if (sh.flash <= 0) { this.fx('flash', first, { r: S.flashRadius, color: '#eef5fc', life: .55 }); this.splash(first, S.flash, S.flashRadius, t); sh.flash = S.flashPeriod; }
+    const o = this.icuShipPos(t), k = ICU_SHIP.k, nose = icuAt(o, o.angle, 60 * k, 0), first = live.reduce((a, b) => b.progress > a.progress ? b : a);
+    // the two black cannons take turns
+    if (sh.gun <= 0) { sh.side = -(sh.side || 1); this.hit(first, S.gun, t); this.fx('shot', icuAt(o, o.angle, 6 * k, sh.side * 9.5 * k), { x2: first.x, y2: first.y, color: '#e6f0fa', life: .1, ship: true }); sh.gun += S.gunPeriod; }
+    if (sh.flash <= 0) { this.fx('shot', nose, { x2: first.x, y2: first.y, color: '#eef5fc', life: .3, heavy: true, ship: true }); this.fx('flash', first, { r: S.flashRadius, color: '#eef5fc', life: .55 }); this.splash(first, S.flash, S.flashRadius, t); sh.flash = S.flashPeriod; }
     if (sh.rail <= 0) {
       const big = live.reduce((a, b) => this.durability(b) > this.durability(a) ? b : a);
       this.hit(big, S.rail + Math.min(S.railCap, S.railPct * (big.maxHp + (big.maxShield ?? 0))), t);
-      this.fx('rail', o, { x2: big.x, y2: big.y, color: '#9fd3ff', life: .5, ship: true });
+      this.fx('rail', nose, { x2: big.x, y2: big.y, color: '#9fd3ff', life: .5, ship: true });
       sh.rail = S.railPeriod;
     }
   },
@@ -3743,6 +3738,40 @@ Object.assign(Game.prototype, {
       for (const e of [...this.enemies]) if (!e.dead) this.hit(e, Math.round(S.laserMin + this.random() * (S.laserMax - S.laserMin)), src);
     }
     if (st.left <= 0) this.storm = null;
+  }
+});
+// ---- shots leave the weapon, not the body (4.4) -------------------------------------------------------
+// Muzzle points in art units (20 per cell) on the turned turret: [forward, to the right], per level;
+// a second row of points means two guns that take turns. One-handed people stand 2.6 units left.
+const MUZZLE = {
+  soldier: [[[20.4, 13.2]], [[20.4, 13.2]], [[22.8, 13.2]], [[24, 13.2]]],
+  minigun: [[[20.5, 13.2]], [[20.5, 13.2]], [[20.5, 13.2]], [[20.5, 15.8], [20.5, -15.8]]],
+  sniper: [[[26, 13.2]], [[26, 13.2]], [[26.6, 13.2]], [[31, 13.2]]],
+  shotgun: [[[16.4, 13.2]], [[16.4, 13.2]], [[19.4, 13.2]], [[19.4, 13.2]]],
+  agent: [[[18.9, 13.2]], [[18.9, 13.2]], [[23.4, 15.8], [23.4, -15.8]]],
+  bomb: [[[11, 13.8]], [[11, 13.8]], [[11, 13.8]]],
+  flame: [[[18, 13.2]], [[18, 13.2]], [[18.4, 13.2]]],
+  laser: [[[28, 0]], [[28, 0]], [[28, 0]], [[34, 0]]]
+};
+// robot: minigun arms (drawn 1.5×), the Lv.4 center gun; the garage's Lv.4 car: its roof gun (drawn 2×)
+const VMUZZLE = { robot: [[[30.4, 12.4]], [[30.4, 14]], [[30.4, 14], [30.4, -14]], [[37, 0]]] };
+Object.assign(Game.prototype, {
+  muzzle(t) {
+    const list = MUZZLE[t.kind]?.[t.level - 1] ?? MUZZLE[t.kind]?.at(-1);
+    if (!list) return t;
+    const [fx, fy] = list[list.length > 1 ? (t.shotSide = ((t.shotSide ?? 0) + 1) % list.length) : 0], a = t.angle ?? 0;
+    return { x: t.x + (Math.cos(a) * fx - Math.sin(a) * fy) * .05, y: t.y + (Math.sin(a) * fx + Math.cos(a) * fy) * .05 };
+  },
+  vmuzzle(v) {
+    const a = v.gunAngle || v.angle || 0;
+    if (v.kind === 'spawner') {
+      const b = v.angle || 0;
+      return { x: v.x - Math.cos(b) * .3 + Math.cos(a) * 2.5, y: v.y - Math.sin(b) * .3 + Math.sin(a) * 2.5 };
+    }
+    const list = VMUZZLE[v.kind]?.[v.level - 1];
+    if (!list) return v;
+    const [fx, fy] = list[list.length > 1 ? (v.shotSide = ((v.shotSide ?? 0) + 1) % list.length) : 0];
+    return { x: v.x + (Math.cos(a) * fx - Math.sin(a) * fy) * .075, y: v.y + (Math.sin(a) * fx + Math.cos(a) * fy) * .075 };
   }
 });
 Object.defineProperty(exports,"Game",{enumerable:true,get:()=>Game});
