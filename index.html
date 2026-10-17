@@ -525,7 +525,7 @@ function soft(key,sum){const s=SOFT[key];if(!s||sum<=s[0])return sum;const [a,b]
 const TOWER_KEYS=new Set(['dmg','range','fire','splash','vhp','spawn','spawnRate','srange','sboost','income','cost','ammo','firstHit','crit','critDmg']);
 const GRADE=Object.fromEntries(GRADES.map((g,i)=>[g.id,{...g,rank:i}]));
 const TAGS={blast:'폭발',close:'근거리',long:'원거리',rapid:'연사',energy:'에너지',summon:'스포너',support:'지원',econ:'경제'};
-const TOWER_TAGS={soldier:['rapid'],bomb:['close','blast'],sniper:['long'],farm:['econ'],flame:['close'],tesla:['energy'],minigun:['rapid'],shotgun:['close'],spawner:['summon'],plane:['rapid','blast'],commander:['support'],gauss:['close','energy','econ'],laser:['long','energy'],agent:['long','econ'],robot:['summon','blast']};
+const TOWER_TAGS={soldier:['rapid'],bomb:['close','blast'],sniper:['long'],farm:['econ'],flame:['energy'],tesla:['energy'],minigun:['rapid'],shotgun:['close'],spawner:['summon'],plane:['rapid','blast'],commander:['support'],gauss:['close','econ'],laser:['long','energy'],agent:['long','econ'],robot:['summon']};
 // shape rows: '#' is a cell. `icon` is the picture on the piece
 // (a tower id draws that tower's face).
 const M=(id,grade,name,icon,shape,text,fx,extra={})=>({id,grade,name,icon,shape,text,fx,...extra});
@@ -623,7 +623,7 @@ const MODULES=[
  M('bounty','rare','현상금','skull',['#','#'],'보스 캐시 +13%',{bossCash:.13},{pal:'money'}),
  M('wallet','rare','든든한 지갑','coins',['#','#'],'시작 캐시 +100',{startCash:100},{pal:'money'}),
  M('econmania','rare','경제 마니아','coin',['#'],'경제 타워 수입 +8%',{'income.econ':.08},{pal:'money'}),
- // explosions: every explosion's radius (any splash from a tower or its units), then the 폭발 label (bomb, plane, robot)
+ // explosions: every explosion's radius (any splash from a tower or its units), then the 폭발 label (bomb, plane)
  M('blast1','rare','익스플로전','burst',['#'],'폭발 범위 +9.5%',{splash:.095},{pal:'blast'}),
  M('creeper','rare','폭발 마니아','burst',['#.#','.#.'],'폭발 타워 공격력 +12.5%',{'dmg.blast':.125},{pal:'blast'}),
  // every tower's magazine (towers that fire bursts: soldier, laser); a share of a round carries over to the next reload
@@ -631,11 +631,11 @@ const MODULES=[
  // each one adds about 0.11-0.12 of the base damage to every hit, 5-6% per cell
  M('jackpot','rare','잭팟','star',['##'],'치명타 배율 +0.14배 (+0.98배부터 감소)',{critDmg:.14},{pal:'fire'}),
  M('rapidmania','rare','강화 탄창','chev',['#','#'],'장탄수 +22%',{ammo:.22},{pal:'fire'}),
- // the 연사 label (soldier, minigun, plane): a little range and attack speed; the 에너지 label (tesla, gauss,
- // laser): attack, a little under 폭발 마니아 per cell since two of its towers carry other labels too
+ // the 연사 label (soldier, minigun, plane): a little range and attack speed; the 에너지 label (tesla, flame,
+ // laser): attack, a little under 폭발 마니아 per cell since the laser carries another label too
  M('rapidmania2','rare','연사 마니아','chev',['.#','#.'],'연사 타워 사거리 +4.5% · 공격 속도 +3.5%',{'range.rapid':.045,'fire.rapid':.035},{pal:'mania'}),
  M('energymania','rare','에너지 마니아','bolt',['#.','##','.#'],'에너지 타워 공격력 +16%',{'dmg.energy':.16},{pal:'mania'}),
- // the 근거리 label (bomb, flame, shotgun, gauss): attack speed and a touch of range; the 지원 label (commander): range
+ // the 근거리 label (bomb, shotgun, gauss): attack speed and a touch of range; the 지원 label (commander): range
  M('closemania','rare','근거리 마니아','blade',['##'],'근거리 타워 공격 속도 +5.9% · 사거리 +1%',{'fire.close':.059,'range.close':.01},{pal:'mania'}),
  // the 원거리 label (sniper, laser, agent): each tower's first hit on each enemy. Big single shots gain the most;
  // the laser, which ticks, hardly gains (it already takes 에너지 마니아)
@@ -661,6 +661,7 @@ const MODULES=[
  M('extort','legend','극한의 이득','coins',['##'],'캐시를 주지 않는 적에게서도 캐시를 48% 뜯어냄',{extort:.48}),
  M('wakeup','legend','정신 차렷-!!','eye',['###'],'마비 저항 +34% · 100%를 넘은 만큼 마비를 건 적에게 되돌려 줌',{stunRes:.34}),
  M('pile','legend','파일 벙커','shield',['###','.#.'],'적 보호막에 주는 피해 +52%',{shield:.52}),
+ M('cool','legend','속이 다 시원하다','missile',['#','#','#'],'비행기의 폭탄이 미사일로 변경됩니다',{'airstrike@plane':1}),
  // myth (4.11.13): one tower each. 프로젝트 리콘 fires the soldier's whole magazine as one round, then reloads
  // (attack speed shortens the reload); 편대 비행 comes back unchanged
  M('recon','myth','프로젝트 리콘','soldier',['##','##'],'[군인] 탄창을 한 발에 모아 쏘고 재장전 · 2개째부터 하나마다 공격력 +23.5%, 대가: 가격 +18%',{'recon@soldier':1},{dup:[{'dmg@soldier':.235,'price@soldier':.18}],stack:true}),
@@ -816,7 +817,7 @@ document.addEventListener('click',e=>{if(performance.now()-swipeAt<400&&e.target
 function warnTap(e,msg){const id=e.pointerId,x=e.clientX,up=ev=>{if(ev.pointerId!==id)return;window.removeEventListener('pointerup',up);if(Math.abs(ev.clientX-x)<30)warn(msg);};window.addEventListener('pointerup',up);}
 
 // the game's version, shown on the title screen and in the 정보 window
-const APP_VERSION='4.11.18';
+const APP_VERSION='4.11.19';
 function home(){fitLoadout(profile);if(cloudWaiting)setTimeout(()=>cloudSync(),0);if(game&&!game.ended){if(game.config.tutorial){game=null;coachStop();}else{game.paused=true;savedRun=game.snapshot();}}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p data-action="version-tap">버전 ${APP_VERSION}</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
 function openDialog(title,body,buttons,kind='dialog'){if(kind!=='result')sound(kind.startsWith('msg')?'question':'open');dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2><span>${title}</span>${button('dialog-x','<i>×</i>','xp-x','aria-label="닫기"')}</h2><div class="dialog-body">${body}</div><div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('.dialog').classList.toggle('msgbox',kind.startsWith('msg'));(modal.querySelector('.xp-yes')??modal.querySelector('.dialog-actions button')??modal.querySelector('button'))?.focus();backNavigation?.sync?.();}
 // Yes/no question in a Windows message box: icon, text, then [예] [아니요] on the right.
@@ -902,7 +903,7 @@ const pieceSize=(id,r)=>{const cs=MODS.cells(id,r);return [Math.max(...cs.map(c=
 // Board effects in short words.
 function effectLines(raw){const pct=v=>`${Math.ceil(Math.round(v*1e6)/1e2)/100}%`,out=[],tag=k=>MODS.TAGS[k.split('.')[1]]??'',gap=kind=>Math.round(TOWER[kind].period[0]*MODS.towerMods(raw,kind).spawn*10)/10;
  for(const [k,r] of Object.entries(raw)){if(k.includes('@')){const [st,kind]=k.split('@'),n=TOWER[kind]?.name??kind,pc=v=>`${Math.ceil(Math.round(v*1e6)/1e2)/100}%`,sg=v=>v>=0?'+':'-';
-  const one={dmg:`${n} 공격력 ${sg(r)}${pc(Math.abs(r))}`,range:`${n} 사거리 ${sg(r)}${pc(Math.abs(r))}`,fire:`${n} 공격 속도 ${sg(r)}${pc(Math.abs(r))}`,spawn:`${n} 출격 주기 -${pc(r)}${raw['spawn.summon']?'':` → ${n} ${gap(kind)}초`}`,income:`${n} 수입 +${pc(r)}`,upgrade:`${n} 업그레이드 비용 ${r>=0?'-':'+'}${pc(Math.abs(r))}`,price:`${n} 가격 +${pc(r)}`,free:`첫 ${n} 무료`,hidden:`${n} Lv.${maxLevel(kind)+1} 해금`,pierce:`${n} 관통 +${r}명`,cap:kind==='farm'?`농장 한도 ${r}개`:`${n} 최대 피해 배율 +${Math.round(r*100)/100}배`,chain:`${n} 전이 +${r}명`,spin:`${n} 예열 공속 최대 +${pc(r)}`,wing:`${n} ${Math.round(r)+1}대 출격`,recon:`${n} 탄창 한 발 사격`,duration:`콜 투 암즈 +${Math.round(r*10)/10}초`}[st];
+  const one={dmg:`${n} 공격력 ${sg(r)}${pc(Math.abs(r))}`,range:`${n} 사거리 ${sg(r)}${pc(Math.abs(r))}`,fire:`${n} 공격 속도 ${sg(r)}${pc(Math.abs(r))}`,spawn:`${n} 출격 주기 -${pc(r)}${raw['spawn.summon']?'':` → ${n} ${gap(kind)}초`}`,income:`${n} 수입 +${pc(r)}`,upgrade:`${n} 업그레이드 비용 ${r>=0?'-':'+'}${pc(Math.abs(r))}`,price:`${n} 가격 +${pc(r)}`,free:`첫 ${n} 무료`,hidden:`${n} Lv.${maxLevel(kind)+1} 해금`,pierce:`${n} 관통 +${r}명`,cap:kind==='farm'?`농장 한도 ${r}개`:`${n} 최대 피해 배율 +${Math.round(r*100)/100}배`,chain:`${n} 전이 +${r}명`,spin:`${n} 예열 공속 최대 +${pc(r)}`,wing:`${n} ${Math.round(r)+1}대 출격`,recon:`${n} 탄창 한 발 사격`,airstrike:`${n} 폭탄 → 미사일`,duration:`콜 투 암즈 +${Math.round(r*10)/10}초`}[st];
   if(one)out.push(one);continue;}
   const [key]=k.split('.'),t=k.includes('.')?tag(k)+' 타워 ':'모든 타워 ',sp=MODS.SOFT[key],unit=['srange','placement','health','startCash','regen','repair','farmLimit','intermission'].includes(key);let v=MODS.soft(key,r);if(unit)v=Math.ceil(Math.round(v*1e4)/1e2)/100;let tapered=sp&&r>sp[0]+1e-9,plain=key==='sell'?`${Math.round(70+r*100)}%`:unit?`${Math.round(r*10)/10}`:pct(r);
   // a label piece adds on top of the all-tower pieces of its kind and they taper together: show what it adds
@@ -945,6 +946,7 @@ const PICTO={
  eye(g,cut){g.beginPath();g.moveTo(-.48,0);g.quadraticCurveTo(0,-.42,.48,0);g.quadraticCurveTo(0,.42,-.48,0);g.closePath();g.fill();g.fillStyle=cut;g.beginPath();g.arc(0,0,.17,0,Math.PI*2);g.fill();g.fillStyle=g.strokeStyle;g.beginPath();g.arc(0,0,.07,0,Math.PI*2);g.fill();},
  leaf(g,cut){g.beginPath();g.moveTo(-.38,.38);g.quadraticCurveTo(-.4,-.36,.42,-.4);g.quadraticCurveTo(.38,.36,-.38,.38);g.closePath();g.fill();g.strokeStyle=cut;g.lineWidth=.05;g.beginPath();g.moveTo(-.32,.32);g.lineTo(.3,-.3);g.stroke();},
  slots(g){for(const [x,y] of [[-.42,-.42],[.04,-.42],[-.42,.04],[.04,.04]])g.fillRect(x,y,.38,.38);},
+ missile(g,cut){g.rotate(Math.PI/4);g.beginPath();g.moveTo(0,-.48);g.quadraticCurveTo(.12,-.4,.12,-.2);g.lineTo(.12,.12);g.lineTo(.27,.32);g.lineTo(.27,.42);g.lineTo(.12,.36);g.lineTo(-.12,.36);g.lineTo(-.27,.42);g.lineTo(-.27,.32);g.lineTo(-.12,.12);g.lineTo(-.12,-.2);g.quadraticCurveTo(-.12,-.4,0,-.48);g.closePath();g.fill();g.fillStyle=cut;g.fillRect(-.12,-.14,.24,.06);g.fillRect(-.03,.12,.06,.24);},
  crate(g,cut){g.fillRect(-.42,-.42,.84,.84);g.strokeStyle=cut;g.lineWidth=.07;g.strokeRect(-.32,-.32,.64,.64);g.beginPath();g.moveTo(-.32,-.32);g.lineTo(.32,.32);g.moveTo(.32,-.32);g.lineTo(-.32,.32);g.stroke();}};
 // Tower faces for tower pieces: the inventory art, tinted to one colour.
 const FACE_IMG={};let FACE_TINT={};const FACE_TINT_CLEAR=()=>{FACE_TINT={};};
@@ -4065,7 +4067,14 @@ class Game{
   const d=TOWER.plane,i=t.level-1,origin={x:t.x+Math.cos(t.orbit)*s.range,y:t.y+Math.sin(t.orbit)*s.range};
   // Free-running, one-at-a-time bombing. No target lookup, path snapping or
   // commander acceleration: even an empty field consumes the normal cycle.
-  if(d.bomb[i]>0&&(t.bombCooldown??0)<=1e-8){
+  if(d.bomb[i]>0&&(t.bombCooldown??0)<=1e-8&&this.mods['airstrike@plane']>0){
+   // 속이 다 시원하다: missiles instead, out to gun range; each one picks a random enemy and always hits
+   const R=d.gunRange[i]*buff.range*this.km('plane').range;let fired=false;
+   for(let n=0;n<Math.round(this.mods['airstrike@plane'])*d.bombCount[i];n++){const pool=this.enemies.filter(e=>!e.dead&&e.hp>0&&distance(origin,e)<=R&&this.visible(e,t));if(!pool.length)break;const e=pool[Math.floor(this.random()*pool.length)];
+    this.fx('shot',origin,{x2:e.x,y2:e.y,color:d.color,life:.22,heavy:true,air:true});this.splash(e,d.bomb[i],d.bombRadius[i],t);fired=true;}
+   if(fired)t.bombCooldown=d.bombPeriod;
+  }
+  else if(d.bomb[i]>0&&(t.bombCooldown??0)<=1e-8){
    const angle=this.random()*Math.PI*2,r=Math.sqrt(this.random())*d.bombScatter;
    this.bombs.push({id:this.nextId++,source:t.id,kind:'plane',x:origin.x,y:origin.y,x2:origin.x+Math.cos(angle)*r,y2:origin.y+Math.sin(angle)*r,damage:d.bomb[i],radius:d.bombRadius[i],remaining:d.bombFallSeconds,duration:d.bombFallSeconds});
    t.bombCooldown=d.bombPeriod;
