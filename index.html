@@ -497,7 +497,7 @@ const DECAY=.7;
 // Stats that would break the game if piled up have no lock; past a point [from] each extra bit
 // counts for less and less, closing in on [toward] without reaching it (like stacking ×0.7s):
 // value = from + (toward-from)·(1 - e^(-(sum-from)/(toward-from))). Below [from] it adds up as is.
-const SOFT={range:[.3,.8],splash:[.5,1.5],vhp:[.5,1.5],spawn:[.5,.75],cost:[.3,.6],upgrade:[.4,.8],srange:[5,12],sboost:[.25,.6],sell:[.05,.15],shield:[.5,1.5],camoDmg:[.5,1],placement:[9,20],health:[100,300],startCash:[1200,3000],regen:[12,30],farmLimit:[3,6],intermission:[15,40]};
+const SOFT={range:[.3,.8],splash:[.5,1.5],vhp:[.5,1.5],spawn:[.5,.75],cost:[.3,.6],srange:[5,12],sboost:[.25,.6],sell:[.05,.15],shield:[.5,1.5],camoDmg:[.5,1],placement:[9,20],health:[100,300],startCash:[1200,3000],regen:[12,30],farmLimit:[3,6],intermission:[15,40]};
 const WHOLE=new Set(['placement','farmLimit']);
 function soft(key,sum){const s=SOFT[key];if(!s||sum<=s[0])return sum;const [a,b]=s;const v=a+(b-a)*(1-Math.exp(-(sum-a)/(b-a)));return WHOLE.has(key)?Math.floor(v+1e-9):v;}
 // stats a tower reads through towerMods (softened there, after all-tower and label pieces are added)
@@ -508,7 +508,8 @@ const TOWER_TAGS={soldier:['rapid'],bomb:['close','blast'],sniper:['long'],farm:
 // shape rows: '#' is a cell. `icon` is the picture on the piece
 // (a tower id draws that tower's face).
 const M=(id,grade,name,icon,shape,text,fx,extra={})=>({id,grade,name,icon,shape,text,fx,...extra});
-const MODULES=[
+// 4.10.0: the old set, out of the game while the new set is written. Pieces come back from here, changed.
+const RETIRED=[
  // Sizes follow strength. One cell ≈ attack +1% for every tower; other stats by their worth
  // (range a little more, money and safety by what they buy). Label pieces (1 cell ≈ label +1.6–2%)
  // are what odd decks stack to the extreme: such a deck at 100 cells is about 3–3.5× as strong.
@@ -573,6 +574,23 @@ const MODULES=[
  M('arsenal','genesis','그리고, 최종장','crate',['########','########','########','########','########'],'로봇을 장착하고 시작하면 그 판에서 로봇이 숨겨진 타워 ICU 전선으로 바뀜 · 최대 1개',{},{limit:1}),
  M('secondlife','genesis','두 번째 기회','heart',['.##.','####'],'기지가 무너지면 한 번, 그 웨이브를 처음부터 다시 시작 (타워·캐시 그대로, 기지 체력 50) · 2개째부터 기지 체력 +30, 이후 ×0.7',{revive:50},{dup:[{revive:30}]}),
  M('timewarp','genesis','시간 왜곡','clock',['####','.##.','###.'],'모든 적 이동 속도 -25% · 2개째부터 -8%, 이후 ×0.7',{speedMul:.75},{dup:[{speedMul:.92}]})];
+// 4.10.0 new set. Common: plain stats for every tower in three sizes; the harder a shape is to fit,
+// the more it gives per cell. Range is the towers' own: units (garage cars, robots, skeletons) get
+// attack and attack speed but not range. Upgrade cuts add up as buying power (upgrade = sum, price =
+// cost ÷ (1 + sum)), so every piece buys as much again as the one before; the shown cut is 1 - 1/(1 + sum).
+const MODULES=[
+ M('atk1','common','공격력 I','blade',['#'],'공격력 +2.5%',{dmg:.025}),
+ M('atk2','common','공격력 II','blade',['##'],'공격력 +5.5%',{dmg:.055}),
+ M('atk3','common','공격력 III','blade',['####'],'공격력 +12.2%',{dmg:.122}),
+ M('rng1','common','사거리 I','scope',['#'],'사거리 +3%',{range:.03}),
+ M('rng2','common','사거리 II','scope',['#','#','#'],'사거리 +10.5%',{range:.105}),
+ M('rng3','common','사거리 III','scope',['#.','##','.#'],'사거리 +14.7%',{range:.147}),
+ M('spd1','common','속도 I','chev',['#'],'공격 속도 +2.3%',{fire:.023}),
+ M('spd2','common','속도 II','chev',['#.','##'],'공격 속도 +8.2%',{fire:.082}),
+ M('spd3','common','속도 III','chev',['#','#','#','#','#'],'공격 속도 +15.3%',{fire:.153}),
+ // 4% and 10% off on their own: buying power 1/0.96 - 1 and 1/0.9 - 1
+ M('disc1','common','할인 I','up',['#','#'],'업그레이드 구매력 +4.17%',{upgrade:1/24}),
+ M('disc2','common','할인 II','up',['##','##'],'업그레이드 구매력 +11.12%',{upgrade:1/9})];
 // 해골 공장's skeletons walk the road backwards from the base and ram enemies with what is left of
 // their health, like the garage's cars. Knights also cut the nearest enemy within reach as they walk.
 // `gap` seconds between skeletons when several come out.
@@ -602,10 +620,12 @@ function effects(placed,opt={}){const out={},count={};for(const p of placed){con
 // A one-tower cut to the launch gap (전차 설계도) shortens what the board's cut leaves, so the gap never reaches 0.
 function towerMods(fx,kind){const tags=TOWER_TAGS[kind]??[],base=key=>soft(key,(fx[key]??0)+tags.reduce((a,t)=>a+(fx[key+'.'+t]??0),0)),own=key=>fx[key+'@'+kind]??0,sum=key=>base(key)+own(key);
  return {dmg:1+sum('dmg'),range:1+sum('range'),fire:1+sum('fire'),splash:1+sum('splash'),vhp:1+sum('vhp'),spawn:(1-base('spawn'))*(1-own('spawn')),srange:sum('srange'),sboost:sum('sboost'),income:1+sum('income'),cost:1-sum('cost')};}
+// Draw rates of the grades that have pieces (the others are left out and the rest share their rates).
+function rates(){const live=GRADES.filter(g=>BY_GRADE[g.id].length),t=live.reduce((a,g)=>a+g.rate,0);return live.map(g=>({...g,rate:g.rate/t}));}
 // One draw: grade by rate, then any piece of that grade.
-function draw(random=Math.random){let r=random(),grade=GRADES[0].id;for(const g of GRADES){if(r<g.rate){grade=g.id;break;}r-=g.rate;}const list=BY_GRADE[grade];return list[Math.floor(random()*list.length)].id;}
+function draw(random=Math.random){const live=rates();let r=random(),grade=live[0].id;for(const g of live){if(r<g.rate){grade=g.id;break;}r-=g.rate;}const list=BY_GRADE[grade];return list[Math.floor(random()*list.length)].id;}
 
-for(const [k,v] of Object.entries({SKELETON,skeletonRoster,BOARD,START_CELLS,PULL_COST,SOFT,soft,TOWER_KEYS,DECAY,GRADES,GRADE,TAGS,TOWER_TAGS,MODULES,MODULE,BY_GRADE,cells,size,cellCost,neighbours,buyable,layout,fits,effects,towerMods,draw}))Object.defineProperty(exports,k,{enumerable:true,get:()=>v});
+for(const [k,v] of Object.entries({SKELETON,skeletonRoster,BOARD,START_CELLS,PULL_COST,SOFT,soft,TOWER_KEYS,DECAY,GRADES,GRADE,TAGS,TOWER_TAGS,MODULES,MODULE,BY_GRADE,RETIRED,cells,size,cellCost,neighbours,buyable,layout,fits,effects,towerMods,rates,draw}))Object.defineProperty(exports,k,{enumerable:true,get:()=>v});
 },
 "app.js":function(require,exports){
 const {enemyMoveSpeed,CODEX_GROUPS,SCALE}=require("data.js");
@@ -715,7 +735,7 @@ document.addEventListener('click',e=>{if(performance.now()-swipeAt<400&&e.target
 function warnTap(e,msg){const id=e.pointerId,x=e.clientX,up=ev=>{if(ev.pointerId!==id)return;window.removeEventListener('pointerup',up);if(Math.abs(ev.clientX-x)<30)warn(msg);};window.addEventListener('pointerup',up);}
 
 // the game's version, shown on the title screen and in the 정보 window
-const APP_VERSION='4.9.10';
+const APP_VERSION='4.10.0';
 function home(){fitLoadout(profile);if(cloudWaiting)setTimeout(()=>cloudSync(),0);if(game&&!game.ended){game.paused=true;savedRun=game.snapshot();}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p data-action="version-tap">버전 ${APP_VERSION}</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
 function openDialog(title,body,buttons,kind='dialog'){if(kind!=='result')sound(kind.startsWith('msg')?'question':'open');dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2><span>${title}</span>${button('dialog-x','<i>×</i>','xp-x','aria-label="닫기"')}</h2><div class="dialog-body">${body}</div><div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('.dialog').classList.toggle('msgbox',kind.startsWith('msg'));(modal.querySelector('.xp-yes')??modal.querySelector('.dialog-actions button')??modal.querySelector('button'))?.focus();backNavigation?.sync?.();}
 // Yes/no question in a Windows message box: icon, text, then [예] [아니요] on the right.
@@ -793,14 +813,14 @@ const gradeOf=id=>MODS.GRADE[MODS.MODULE[id].grade];
 function modText(m){return m.text+(m.pending?' (효과 준비 중)':'');}
 const pieceSize=(id,r)=>{const cs=MODS.cells(id,r);return [Math.max(...cs.map(c=>c[0]))+1,Math.max(...cs.map(c=>c[1]))+1];};
 // Board effects in short words.
-function effectLines(raw){const pct=v=>`${Math.round(v*1000)/10}%`,out=[],tag=k=>MODS.TAGS[k.split('.')[1]]??'',gap=kind=>Math.round(TOWER[kind].period[0]*MODS.towerMods(raw,kind).spawn*10)/10;
+function effectLines(raw){const pct=v=>`${Math.ceil(Math.round(v*1e6)/1e2)/100}%`,out=[],tag=k=>MODS.TAGS[k.split('.')[1]]??'',gap=kind=>Math.round(TOWER[kind].period[0]*MODS.towerMods(raw,kind).spawn*10)/10;
  for(const [k,r] of Object.entries(raw)){if(k.includes('@')){const [st,kind]=k.split('@'),n=TOWER[kind]?.name??kind,pc=v=>`${Math.round(v*1000)/10}%`,sg=v=>v>=0?'+':'-';
   const one={dmg:`${n} 공격력 ${sg(r)}${pc(Math.abs(r))}`,range:`${n} 사거리 ${sg(r)}${pc(Math.abs(r))}`,fire:`${n} 공격 속도 ${sg(r)}${pc(Math.abs(r))}`,spawn:`${n} 출격 주기 -${pc(r)}${raw['spawn.summon']?'':` → ${n} ${gap(kind)}초`}`,income:`${n} 수입 +${pc(r)}`,upgrade:`${n} 업그레이드 비용 ${r>=0?'-':'+'}${pc(Math.abs(r))}`,price:`${n} 가격 +${pc(r)}`,free:`첫 ${n} 무료`,hidden:`${n} 숨겨진 Lv.${maxLevel(kind)+1}`,pierce:`${n} 관통 +${r}명`,cap:kind==='farm'?`농장 한도 ${r}개`:`${n} 최대 피해 배율 +${Math.round(r*100)/100}배`,chain:`${n} 전이 +${r}명`,spin:`${n} 예열 공속 최대 +${pc(r)}`,wing:`${n} 2대 출격`,duration:`콜 투 암즈 +${Math.round(r*10)/10}초`}[st];
   if(one)out.push(one);continue;}
   const [key]=k.split('.'),t=k.includes('.')?tag(k)+' ':'모든 타워 ',sp=MODS.SOFT[key],unit=['srange','placement','health','startCash','regen','farmLimit','intermission'].includes(key);let v=MODS.soft(key,r),tapered=sp&&r>sp[0]+1e-9,plain=key==='sell'?`${Math.round(70+r*100)}%`:unit?`${Math.round(r*10)/10}`:pct(r);
   // a label piece adds on top of the all-tower pieces of its kind and they taper together: show what it adds
   if(sp&&k.includes('.')&&MODS.TOWER_KEYS.has(key)&&raw[key]){const g=raw[key];v=MODS.soft(key,g+r)-MODS.soft(key,g);tapered=g+r>sp[0]+1e-9;}
-  const line={dmg:`${t}공격력 +${pct(v)}`,range:`${t}사거리 +${pct(v)}`,fire:`${t}공격 속도 +${pct(v)}`,splash:`${t}폭발 범위 +${pct(v)}`,vhp:`소환 차량 체력 +${pct(v)}`,spawn:`소환 출격 주기 -${pct(v)}`,srange:`지원 범위 +${v}칸`,sboost:`지원 효과 +${pct(v)}p`,income:`경제 수입 +${pct(v)}`,cost:`${k.includes('.')?t:''}설치 비용 -${pct(v)}`,upgrade:`업그레이드 비용 -${pct(v)}`,sell:`판매 환급 ${Math.round(70+v*100)}%`,boss:`보스에게 주는 피해 +${pct(v)}`,shield:`보호막 적에게 주는 피해 +${pct(v)}`,cash:`피해 캐시 +${pct(v)}`,camoDmg:`히든에게 주는 피해 +${pct(v)}`,bossStunMul:`보스 마비 -${pct(1-v)}`,stunMul:`모든 마비 -${pct(1-v)}`,placement:`최대 배치 +${v}`,health:`기지 체력 +${v}`,startCash:`시작 캐시 +${v}`,regen:`웨이브마다 기지 체력 +${v}`,waveBonus:`웨이브 보상 +${pct(v)}`,camoShift:`히든 감지 레벨 -${v}`,farmLimit:`농장 한도 +${v}`,intermission:`인터미션 +${v}초`,skeleton:`매 웨이브 스켈레톤 ${v}~${v*5}마리`,slots:`타워 장착 칸 +${Math.min(5,v)}`,revive:`한 번 웨이브 다시 시작 · 기지 체력 ${Math.min(Math.round(v),Math.round(100+MODS.soft('health',raw.health??0)))}`,speedMul:`모든 적 이동 속도 -${pct(1-v)}`}[key];
+  const line={dmg:`${t}공격력 +${pct(v)}`,range:`${t}사거리 +${pct(v)}`,fire:`${t}공격 속도 +${pct(v)}`,splash:`${t}폭발 범위 +${pct(v)}`,vhp:`소환 차량 체력 +${pct(v)}`,spawn:`소환 출격 주기 -${pct(v)}`,srange:`지원 범위 +${v}칸`,sboost:`지원 효과 +${pct(v)}p`,income:`경제 수입 +${pct(v)}`,cost:`${k.includes('.')?t:''}설치 비용 -${pct(v)}`,upgrade:`업그레이드 비용 -${pct(1-1/(1+v))}`,sell:`판매 환급 ${Math.round(70+v*100)}%`,boss:`보스에게 주는 피해 +${pct(v)}`,shield:`보호막 적에게 주는 피해 +${pct(v)}`,cash:`피해 캐시 +${pct(v)}`,camoDmg:`히든에게 주는 피해 +${pct(v)}`,bossStunMul:`보스 마비 -${pct(1-v)}`,stunMul:`모든 마비 -${pct(1-v)}`,placement:`최대 배치 +${v}`,health:`기지 체력 +${v}`,startCash:`시작 캐시 +${v}`,regen:`웨이브마다 기지 체력 +${v}`,waveBonus:`웨이브 보상 +${pct(v)}`,camoShift:`히든 감지 레벨 -${v}`,farmLimit:`농장 한도 +${v}`,intermission:`인터미션 +${v}초`,skeleton:`매 웨이브 스켈레톤 ${v}~${v*5}마리`,slots:`타워 장착 칸 +${Math.min(5,v)}`,revive:`한 번 웨이브 다시 시작 · 기지 체력 ${Math.min(Math.round(v),Math.round(100+MODS.soft('health',raw.health??0)))}`,speedMul:`모든 적 이동 속도 -${pct(1-v)}`}[key];
   const tail=key==='spawn'?` → 정비소 ${gap('spawner')}초 · 로봇 ${gap('robot')}초`:'';
   if(line)out.push((tapered?`${line} (체감 · 합 ${plain})`:line)+tail);}
  return out;}
@@ -948,7 +968,7 @@ function modulesScreen(tab=modTab){modTab=tab;if(modSel?.mode==='placed'&&!modSt
  const tabs=`<div class="mod-top">${button('mod-tab','장착',modTab==='equip'?'active':'','data-kind="equip"')}${button('mod-tab','뽑기',modTab==='gacha'?'active':'','data-kind="gacha"')}<i class="mod-top-gap"></i>${button('mod-presets','프리셋')}${button('mod-clear','일괄 해제','',modState().placed.length?'':'disabled')}</div>`;
  if(modTab==='equip'){setScreen('modules',header('모듈')+tabs+`<div class="board-wrap mod-stage"><canvas id="mod-board" class="board" aria-label="모듈 판. 아래 모듈을 끌어 올려 끼웁니다."></canvas></div><footer class="battle-footer mod-footer"><div class="tower-controls" id="mod-controls"></div><div id="mod-tray" class="mod-tray"></div></footer>`);
   const cv=$('#mod-board');modView=null;modOff=null;modObserver?.disconnect();modObserver=new ResizeObserver(()=>{modFit();drawModBoard();});modObserver.observe(cv);modFit();bindModBoard(cv);refreshModPanel();refreshTray();redrawModules();}
- else{modSel=null;setScreen('modules',header('모듈')+tabs+`<div class="mod-gacha"><fieldset class="xp-group mod-pullbox"><legend>뽑기 · ${icon('coin')} ${money(MODS.PULL_COST*100)}</legend><div class="mod-rates">${MODS.GRADES.map(g=>`<span style="color:${g.color}">${g.name} ${Math.round(g.rate*1000)/10}%</span>`).join('')}</div><div class="mod-pull"></div><div class="mod-shopbar"></div></fieldset><div class="scroll mod-list" aria-label="보관함"></div><div class="mod-sellbar"></div></div>`);refreshGacha();}}
+ else{modSel=null;setScreen('modules',header('모듈')+tabs+`<div class="mod-gacha"><fieldset class="xp-group mod-pullbox"><legend>뽑기 · ${icon('coin')} ${money(MODS.PULL_COST*100)}</legend><div class="mod-rates">${MODS.rates().map(g=>`<span style="color:${g.color}">${g.name} ${Math.round(g.rate*1000)/10}%</span>`).join('')}</div><div class="mod-pull"></div><div class="mod-shopbar"></div></fieldset><div class="scroll mod-list" aria-label="보관함"></div><div class="mod-sellbar"></div></div>`);refreshGacha();}}
 function refreshModules(){if(screen!=='modules')return;if(modTab==='equip'){refreshModPanel();refreshTray();redrawModules();}else refreshGacha();const w=$('.xp-status .wallet');if(w)w.innerHTML=icon('coin')+wallet();}
 // The footer panel: board effects; the piece in hand; a piece on the board.
 function refreshModPanel(info=null){const box=$('#mod-controls');if(!box)return;const st=modState();let html;
@@ -976,7 +996,7 @@ function expandCell(i){const st=modState();closeDialog();if(!MODS.buyable(st.cel
  if(!profile.cheats.coins)profile.coins-=cost;st.cells.push(i);sound('upgrade');save();refreshModules();}
 function sellModules(id,count){const n=Math.min(count,spareCount(id));if(n<=0)return;const st=modState();st.owned[id]-=n;if(st.owned[id]<=0){delete st.owned[id];sellSel=null;}st.points=(st.points??0)+gradeOf(id).points*n;sound('sell');save();refreshModules();}
 // Points shop: any myth or genesis piece, chosen, for points from selling.
-function shopRows(){const pts=modState().points??0;return ['myth','genesis'].map(gid=>{const g=MODS.GRADE[gid];return `<div class="section-label" style="color:${g.color}"><span>${g.name} · ${g.swap.toLocaleString('en-US')} 포인트</span></div><div class="mod-items">${MODS.BY_GRADE[gid].map(m=>`<div class="mod-item mod-shop-item" style="--g:${g.color}"><img class="mod-row-art" src="${pieceImage(m.id)}" alt=""><span class="mod-item-text"><strong>${m.name}</strong><small>${modText(m)}</small></span>${button('shop-buy','교환','',`data-kind="${m.id}"${pts>=g.swap?'':' disabled'}`)}</div>`).join('')}</div>`;}).join('');}
+function shopRows(){const pts=modState().points??0,gs=['myth','genesis'].filter(gid=>MODS.BY_GRADE[gid].length);if(!gs.length)return '<p class="mod-empty">비어 있음</p>';return gs.map(gid=>{const g=MODS.GRADE[gid];return `<div class="section-label" style="color:${g.color}"><span>${g.name} · ${g.swap.toLocaleString('en-US')} 포인트</span></div><div class="mod-items">${MODS.BY_GRADE[gid].map(m=>`<div class="mod-item mod-shop-item" style="--g:${g.color}"><img class="mod-row-art" src="${pieceImage(m.id)}" alt=""><span class="mod-item-text"><strong>${m.name}</strong><small>${modText(m)}</small></span>${button('shop-buy','교환','',`data-kind="${m.id}"${pts>=g.swap?'':' disabled'}`)}</div>`).join('')}</div>`;}).join('');}
 function shopDialog(){openDialog(`포인트 교환 · ${(modState().points??0).toLocaleString('en-US')} 포인트`,`<div class="scroll mod-shop">${shopRows()}</div>`,button('close-dialog','닫기'));}
 function buyWithPoints(id){const st=modState(),g=gradeOf(id);if(!g.swap||(st.points??0)<g.swap)return;st.points-=g.swap;st.owned[id]=(st.owned[id]??0)+1;sound('unlock');save();refreshModules();shopDialog();}
 function pullModules(){const n=pullCount,cost=n*MODS.PULL_COST*100;if(!profile.cheats.coins&&profile.coins<cost){warn('크레딧이 부족합니다.');return;}
@@ -3717,7 +3737,7 @@ class Game{
  stat(t){const s=stat(t),m=this.km(t.kind);s.range*=m.range;if(t.kind==='spawner'||t.kind==='robot')s.period*=m.spawn;else if(t.kind!=='farm'&&t.kind!=='commander')s.period/=m.fire;return s;}
  buildCost(kind){if(this.mods['free@'+kind]&&!this.towers.some(t=>t.kind===kind))return 0;return Math.round(TOWER[kind].cost*this.km(kind).cost*(1+(this.mods['price@'+kind]??0)))*100;}
  maxLevelOf(kind){return maxLevel(kind)+(this.mods['hidden@'+kind]?TOWER[kind]?.hidden??0:0);}
- upgradeCost(t){const c=TOWER[t.kind].upgrades[t.level-1];if(c==null||t.level>=this.maxLevelOf(t.kind))return 0;if(t.kind==='icu')return c*100;return Math.round(c*(1-(this.mods.upgrade??0))*(1-(this.mods['upgrade@'+t.kind]??0))*(1+(this.mods['price@'+t.kind]??0)))*100;}
+ upgradeCost(t){const c=TOWER[t.kind].upgrades[t.level-1];if(c==null||t.level>=this.maxLevelOf(t.kind))return 0;if(t.kind==='icu')return c*100;return Math.round(c/(1+(this.mods.upgrade??0))*(1-(this.mods['upgrade@'+t.kind]??0))*(1+(this.mods['price@'+t.kind]??0)))*100;}
  sellValue(t){return Math.floor(t.spent*Math.min(100,70+Math.round((t.kind==='icu'?0:this.mods.sell??0)*100))/100);}
  placementLimit(){return PLACEMENT_LIMIT+(this.mods.placement??0);}
  towerCap(kind){const cap=TOWER[kind]?.placementLimit;return cap&&kind==='farm'?(this.mods['cap@farm']??cap)+(this.mods.farmLimit??0):cap;}
@@ -3891,8 +3911,8 @@ class Game{
    if(t.kind==='plane'&&this.mods['wing@plane'])this.wingStep(t,s,buff,dt);
   }
   for(const v of this.vehicles){if(v.hp<=0)continue;if(v.kind==='icu'){this.icuUnit(v,dt);continue;}const d=this.unitData(v),i=v.level-1,source=this.towers.find(t=>t.id===v.source)??{kind:v.kind,damage:0};v.progress-=dt*d.vehicleSpeed[i];Object.assign(v,this.position(v.progress));v.angle+=Math.PI;v.fireWindows=(v.fireWindows??[]).filter(w=>w.until>this.time);const fire=Math.max(v.fireBoost??1,...v.fireWindows.map(w=>w.fire));v.cooldown-=dt*fire;v.rocketCooldown-=dt*fire;
-   const gun=d.gun[i],vm=v.kind==='skeleton'?{range:1,fire:1}:this.km(v.kind),shell=d.rocketRange?.[i]??0,sees=e=>!e.dead&&(!this.enemyData(e).camo||e.revealed),lead=r=>this.enemies.filter(e=>sees(e)&&distance(v,e)<=r).sort((a,b)=>b.progress-a.progress)[0],aim=(k,e)=>{const w=Math.atan2(e.y-v.y,e.x-v.x),g0=v[k]||v.angle;v[k]=g0+Math.max(-7*dt,Math.min(7*dt,angleDiff(w,g0)));};if(gun>0){const enemy=lead(d.gunRange[i]*vm.range);if(enemy){aim(shell?'mgAngle':'gunAngle',enemy);if(v.cooldown<=0){this.hit(enemy,gun,source);this.fx(d.cut?'blast':'shot',d.cut?enemy:this.vmuzzle(v),{x2:enemy.x,y2:enemy.y,r:.4*FX,color:d.color,life:d.cut?.2:.12});v.cooldown+=d.gunPeriod[i]/vm.fire;}if(!shell&&d.rocket?.[i]&&v.rocketCooldown<=0){this.splash(enemy,d.rocket[i],d.rocketRadius,source);v.rocketCooldown=d.rocketPeriod/vm.fire;}}else{v.cooldown=Math.max(0,v.cooldown);if(!shell)v.rocketCooldown=Math.max(0,v.rocketCooldown);}}
-   if(shell){const target=v.rocketCooldown<=.3?lead(shell*vm.range):null;if(target){aim('gunAngle',target);if(v.rocketCooldown<=0&&Math.abs(angleDiff(Math.atan2(target.y-v.y,target.x-v.x),v.gunAngle||v.angle))<.12){this.fx('shot',this.vcannon(v),{x2:target.x,y2:target.y,color:d.color,life:.22,heavy:true});this.splash(target,d.rocket[i],d.rocketRadius,source);v.rocketCooldown=d.rocketPeriod/vm.fire;}}else v.rocketCooldown=Math.max(0,v.rocketCooldown);}
+   const gun=d.gun[i],vm=v.kind==='skeleton'?{range:1,fire:1}:this.km(v.kind),shell=d.rocketRange?.[i]??0,sees=e=>!e.dead&&(!this.enemyData(e).camo||e.revealed),lead=r=>this.enemies.filter(e=>sees(e)&&distance(v,e)<=r).sort((a,b)=>b.progress-a.progress)[0],aim=(k,e)=>{const w=Math.atan2(e.y-v.y,e.x-v.x),g0=v[k]||v.angle;v[k]=g0+Math.max(-7*dt,Math.min(7*dt,angleDiff(w,g0)));};if(gun>0){const enemy=lead(d.gunRange[i]);if(enemy){aim(shell?'mgAngle':'gunAngle',enemy);if(v.cooldown<=0){this.hit(enemy,gun,source);this.fx(d.cut?'blast':'shot',d.cut?enemy:this.vmuzzle(v),{x2:enemy.x,y2:enemy.y,r:.4*FX,color:d.color,life:d.cut?.2:.12});v.cooldown+=d.gunPeriod[i]/vm.fire;}if(!shell&&d.rocket?.[i]&&v.rocketCooldown<=0){this.splash(enemy,d.rocket[i],d.rocketRadius,source);v.rocketCooldown=d.rocketPeriod/vm.fire;}}else{v.cooldown=Math.max(0,v.cooldown);if(!shell)v.rocketCooldown=Math.max(0,v.rocketCooldown);}}
+   if(shell){const target=v.rocketCooldown<=.3?lead(shell):null;if(target){aim('gunAngle',target);if(v.rocketCooldown<=0&&Math.abs(angleDiff(Math.atan2(target.y-v.y,target.x-v.x),v.gunAngle||v.angle))<.12){this.fx('shot',this.vcannon(v),{x2:target.x,y2:target.y,color:d.color,life:.22,heavy:true});this.splash(target,d.rocket[i],d.rocketRadius,source);v.rocketCooldown=d.rocketPeriod/vm.fire;}}else v.rocketCooldown=Math.max(0,v.rocketCooldown);}
    for(const e of this.enemies.filter(e=>!e.dead&&Math.abs(e.progress-v.progress)<.6*SCALE).sort((a,b)=>b.progress-a.progress)){const amount=Math.min(v.hp,this.durability(e));this.hit(e,amount,source,{ram:true});v.hp-=amount;if(v.hp<=0)break;}
    if(v.hp<=0){if(d.explosion?.[i])this.splash(v,d.explosion[i],d.explosionRadius??1.5*SCALE,source);else this.fx('blast',v,{r:.5*FX,color:d.color,life:.25});}
   }
