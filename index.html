@@ -708,7 +708,7 @@ document.addEventListener('click',e=>{if(performance.now()-swipeAt<400&&e.target
 // a slot that cannot be used says why on release, unless the finger swiped across the slots
 function warnTap(e,msg){const id=e.pointerId,x=e.clientX,up=ev=>{if(ev.pointerId!==id)return;window.removeEventListener('pointerup',up);if(Math.abs(ev.clientX-x)<30)warn(msg);};window.addEventListener('pointerup',up);}
 
-function home(){fitLoadout(profile);if(cloudWaiting)setTimeout(()=>cloudSync(),0);if(game&&!game.ended){game.paused=true;savedRun=game.snapshot();}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p>버전 4.9.3</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
+function home(){fitLoadout(profile);if(cloudWaiting)setTimeout(()=>cloudSync(),0);if(game&&!game.ended){game.paused=true;savedRun=game.snapshot();}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p>버전 4.9.4</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
 function openDialog(title,body,buttons,kind='dialog'){if(kind!=='result')sound(kind.startsWith('msg')?'question':'open');dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2><span>${title}</span>${button('dialog-x','<i>×</i>','xp-x','aria-label="닫기"')}</h2>${body}<div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('.dialog').classList.toggle('msgbox',kind.startsWith('msg'));(modal.querySelector('.xp-yes')??modal.querySelector('.dialog-actions button')??modal.querySelector('button'))?.focus();backNavigation?.sync?.();}
 // Yes/no question in a Windows message box: icon, text, then [예] [아니요] on the right.
 const QUESTION='<svg class="xp-qicon" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="14" fill="#2f6fd8" stroke="#fff" stroke-width="2"/><text x="16" y="22.5" text-anchor="middle" font-size="19" font-weight="700" fill="#fff">?</text></svg>';
@@ -741,7 +741,7 @@ function levelLine(id,lv){const d=TOWER[id],i=lv-1,s=[],sec=v=>fmtN(v)+'초';
  switch(id){
   case'farm':s.push(['수입',`${d.income[i]} / ${sec(d.period[i])}`]);break;
   case'commander':s.push(['공속',`+${Math.round((d.boost[i]-1)*100)}%`],['사거리',`+${Math.round((d.rangeBoost[i]-1)*100)}%`],['범위',fmtN(d.range[i])]);if(d.activeDuration[i])s.push(['콜 투 암즈',`+${Math.round((d.activeFire[i]-1)*100)}%p · ${d.activeDuration[i]}초`]);break;
-  case'spawner':s.push(['차량 체력',d.hp[i]]);if(d.gun[i])s.push(['기관총',d.gun[i]]);if(d.explosion[i])s.push(['폭발',d.explosion[i]]);s.push(['출격',sec(d.period[i])]);break;
+  case'spawner':s.push(['차량 체력',d.hp[i]]);if(d.gun[i])s.push(['기관총',d.gun[i]]);if(d.rocket?.[i])s.push(['포격',d.rocket[i]]);if(d.explosion[i])s.push(['폭발',d.explosion[i]]);s.push(['출격',sec(d.period[i])]);break;
   case'robot':s.push(['체력',d.hp[i].toLocaleString()],['미니건',d.gun[i]]);if(d.rocket[i])s.push(['로켓',d.rocket[i]]);s.push(['사거리',fmtN(d.gunRange[i])],['출격',sec(d.period[i])]);break;
   case'plane':s.push(['기관포',d.damage[i]]);if(d.bomb[i])s.push(['폭탄',d.bomb[i]]);if(d.missile[i])s.push(['미사일',`${d.missile[i]}×${d.missileCount}`]);s.push(['비행 반경',fmtN(d.range[i])]);break;
   case'flame':s.push(['화상',`${d.burn[i]} / 초`],['지속',sec(d.burnDuration[i])],['사거리',fmtN(d.range[i])]);break;
@@ -1967,8 +1967,11 @@ function carUnit(lv) {
     p += P([-25, -11, 19, -11, 26, -5.4, 26, 5.4, 19, 11, -25, 11], "c-30");
     p += P([-21, -8, 15, -8, 20.4, -3.6, 20.4, 3.6, 15, 8, -21, 8], "c-12");
     for (const x of [-21.4, -18.6, -15.8]) p += L(x, -6, x, 6, "c-40", 1); // engine deck grille
+    // side machine gun: a round sponson on the right edge of the hull, its own small turret (mg)
+    p += C(12, 9.6, 4.6, "c-40");
+    p += G("mg", C(12, 9.6, 3.4, "c-12") + R(12, 8.4, 12, 2.4, "hull", 0.5) + R(22.4, 7.9, 2.8, 3.4, "rubber", 0.6) + C(10.6, 9.6, 1.3, "c+40"), ' data-pivot="12,9.6"');
     p += G("turret", C(-2, 0, 9.4, "c-40") + P([-11, -7.4, 4, -8.4, 9.6, -4.4, 9.6, 4.4, 4, 8.4, -11, 7.4], "c") +
-      R(9, -1.7, 26, 3.4, "gunHi", 0.6) + R(32, -2.5, 4, 5, "gun", 0.8) + C(-4.4, 0, 2.4, "c+40") + R(-9.6, -6.4, 3.2, 3.2, "plate", 0.6));
+      R(9, -1.7, 26, 3.4, "gunHi", 0.6) + R(32, -2.5, 4, 5, "gun", 0.8) + C(-4.4, 0, 2.4, "c+40") + R(-9.6, -6.4, 3.2, 3.2, "plate", 0.6), ' data-pivot="-2,0"');
     return p;
   }
   // Lv4 armored car
@@ -2412,7 +2415,7 @@ function drawUnit(g, kind, level, o = {}) {
   const frame = Math.floor((o.travel ?? 0) * (o.step ?? 6)) % 2 === 0;
   g.save();
   g.scale(0.05, 0.05);
-  run(g, parts, { turret: { rotate: o.gunAngle ?? 0 }, treadA: frame, treadB: !frame, handA: frame, handB: !frame });
+  run(g, parts, { turret: { rotate: o.gunAngle ?? 0 }, mg: { rotate: o.mgAngle ?? 0 }, treadA: frame, treadB: !frame, handA: frame, handB: !frame });
   g.restore();
   return true;
 }
@@ -2602,7 +2605,7 @@ function createBoard(canvas,map){
   ctx.save();ctx.lineCap='butt';let n=0;for(const e of game.enemies){if(e.dead||n++>70)continue;if(Math.random()<.45)continue;ctx.globalAlpha=.25+Math.random()*.5;ctx.strokeStyle=Math.random()<.5?'#ffffff':'#a8d2ff';ctx.lineWidth=(1+Math.random()*2.4)/scale;ctx.beginPath();ctx.moveTo(o.x,o.y);ctx.lineTo(e.x,e.y);ctx.stroke();}
   const white=p<.7?.55*(p/.7)**2:.55*(1-(p-.7)/.3);ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=Math.max(0,white);ctx.fillStyle='#ffffff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.restore();}
  const icuShake=game=>{const st=game.storm;if(!st)return [0,0];const p=1-st.left/st.total,amp=(p<.15?p/.15:p>.85?(1-p)/.15:1)*5;return [(Math.random()-.5)*amp,(Math.random()-.5)*amp];};
- function vehicle(v){if(v.kind==='icu'){icuVehicle(v);return;}if(v.kind==='skeleton'){const S=MODS.SKELETON,kn=v.big===2,c=kn?S.knightColor:S.color,k=v.big?2.6:1.7,bw=k*1.3,by=-k*1.15,swing=kn?-1.1*Math.max(0,Math.min(1,v.cooldown/S.knightPeriod))**2:0,ga=(v.gunAngle===0?v.angle:v.gunAngle)+swing;ctx.save();ctx.translate(v.x,v.y);ctx.save();ctx.rotate(v.angle);ctx.scale(k,k);ART.drawUnit(ctx,kn?'knight':'skeleton',1,{travel:v.progress,step:.45,color:c,gunAngle:ga-v.angle});ctx.restore();ctx.fillStyle='#2e2e2e';ctx.fillRect(-bw/2,by,bw,.26);ctx.fillStyle=c;ctx.fillRect(-bw/2,by,Math.max(0,v.hp/v.maxHp*bw),.26);ctx.restore();return;}if(ART.hasArt(v.kind)){const robot=v.kind==='robot',k=robot?1.5:2,ga=v.gunAngle===0?v.angle:v.gunAngle,bw=robot?3.4:3,by=robot?-2.6:-2.7;ctx.save();ctx.translate(v.x,v.y);ctx.save();ctx.rotate(v.angle);ctx.scale(k,k);ART.drawUnit(ctx,v.kind,v.level,{gunAngle:ga-v.angle,travel:v.progress});ctx.restore();ctx.fillStyle='#2e2e2e';ctx.fillRect(-bw/2,by,bw,.26);ctx.fillStyle=TOWER[v.kind].color;ctx.fillRect(-bw/2,by,Math.max(0,v.hp/v.maxHp*bw),.26);ctx.restore();return;}const c=TOWER[v.kind].color,k=(v.kind==='robot'?1.05:.8)*UNIT;ctx.save();ctx.translate(v.x,v.y);ctx.scale(k,k);ctx.save();ctx.rotate(v.angle);ctx.fillStyle='#353535';ctx.strokeStyle=c;ctx.lineWidth=2;ctx.fillRect(-17,-11,34,22);ctx.strokeRect(-17,-11,34,22);ctx.beginPath();ctx.moveTo(-11,-15);ctx.lineTo(-11,-10);ctx.moveTo(-11,10);ctx.lineTo(-11,15);ctx.moveTo(10,-15);ctx.lineTo(10,-10);ctx.moveTo(10,10);ctx.lineTo(10,15);ctx.moveTo(4,-8);ctx.lineTo(4,8);ctx.stroke();ctx.restore();
+ function vehicle(v){if(v.kind==='icu'){icuVehicle(v);return;}if(v.kind==='skeleton'){const S=MODS.SKELETON,kn=v.big===2,c=kn?S.knightColor:S.color,k=v.big?2.6:1.7,bw=k*1.3,by=-k*1.15,swing=kn?-1.1*Math.max(0,Math.min(1,v.cooldown/S.knightPeriod))**2:0,ga=(v.gunAngle===0?v.angle:v.gunAngle)+swing;ctx.save();ctx.translate(v.x,v.y);ctx.save();ctx.rotate(v.angle);ctx.scale(k,k);ART.drawUnit(ctx,kn?'knight':'skeleton',1,{travel:v.progress,step:.45,color:c,gunAngle:ga-v.angle});ctx.restore();ctx.fillStyle='#2e2e2e';ctx.fillRect(-bw/2,by,bw,.26);ctx.fillStyle=c;ctx.fillRect(-bw/2,by,Math.max(0,v.hp/v.maxHp*bw),.26);ctx.restore();return;}if(ART.hasArt(v.kind)){const robot=v.kind==='robot',k=robot?1.5:2,ga=v.gunAngle===0?v.angle:v.gunAngle,bw=robot?3.4:3,by=robot?-2.6:-2.7;ctx.save();ctx.translate(v.x,v.y);ctx.save();ctx.rotate(v.angle);ctx.scale(k,k);ART.drawUnit(ctx,v.kind,v.level,{gunAngle:ga-v.angle,mgAngle:v.mgAngle==null?0:v.mgAngle-v.angle,travel:v.progress});ctx.restore();ctx.fillStyle='#2e2e2e';ctx.fillRect(-bw/2,by,bw,.26);ctx.fillStyle=TOWER[v.kind].color;ctx.fillRect(-bw/2,by,Math.max(0,v.hp/v.maxHp*bw),.26);ctx.restore();return;}const c=TOWER[v.kind].color,k=(v.kind==='robot'?1.05:.8)*UNIT;ctx.save();ctx.translate(v.x,v.y);ctx.scale(k,k);ctx.save();ctx.rotate(v.angle);ctx.fillStyle='#353535';ctx.strokeStyle=c;ctx.lineWidth=2;ctx.fillRect(-17,-11,34,22);ctx.strokeRect(-17,-11,34,22);ctx.beginPath();ctx.moveTo(-11,-15);ctx.lineTo(-11,-10);ctx.moveTo(-11,10);ctx.lineTo(-11,15);ctx.moveTo(10,-15);ctx.lineTo(10,-10);ctx.moveTo(10,10);ctx.lineTo(10,15);ctx.moveTo(4,-8);ctx.lineTo(4,8);ctx.stroke();ctx.restore();
   if(TOWER[v.kind].gun[v.level-1]>0){ctx.save();ctx.rotate(v.gunAngle);ctx.strokeStyle=c;ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(23,0);ctx.stroke();ctx.restore();}
   ctx.fillStyle='#2e2e2e';ctx.fillRect(-16,-20,32,3);ctx.fillStyle=c;ctx.fillRect(-16,-20,Math.max(0,v.hp/v.maxHp*32),3);ctx.restore();}
  function range(t,game,radiusOverride){const T=TOWER[t.kind];const r=radiusOverride??(game.stat?game.stat(t):stat(t)).range*(['plane','commander'].includes(t.kind)?1:game.buffs(t).range);if(!(r>0))return;ctx.save();ctx.beginPath();ctx.arc(t.x,t.y,r,0,Math.PI*2);if(t.kind!=='plane'){ctx.fillStyle=T.color;ctx.globalAlpha=.065;ctx.fill();}ctx.globalAlpha=.65;ctx.strokeStyle=T.color;ctx.lineWidth=1.5/scale;if(t.kind==='plane')ctx.setLineDash([6/scale,5/scale]);ctx.stroke();ctx.restore();}
@@ -2746,9 +2749,9 @@ const BORDERLAND_PATH=[[-4,52],[16,52],[16,73],[58,73],[58,35],[41,35],[41,56],[
 const BORDERLAND_GROUND=[[13,12],[18,8.5],[24,6.5],[32,8],[40,9.5],[47,8],[52,5],[60,4],[68,5],[75,8],[82,12],[86,17],[88.5,24],[89.5,35],[90,50],[90,88],[88,93],[84,96.5],[80,97.5],[72,96.5],[64,97],[56,96],[49,97],[44,95],[38,94],[33,95.5],[27,98],[23,99.5],[17,98],[12,95],[7,90],[3.5,82],[2,72],[1.5,60],[2,50],[6,46.5],[11,45],[15.5,43],[17.5,38],[19,30],[18.5,24],[14,22],[10,21],[8.5,17.5],[10,14]];
 const BORDERLAND_FEATURES=[
  // Raised walls (green strips in Tower Battles: cliff-only spots; this game has no cliff towers).
- {kind:'cliff',poly:[[19,3],[24.5,3],[24.5,64],[19,64]]},
- {kind:'cliff-block',poly:[[18.4,63.5],[27,63.5],[27,71],[18.4,71]]},
- {kind:'cliff-block',poly:[[18,1],[23.8,1],[23.8,5],[18,5]]},
+ {kind:'cliff',poly:[[20,3],[24.5,3],[24.5,64],[20,64]]},
+ {kind:'cliff-block',poly:[[19.4,63.5],[27,63.5],[27,71],[19.4,71]]},
+ {kind:'cliff-block',poly:[[19,1],[23.8,1],[23.8,5],[19,5]]},
  {kind:'cliff',poly:[[18.6,79],[23,79],[23,99.5],[18.6,99.5]]},
  {kind:'cliff-block',poly:[[18.2,76.4],[26,76.4],[26,80],[18.2,80]]},
  // Water and rock along the west wall.
@@ -2799,8 +2802,9 @@ const TOWER=Object.fromEntries(TOWERS.map(t=>[t.id,t]));
 // level arrays but only count while the module is on the board (Game.maxLevelOf).
 {const H=(id,f)=>{const t=TOWER[id];t.hidden=1;for(const [k,v] of Object.entries(f))if(Array.isArray(t[k]))t[k].push(v);else t[k]=v;};
  H('soldier',{upgrades:2500,damage:4,range:15,period:1,burst:8,notes:'피해 4 · 8발 버스트 · 주기 1초 · 사거리 15',upgradeNames:'특수부대'});
- H('spawner',{upgrades:4500,damage:0,range:0,period:40,hp:500,gun:5,gunPeriod:.15,gunRange:16,explosion:90,vehicleSpeed:5.5,notes:'탱크 · 체력 500 · 기관총 5 · 주포 30 · 파괴 시 폭발 90',upgradeNames:'전차'});
- Object.assign(TOWER.spawner,{rocket:[0,0,0,0,30],rocketRadius:3.5,rocketPeriod:2});}
+ H('spawner',{upgrades:4500,damage:0,range:0,period:45,hp:500,gun:5,gunPeriod:.17,gunRange:16,explosion:45,vehicleSpeed:5.5,notes:'탱크 · 체력 500 · 기관총 5 · 포격 60 · 파괴 시 폭발 45',upgradeNames:'전차'});
+ // the tank's main gun shells on its own: own target, longer range than the machine gun (rocketRange)
+ Object.assign(TOWER.spawner,{rocket:[0,0,0,0,60],rocketRadius:5,rocketPeriod:3.5,rocketRange:[0,0,0,0,24]});}
 // Footprint in cells at rotation 0 ([width, height]); `turns` = rotating changes the shape or the front.
 const FOOTPRINT={soldier:[2,2],bomb:[2,2],sniper:[2,2],farm:[4,3],flame:[2,2],tesla:[3,3],minigun:[2,2],shotgun:[2,2],spawner:[3,5],plane:[3,6],commander:[2,2],gauss:[3,3],laser:[3,3],agent:[2,2],robot:[7,7],icu:[10,10]};
 for(const t of TOWERS){t.size=FOOTPRINT[t.id];t.turns=t.size[0]!==t.size[1]||['robot','spawner','plane'].includes(t.id);}
@@ -3875,7 +3879,8 @@ class Game{
    if(t.kind==='plane'&&this.mods['wing@plane'])this.wingStep(t,s,buff,dt);
   }
   for(const v of this.vehicles){if(v.hp<=0)continue;if(v.kind==='icu'){this.icuUnit(v,dt);continue;}const d=this.unitData(v),i=v.level-1,source=this.towers.find(t=>t.id===v.source)??{kind:v.kind,damage:0};v.progress-=dt*d.vehicleSpeed[i];Object.assign(v,this.position(v.progress));v.angle+=Math.PI;v.fireWindows=(v.fireWindows??[]).filter(w=>w.until>this.time);const fire=Math.max(v.fireBoost??1,...v.fireWindows.map(w=>w.fire));v.cooldown-=dt*fire;v.rocketCooldown-=dt*fire;
-   const gun=d.gun[i],vm=v.kind==='skeleton'?{range:1,fire:1}:this.km(v.kind);if(gun>0){const range=d.gunRange[i]*vm.range,enemy=this.enemies.filter(e=>!e.dead&&distance(v,e)<=range&&(!this.enemyData(e).camo||e.revealed)).sort((a,b)=>b.progress-a.progress)[0];if(enemy){{const w=Math.atan2(enemy.y-v.y,enemy.x-v.x),g0=v.gunAngle||v.angle;v.gunAngle=g0+Math.max(-7*dt,Math.min(7*dt,angleDiff(w,g0)));}if(v.cooldown<=0){this.hit(enemy,gun,source);this.fx(d.cut?'blast':'shot',d.cut?enemy:this.vmuzzle(v),{x2:enemy.x,y2:enemy.y,r:.4*FX,color:d.color,life:d.cut?.2:.12});v.cooldown+=d.gunPeriod[i]/vm.fire;}if(d.rocket?.[i]&&v.rocketCooldown<=0){this.splash(enemy,d.rocket[i],d.rocketRadius,source);v.rocketCooldown=d.rocketPeriod/vm.fire;}}else{v.cooldown=Math.max(0,v.cooldown);v.rocketCooldown=Math.max(0,v.rocketCooldown);}}
+   const gun=d.gun[i],vm=v.kind==='skeleton'?{range:1,fire:1}:this.km(v.kind),shell=d.rocketRange?.[i]??0,sees=e=>!e.dead&&(!this.enemyData(e).camo||e.revealed),lead=r=>this.enemies.filter(e=>sees(e)&&distance(v,e)<=r).sort((a,b)=>b.progress-a.progress)[0],aim=(k,e)=>{const w=Math.atan2(e.y-v.y,e.x-v.x),g0=v[k]||v.angle;v[k]=g0+Math.max(-7*dt,Math.min(7*dt,angleDiff(w,g0)));};if(gun>0){const enemy=lead(d.gunRange[i]*vm.range);if(enemy){aim(shell?'mgAngle':'gunAngle',enemy);if(v.cooldown<=0){this.hit(enemy,gun,source);this.fx(d.cut?'blast':'shot',d.cut?enemy:this.vmuzzle(v),{x2:enemy.x,y2:enemy.y,r:.4*FX,color:d.color,life:d.cut?.2:.12});v.cooldown+=d.gunPeriod[i]/vm.fire;}if(!shell&&d.rocket?.[i]&&v.rocketCooldown<=0){this.splash(enemy,d.rocket[i],d.rocketRadius,source);v.rocketCooldown=d.rocketPeriod/vm.fire;}}else{v.cooldown=Math.max(0,v.cooldown);if(!shell)v.rocketCooldown=Math.max(0,v.rocketCooldown);}}
+   if(shell){const target=lead(shell*vm.range);if(target){aim('gunAngle',target);if(v.rocketCooldown<=0){this.fx('shot',this.vcannon(v),{x2:target.x,y2:target.y,color:d.color,life:.22,heavy:true});this.splash(target,d.rocket[i],d.rocketRadius,source);v.rocketCooldown=d.rocketPeriod/vm.fire;}}else v.rocketCooldown=Math.max(0,v.rocketCooldown);}
    for(const e of this.enemies.filter(e=>!e.dead&&Math.abs(e.progress-v.progress)<.6*SCALE).sort((a,b)=>b.progress-a.progress)){const amount=Math.min(v.hp,this.durability(e));this.hit(e,amount,source,{ram:true});v.hp-=amount;if(v.hp<=0)break;}
    if(v.hp<=0){if(d.explosion?.[i])this.splash(v,d.explosion[i],d.explosionRadius??1.5*SCALE,source);else this.fx('blast',v,{r:.5*FX,color:d.color,life:.25});}
   }
@@ -4104,10 +4109,19 @@ Object.assign(Game.prototype, {
     const [fx, fy] = list[list.length > 1 ? (t.shotSide = ((t.shotSide ?? 0) + 1) % list.length) : 0], a = t.angle ?? 0;
     return { x: t.x + (Math.cos(a) * fx - Math.sin(a) * fy) * .05, y: t.y + (Math.sin(a) * fx + Math.cos(a) * fy) * .05 };
   },
+  vcannon(v) {
+    const a = v.gunAngle || v.angle || 0, b = v.angle || 0;
+    return { x: v.x - Math.cos(b) * .2 + Math.cos(a) * 3.8, y: v.y - Math.sin(b) * .2 + Math.sin(a) * 3.8 };
+  },
   vmuzzle(v) {
     const a = v.gunAngle || v.angle || 0;
     if (v.kind === 'spawner') {
       const b = v.angle || 0;
+      if (v.level >= 5) {
+        // tank: the side machine gun, pivot (13, 11) in art units (x0.1), barrel 13 long
+        const m = v.mgAngle || b;
+        return { x: v.x + (Math.cos(b) * 13 - Math.sin(b) * 11) * .1 + Math.cos(m) * 1.3, y: v.y + (Math.sin(b) * 13 + Math.cos(b) * 11) * .1 + Math.sin(m) * 1.3 };
+      }
       return { x: v.x - Math.cos(b) * .3 + Math.cos(a) * 2.5, y: v.y - Math.sin(b) * .3 + Math.sin(a) * 2.5 };
     }
     const list = VMUZZLE[v.kind]?.[v.level - 1];
