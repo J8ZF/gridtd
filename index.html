@@ -805,7 +805,7 @@ document.addEventListener('click',e=>{if(performance.now()-swipeAt<400&&e.target
 function warnTap(e,msg){const id=e.pointerId,x=e.clientX,up=ev=>{if(ev.pointerId!==id)return;window.removeEventListener('pointerup',up);if(Math.abs(ev.clientX-x)<30)warn(msg);};window.addEventListener('pointerup',up);}
 
 // the game's version, shown on the title screen and in the 정보 window
-const APP_VERSION='4.11.0';
+const APP_VERSION='4.11.1';
 function home(){fitLoadout(profile);if(cloudWaiting)setTimeout(()=>cloudSync(),0);if(game&&!game.ended){if(game.config.tutorial){game=null;coachStop();}else{game.paused=true;savedRun=game.snapshot();}}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p data-action="version-tap">버전 ${APP_VERSION}</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
 function openDialog(title,body,buttons,kind='dialog'){if(kind!=='result')sound(kind.startsWith('msg')?'question':'open');dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2><span>${title}</span>${button('dialog-x','<i>×</i>','xp-x','aria-label="닫기"')}</h2><div class="dialog-body">${body}</div><div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('.dialog').classList.toggle('msgbox',kind.startsWith('msg'));(modal.querySelector('.xp-yes')??modal.querySelector('.dialog-actions button')??modal.querySelector('button'))?.focus();backNavigation?.sync?.();}
 // Yes/no question in a Windows message box: icon, text, then [예] [아니요] on the right.
@@ -824,11 +824,14 @@ function logoImage(){if(LOGO)return LOGO;try{const c=document.createElement('can
  LOGO=c.toDataURL();}catch{}return LOGO;}
 function makeBanner(){return new Promise(done=>{try{const svg=mapSVG(MAPS[0]),vb=svg.match(/viewBox="([^"]+)"/)[1].split(' ').map(Number),w=150,h=Math.round(w*vb[3]/vb[2]);const img=new Image();img.onload=()=>{try{const c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);BANNER=c.toDataURL();}catch{}done();};img.onerror=()=>done();img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg.replace('<svg ',`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" `));}catch{done();}});}
 function mapSVG(map){const pts=a=>a.map(p=>p.join(',')).join(' '),road=map.points.map(([x,y])=>`${x+.5},${y+.5}`).join(' '),tone={cliff:'#3d3d3d','cliff-block':'#3d3d3d',water:'#14313d',rock:'#383838',pallet:'#383838'},end=map.points.at(-1);
- return `<svg viewBox="0 ${map.viewTop} ${COLS} ${ROWS-map.viewTop}" aria-hidden="true"><rect x="-10" y="-10" width="${COLS+20}" height="${ROWS+20}" fill="#000000"/><polygon points="${pts(map.ground)}" fill="#202020" stroke="#2e2e2e" stroke-width=".6"/>${map.features.map(f=>f.circle?`<circle cx="${f.circle[0]}" cy="${f.circle[1]}" r="${f.circle[2]}" fill="#333333"/>`:`<polygon points="${pts(f.poly)}" fill="${tone[f.kind]??'#333333'}"/>`).join('')}<polyline points="${road}" fill="none" stroke="#4f4f4f" stroke-width="3" stroke-linejoin="miter"/><polyline points="${road}" fill="none" stroke="#363636" stroke-width="2.6" stroke-linejoin="miter"/><polyline points="${road}" fill="none" stroke="${map.color}" stroke-width=".4" stroke-dasharray="1.2 2.4"/><circle cx="3" cy="${map.points[1][1]+.5}" r="1.8" fill="${map.color}"/><rect x="${end[0]-1.5}" y="${end[1]-2.5}" width="4" height="4" fill="none" stroke="#ea7f90" stroke-width=".7"/></svg>`;}
+ // 4.11.1 map.view: a map can frame part of the world (the tutorial plate); default is everything below viewTop
+ let seams='';if(map.grid){const[a,b]=map.ground[0],[c,d]=map.ground[2],T=map.grid,p=['',''];for(let i=1;a+i*T<c;i++)p[i%map.major?0:1]+=`M${a+i*T} ${b}V${d}`;for(let j=1;b+j*T<d;j++)p[j%map.major?0:1]+=`M${a} ${b+j*T}H${c}`;seams=`<path d="${p[0]}" stroke="#1d1d1d" stroke-width=".3"/><path d="${p[1]}" stroke="#181818" stroke-width=".6"/>`;}
+ const vb=map.view?[map.view[0],map.view[1],map.view[2]-map.view[0],map.view[3]-map.view[1]]:[0,map.viewTop,COLS,ROWS-map.viewTop];
+ return `<svg viewBox="${vb.join(' ')}" aria-hidden="true"><rect x="-10" y="-10" width="${COLS+20}" height="${ROWS+20}" fill="#000000"/><polygon points="${pts(map.ground)}" fill="${map.grid?'#232323':'#202020'}"/>${seams}<polygon points="${pts(map.ground)}" fill="none" stroke="#2e2e2e" stroke-width=".6"/>${map.features.map(f=>f.circle?`<circle cx="${f.circle[0]}" cy="${f.circle[1]}" r="${f.circle[2]}" fill="#333333"/>`:`<polygon points="${pts(f.poly)}" fill="${tone[f.kind]??'#333333'}"/>`).join('')}<polyline points="${road}" fill="none" stroke="#4f4f4f" stroke-width="3" stroke-linejoin="miter"/><polyline points="${road}" fill="none" stroke="#363636" stroke-width="2.6" stroke-linejoin="miter"/><polyline points="${road}" fill="none" stroke="${map.color}" stroke-width=".4" stroke-dasharray="1.2 2.4"/><circle cx="3" cy="${map.points[1][1]+.5}" r="1.8" fill="${map.color}"/><rect x="${end[0]-1.5}" y="${end[1]-2.5}" width="4" height="4" fill="none" stroke="#ea7f90" stroke-width=".7"/></svg>`;}
 
 // Map list. Until the tutorial is done it comes first and the maps wait behind it; after that it sits below them.
-function tutorialCard(){return button('start-tutorial',`<div class="map-thumb">${mapSVG(MAPS[0],true)}</div><div class="map-label"><div><h3>튜토리얼</h3><div class="muted">${DIFFICULTIES.tutorial.count} 웨이브</div></div>${profile.tutorial?'':`<span class="rate">${icon('coin')} ${money(TUTORIAL_REWARD)}</span>`}</div>`,'map-card'+(profile.tutorial?'':' map-next'));}
-function maps(){closeDialog();const cards=MAPS.map(m=>button('choose-map',`<div class="map-thumb">${mapSVG(m,true)}</div><div class="map-label"><div><h3>${m.name}</h3><div class="muted">${profile.tutorial?`${m.difficulty} · ${makePath(m.points).length-1}칸`:'튜토리얼 클리어 후'}</div></div><span class="rate">×${fmtN(m.mult)}</span></div>`,'map-card'+(profile.tutorial?'':' map-locked'),`data-map="${m.id}"`)).join('');
+function tutorialCard(){return button('start-tutorial',`<div class="map-thumb">${mapSVG(MAPS.find(m=>m.id==='tutorial'))}</div><div class="map-label"><div><h3>튜토리얼</h3><div class="muted">${DIFFICULTIES.tutorial.count} 웨이브</div></div>${profile.tutorial?'':`<span class="rate">${icon('coin')} ${money(TUTORIAL_REWARD)}</span>`}</div>`,'map-card'+(profile.tutorial?'':' map-next'));}
+function maps(){closeDialog();const cards=MAPS.filter(m=>!m.hidden).map(m=>button('choose-map',`<div class="map-thumb">${mapSVG(m,true)}</div><div class="map-label"><div><h3>${m.name}</h3><div class="muted">${profile.tutorial?`${m.difficulty} · ${makePath(m.points).length-1}칸`:'튜토리얼 클리어 후'}</div></div><span class="rate">×${fmtN(m.mult)}</span></div>`,'map-card'+(profile.tutorial?'':' map-locked'),`data-map="${m.id}"`)).join('');
  setScreen('maps',header('맵 선택')+`<div class="scroll map-list">${profile.tutorial?cards+tutorialCard():tutorialCard()+cards}</div>`);}
 function difficulty(map){chosenMap=map;const bonus=modifierBonus(profile.modifiers),extra=bonus+(MODS.effects(profile.modules.placed).reward??0);setScreen('difficulty',header(map.name,'maps')+`<div class="scroll">${Object.entries(DIFFICULTIES).filter(([,d])=>!d.tutorial).map(([id,d])=>{const first=!profile.clears[`${map.id}:${id}`],reward=Math.round(d.reward*map.mult*100*(first?1.2:1));return button('start-game',`<div><strong>${d.name}</strong><p>${d.count} 웨이브</p></div><div><div class="reward">${icon('coin')}<span>${money(reward)}</span>${extra?`<small class="mod-rate">+${Math.ceil(Math.round(extra*1e6)/1e2)/100}%</small>`:''}</div><div class="first-clear">${first?'첫 클리어 +20%':'클리어 완료'}</div></div>`,'difficulty-card'+(id==='doom'?' doom':''),`data-difficulty="${id}"`);}).join('')}<div class="mod-open">${button('modifiers','모디파이어',bonus?'active':'')}</div></div>`);}
 // 모디파이어 popup: switch them on and off, 확인 keeps the choice (it stays until changed)
@@ -1172,7 +1175,7 @@ function guideTabTo(id){if(!GUIDE[id])return;guideTab=id;const b=$('#guide-body'
 function hooks(){return{discover:id=>{profile.seen[id]=true;},wave:n=>{sound('wave');waveNotice(n);},intermission:()=>{},reward:delta=>{profile.coins+=delta;save();},leak:()=>{sound('leak');vibrate(25);},bossLine:(kind,key)=>{const t=BOSS_LINES[kind]?.[key];if(t&&LINE_MODES[kind]&&!LINE_MODES[kind].includes(game?.difficulty))return;if(t&&key==='death')lastBossLineAt=performance.now();if(t&&screen==='battle')notice(`<b>${ENEMIES[kind].name}</b>: ${t}`,'main',key==='spawn'?8000:5000);},jam:(kind,sec,mul)=>{if(screen==='battle')notice(`<b>${ENEMIES[kind].name}</b> 교란 · 모든 타워 공격 속도 ${Math.round((1-mul)*100)}% 감소 · ${sec}초`,'temp',3500);},revive:w=>{sound('unlock');if(screen==='battle')notice(`두 번째 기회 · ${w}웨이브 다시 시작`,'main',4000);},finish:won=>won?victoryOutro():finishBattle(won)};}
 function newGame(difficultyId){if(!profile.loadout.some(Boolean)){warn('타워를 하나 이상 장착해 주세요.');return;}savedRun=null;fitLoadout(profile);const finale=profile.modules.placed.some(p=>p.id==='arsenal');game=new Game(chosenMap.id,difficultyId,profile.loadout.map(k=>finale&&k==='robot'?'icu':k),hooks(),profile.cheats,MODS.effects(profile.modules.placed),profile.modifiers??[]);battleSettled=false;profile.stats.played++;selected=null;placing=null;save();showBattle();}
 const TUTORIAL_REWARD=50000,TUTORIAL_LOADOUT=['soldier','bomb','sniper','farm'];
-function newTutorial(){savedRun=null;chosenMap=MAPS[0];game=new Game(MAPS[0].id,'tutorial',TUTORIAL_LOADOUT,hooks(),{},{},[]);battleSettled=false;selected=null;placing=null;save();showBattle();coachStart();}
+function newTutorial(){savedRun=null;chosenMap=MAPS[0];game=new Game('tutorial','tutorial',TUTORIAL_LOADOUT,hooks(),{},{},[]);battleSettled=false;selected=null;placing=null;save();showBattle();coachStart();}
 function resumeSaved(){closeDialog();try{if(!game||game.ended)game=Game.restore(savedRun,hooks());game.setCheats(profile.cheats);battleSettled=false;savedRun=null;showBattle();}catch{savedRun=null;game=null;save();toast('저장된 전투를 불러올 수 없습니다.');home();}}
 // ---- 튜토리얼 coach (4.11) ----------------------------------------------------------------------------
 // One short line at a time, a ring around what to touch (a button, or a spot on the map), and the next
@@ -2644,7 +2647,7 @@ const ART=require("art.js");const MODS=require("modules.js");let artGame=null,ar
 // height reads as brightness (lighter = higher), never as shadows.
 const C={cave:'#000000',ground:'#202020',groundRim:'#2e2e2e',road:'#363636',roadEdge:'#4f4f4f',roadMark:'#666666',
  cliffFace:'#282828',cliffTop:'#3d3d3d',cliffRim:'#555555',rockMid:'#2d2d2d',rockRim:'#383838',rockTop:'#404040',rockEdge:'#4f4f4f',bushLow:'#3c3c3c',bushTop:'#575757',
- water:'#1e1e1e',waterMid:'#14313d',waterLine:'#235060',bldg:'#272727',bldgRoof:'#333333',bldgLine:'#454545',metal:'#444444',crane:'#8f7d4c',base:'#202020'};
+ plate:'#232323',plateSeam:'#1d1d1d',plateMajor:'#181818',water:'#1e1e1e',waterMid:'#14313d',waterLine:'#235060',bldg:'#272727',bldgRoof:'#333333',bldgLine:'#454545',metal:'#444444',crane:'#8f7d4c',base:'#202020'};
 // Enemy outlines from icons.js are drawn in a 36-unit box; this turns units into cells
 // (a normal enemy is about 1.6 cells across on the 3-cell road).
 const UNIT=.094,TAKEOFF=2.2;
@@ -2664,11 +2667,11 @@ function planePosition(t){const R=(artGame?.stat?artGame.stat(t):stat(t)).range,
 function createBoard(canvas,map){
  const ctx=canvas.getContext('2d'),cache=document.createElement('canvas'),cctx=cache.getContext('2d');
  const MAP_RES=.5;let W=1,H=1,DPR=1,scale=1,ox=0,oy=0,fitScale=1,sized=false,cacheKey='';
- const rows=ROWS-map.viewTop;
- function resize(){const r=canvas.getBoundingClientRect();if(!r.width||!r.height)return;const atFit=!sized||Math.abs(scale-fitScale)<1e-6;DPR=1;W=r.width;H=r.height;canvas.width=Math.round(W*DPR);canvas.height=Math.round(H*DPR);cache.width=Math.max(1,Math.round(canvas.width*MAP_RES));cache.height=Math.max(1,Math.round(canvas.height*MAP_RES));fitScale=Math.min(W/COLS,H/rows);sized=true;if(atFit)fit();else clamp();cacheKey='';}
- function fit(){scale=fitScale;ox=(W-COLS*scale)/2;oy=(H-rows*scale)/2-map.viewTop*scale;cacheKey='';}
- function clamp(){scale=Math.max(fitScale*.4,Math.min(fitScale*10,scale));const M=80,cx=(W/2-ox)/scale,cy=(H/2-oy)/scale,X=Math.max(-M,Math.min(COLS+M,cx)),Y=Math.max(map.viewTop-M,Math.min(ROWS+M,cy));ox=W/2-X*scale;oy=H/2-Y*scale;}
- function zoomTo(next,sx=W/2,sy=H/2){const wx=(sx-ox)/scale,wy=(sy-oy)/scale;scale=Math.max(fitScale*.4,Math.min(fitScale*10,next));ox=sx-wx*scale;oy=sy-wy*scale;clamp();}
+ const V=map.view??[0,map.viewTop,COLS,ROWS],VW=V[2]-V[0],VH=V[3]-V[1],ZMIN=map.view?1:.4;
+ function resize(){const r=canvas.getBoundingClientRect();if(!r.width||!r.height)return;const atFit=!sized||Math.abs(scale-fitScale)<1e-6;DPR=1;W=r.width;H=r.height;canvas.width=Math.round(W*DPR);canvas.height=Math.round(H*DPR);cache.width=Math.max(1,Math.round(canvas.width*MAP_RES));cache.height=Math.max(1,Math.round(canvas.height*MAP_RES));fitScale=Math.min(W/VW,H/VH);sized=true;if(atFit)fit();else clamp();cacheKey='';}
+ function fit(){scale=fitScale;ox=(W-VW*scale)/2-V[0]*scale;oy=(H-VH*scale)/2-V[1]*scale;cacheKey='';}
+ function clamp(){scale=Math.max(fitScale*ZMIN,Math.min(fitScale*10,scale));const M=map.view?Math.round(.6*Math.max(VW,VH)):80,cx=(W/2-ox)/scale,cy=(H/2-oy)/scale,X=Math.max(V[0]-M,Math.min(V[2]+M,cx)),Y=Math.max(V[1]-M,Math.min(V[3]+M,cy));ox=W/2-X*scale;oy=H/2-Y*scale;}
+ function zoomTo(next,sx=W/2,sy=H/2){const wx=(sx-ox)/scale,wy=(sy-oy)/scale;scale=Math.max(fitScale*ZMIN,Math.min(fitScale*10,next));ox=sx-wx*scale;oy=sy-wy*scale;clamp();}
  const zoomBy=(f,sx,sy)=>zoomTo(scale*f,sx,sy);
  function pan(dx,dy){ox+=dx;oy+=dy;clamp();}
  const toWorld=(sx,sy)=>[(sx-ox)/scale,(sy-oy)/scale];
@@ -2700,9 +2703,17 @@ function createBoard(canvas,map){
   for(let i=0;i<P.length-1;i++){const[a,b]=P[i],[c,d]=P[i+1],L=Math.hypot(c-a,d-b),ang=Math.atan2(d-b,c-a);for(let s=6;s<L-3;s+=12){g.save();g.translate(a+(c-a)*s/L,b+(d-b)*s/L);g.rotate(ang);g.strokeStyle=C.roadMark;g.lineWidth=.18;g.beginPath();g.moveTo(-.35,-.6);g.lineTo(.3,0);g.lineTo(-.35,.6);g.stroke();g.restore();}}
   const s=P[1];g.save();g.translate(3,s[1]);g.fillStyle='#242424';g.strokeStyle='#5fb25f';g.lineWidth=.22;g.beginPath();g.arc(0,0,1.25,0,Math.PI*2);g.fill();g.stroke();g.beginPath();g.moveTo(-.6,0);g.lineTo(.6,0);g.moveTo(.15,-.45);g.lineTo(.6,0);g.lineTo(.15,.45);g.stroke();g.restore();
   const e=P.at(-1);g.fillStyle='#272727';g.fillRect(e[0]-3.5,e[1]-3,7,5);g.save();g.translate(e[0],e[1]-.4);g.fillStyle='#2a2a2a';g.strokeStyle='#df8b94';g.lineWidth=.22;g.beginPath();for(let i=0;i<6;i++){const a=-Math.PI/2+i*Math.PI/3;g.lineTo(Math.cos(a)*1.6,Math.sin(a)*1.6);}g.closePath();g.fill();g.stroke();g.restore();}
+ // Baseplate: one slab cut into 3×3-cell tiles, every map.major-th seam deeper (weak · strong · the lit rim strongest).
+ // Seams are snapped to cache pixels so the grid stays even at any zoom; they thicken a little as you zoom in.
+ function plate(g){const[a,b,c,d]=box(map.ground),T=map.grid,k=MAP_RES*DPR,px=x=>k*(ox+x*scale),py=y=>k*(oy+y*scale),w=Math.max(1,Math.round(.1*scale*k));
+  g.fillStyle=C.plate;g.fillRect(a,b,c-a,d-b);g.save();g.setTransform(1,0,0,1,0,0);const X0=Math.round(px(a)),X1=Math.round(px(c)),Y0=Math.round(py(b)),Y1=Math.round(py(d));
+  for(const major of[false,true]){const lw=major?w*2:w;g.fillStyle=major?C.plateMajor:C.plateSeam;
+   for(let i=1;a+i*T<c;i++)if((i%map.major===0)===major)g.fillRect(Math.round(px(a+i*T)-lw/2),Y0,lw,Y1-Y0);
+   for(let j=1;b+j*T<d;j++)if((j%map.major===0)===major)g.fillRect(X0,Math.round(py(b+j*T)-lw/2),X1-X0,lw);}
+  g.restore();g.strokeStyle=C.groundRim;g.lineWidth=.6;g.lineJoin='miter';g.strokeRect(a,b,c-a,d-b);}
  function terrain(){const key=[scale,ox,oy,W,H].join();if(key===cacheKey)return;cacheKey=key;const g=cctx;g.setTransform(1,0,0,1,0,0);g.fillStyle=C.cave;g.fillRect(0,0,cache.width,cache.height);g.setTransform(MAP_RES*DPR*scale,0,0,MAP_RES*DPR*scale,MAP_RES*DPR*ox,MAP_RES*DPR*oy);
   // the floor sits below the cave wall: the lighter rim reads as the step
-  poly(g,map.ground);g.fillStyle=C.ground;g.fill();g.strokeStyle=C.groundRim;g.lineWidth=.6;g.lineJoin='round';g.stroke();
+  if(map.grid)plate(g);else{poly(g,map.ground);g.fillStyle=C.ground;g.fill();g.strokeStyle=C.groundRim;g.lineWidth=.6;g.lineJoin='round';g.stroke();}
   for(const f of map.features)if(f.kind!=='building'&&f.kind!=='tank')feature(g,f);road(g);for(const f of map.features)if(f.kind==='building'||f.kind==='tank')feature(g,f);}
 
  // ---------- units ----------
@@ -2939,8 +2950,16 @@ const BORDERLAND_FEATURES=[
  {kind:'building',poly:[[55,80.6],[74.4,80.6],[74.4,94],[47.6,94],[47.6,92.2]]},
  {kind:'tank',circle:[84.2,87.8,2.9]}
 ];
+// 튜토리얼 (4.11.1): a small bare baseplate, 12×15 tiles of 3×3 cells; every third seam is deeper. Road centres sit
+// on tile middles (x=4+3i, y=5+3j), so the three-cell road fills whole tiles; three short runs snake down to the
+// base. The camera fits this plate (view), not the whole world, so the tutorial opens close up; the view keeps
+// some room above and below for the start button and the coach line.
+const TUTORIAL_PATH=[[-4,11],[31,11],[31,26],[10,26],[10,41],[31,41],[31,48]];
+const TUTORIAL_PLATE=[[3,4],[39,4],[39,49],[3,49]];
 const MAPS=[
- {id:'borderland',name:'보더랜드',difficulty:'매우 쉬움',mult:.85,color:'#dbb978',viewTop:2,points:BORDERLAND_PATH,ground:BORDERLAND_GROUND,features:BORDERLAND_FEATURES}
+ {id:'borderland',name:'보더랜드',difficulty:'매우 쉬움',mult:.85,color:'#dbb978',viewTop:2,points:BORDERLAND_PATH,ground:BORDERLAND_GROUND,features:BORDERLAND_FEATURES},
+ // hidden: never listed as a map; only the tutorial card starts it
+ {id:'tutorial',name:'튜토리얼',difficulty:'',mult:1,color:'#9a9a9a',viewTop:2,view:[1,-4,41,57],points:TUTORIAL_PATH,ground:TUTORIAL_PLATE,features:[],grid:3,major:3,hidden:true}
 ];
 // Rebalance: 1 cell = 1 stud. Soldier, bomb (Fragger), farm, flamethrower, minigun (Commando),
 // shotgun, spawner (Patrol), plane (Aviator), commander and laser (Phaser) use Tower Battles
@@ -4044,13 +4063,15 @@ class Game{
    if(t.kind==='spawner'||t.kind==='robot'){t.cooldown-=dt*this.jamMul(t);if(t.cooldown<=0){this.spawnVehicle(t);t.cooldown+=s.period;}continue;}
    t.cooldown-=dt*this.jamMul(t)*(t.kind==='flame'?1:buff.fire)*(t.kind==='minigun'?1+(this.mods['spin@minigun']??0)*(t.spin??0):1);
    
-   if(t.kind!=='plane'&&t.kind!=='gauss'){const aim=this.select(t,t,s.range*buff.range);if(aim)t.angle=Math.atan2(aim.y-t.y,aim.x-t.x);if(t.kind==='minigun'&&this.mods['spin@minigun'])t.spin=Math.max(0,Math.min(1,(t.spin??0)+(aim?dt/4:-dt/2)));}
+   // 4.11.1 towers turn only when they fire: each shot snaps the tower onto its target (attack sets t.angle) and it holds
+   // that aim until the next one. Fast shooters still look like they track; slow ones go clack, clack.
+   if(t.kind==='minigun'&&this.mods['spin@minigun']){const aim=this.select(t,t,s.range*buff.range);t.spin=Math.max(0,Math.min(1,(t.spin??0)+(aim?dt/4:-dt/2)));}
    if(t.cooldown<=0){for(let attempts=0;attempts<8&&t.cooldown<=0;attempts++)if(!this.attack(t,s,buff)){t.cooldown=0;break;}}
    if(t.kind==='plane'&&this.mods['wing@plane'])this.wingStep(t,s,buff,dt);
   }
   for(const v of this.vehicles){if(v.hp<=0)continue;if(v.kind==='icu'){this.icuUnit(v,dt);continue;}const d=this.unitData(v),i=v.level-1,source=this.towers.find(t=>t.id===v.source)??{kind:v.kind,damage:0};v.progress-=dt*d.vehicleSpeed[i];if(this.mods.uregen&&v.hp<v.maxHp)v.hp=Math.min(v.maxHp,v.hp+v.maxHp*this.mods.uregen*dt);Object.assign(v,this.position(v.progress));v.angle+=Math.PI;v.fireWindows=(v.fireWindows??[]).filter(w=>w.until>this.time);const fire=Math.max(v.fireBoost??1,...v.fireWindows.map(w=>w.fire));v.cooldown-=dt*fire;v.rocketCooldown-=dt*fire;
-   const gun=d.gun[i],vm=v.kind==='skeleton'?{range:1,fire:1}:this.km(v.kind),shell=d.rocketRange?.[i]??0,sees=e=>!e.dead&&(!this.enemyData(e).camo||e.revealed),lead=r=>this.enemies.filter(e=>sees(e)&&distance(v,e)<=r).sort((a,b)=>b.progress-a.progress)[0],aim=(k,e)=>{const w=Math.atan2(e.y-v.y,e.x-v.x),g0=v[k]||v.angle;v[k]=g0+Math.max(-7*dt,Math.min(7*dt,angleDiff(w,g0)));};if(gun>0){const enemy=lead(d.gunRange[i]);if(enemy){aim(shell?'mgAngle':'gunAngle',enemy);if(v.cooldown<=0){this.hit(enemy,gun,source);this.fx(d.cut?'blast':'shot',d.cut?enemy:this.vmuzzle(v),{x2:enemy.x,y2:enemy.y,r:.4*FX,color:d.color,life:d.cut?.2:.12});v.cooldown+=d.gunPeriod[i]/vm.fire;}if(!shell&&d.rocket?.[i]&&v.rocketCooldown<=0){this.splash(enemy,d.rocket[i],d.rocketRadius,source);v.rocketCooldown=d.rocketPeriod/vm.fire;}}else{v.cooldown=Math.max(0,v.cooldown);if(!shell)v.rocketCooldown=Math.max(0,v.rocketCooldown);}}
-   if(shell){const target=v.rocketCooldown<=.3?lead(shell):null;if(target){aim('gunAngle',target);if(v.rocketCooldown<=0&&Math.abs(angleDiff(Math.atan2(target.y-v.y,target.x-v.x),v.gunAngle||v.angle))<.12){this.fx('shot',this.vcannon(v),{x2:target.x,y2:target.y,color:d.color,life:.22,heavy:true});this.splash(target,d.rocket[i],d.rocketRadius,source);v.rocketCooldown=d.rocketPeriod/vm.fire;}}else v.rocketCooldown=Math.max(0,v.rocketCooldown);}
+   const gun=d.gun[i],vm=v.kind==='skeleton'?{range:1,fire:1}:this.km(v.kind),shell=d.rocketRange?.[i]??0,sees=e=>!e.dead&&(!this.enemyData(e).camo||e.revealed),lead=r=>this.enemies.filter(e=>sees(e)&&distance(v,e)<=r).sort((a,b)=>b.progress-a.progress)[0],aim=(k,e)=>{v[k]=Math.atan2(e.y-v.y,e.x-v.x);};if(gun>0){const enemy=lead(d.gunRange[i]);if(enemy){if(v.cooldown<=0){aim(shell?'mgAngle':'gunAngle',enemy);this.hit(enemy,gun,source);this.fx(d.cut?'blast':'shot',d.cut?enemy:this.vmuzzle(v),{x2:enemy.x,y2:enemy.y,r:.4*FX,color:d.color,life:d.cut?.2:.12});v.cooldown+=d.gunPeriod[i]/vm.fire;}if(!shell&&d.rocket?.[i]&&v.rocketCooldown<=0){this.splash(enemy,d.rocket[i],d.rocketRadius,source);v.rocketCooldown=d.rocketPeriod/vm.fire;}}else{v.cooldown=Math.max(0,v.cooldown);if(!shell)v.rocketCooldown=Math.max(0,v.rocketCooldown);}}
+   if(shell){const target=v.rocketCooldown<=0?lead(shell):null;if(target){aim('gunAngle',target);{this.fx('shot',this.vcannon(v),{x2:target.x,y2:target.y,color:d.color,life:.22,heavy:true});this.splash(target,d.rocket[i],d.rocketRadius,source);v.rocketCooldown=d.rocketPeriod/vm.fire;}}else v.rocketCooldown=Math.max(0,v.rocketCooldown);}
    for(const e of this.enemies.filter(e=>!e.dead&&Math.abs(e.progress-v.progress)<.6*SCALE).sort((a,b)=>b.progress-a.progress)){const amount=Math.min(v.hp,this.durability(e));this.hit(e,amount,source,{ram:true});v.hp-=amount;if(v.hp<=0)break;}
    if(v.hp<=0){if(d.explosion?.[i])this.splash(v,d.explosion[i],d.explosionRadius??1.5*SCALE,source);else this.fx('blast',v,{r:.5*FX,color:d.color,life:.25});}
   }
@@ -4127,31 +4148,34 @@ Object.assign(Game.prototype, {
     v.angle += Math.PI;
     v.cooldown -= dt;
     v.rocketCooldown -= dt;
-    // facing: a trooper turns to what it shoots and keeps facing that way while it stands; only when it
-    // walks on does it turn back to the road. Turrets keep their last aim. All turns are gradual.
+    // facing (4.11.1): weapons turn only when they fire, snapping onto the target with the shot; between shots
+    // they keep that aim. A trooper keeps facing its last shot while it stands and faces the road when it walks on.
     const want = target ? Math.atan2(target.y - v.y, target.x - v.x) : null;
+    const snap = () => { if (v.unit === 'trooper') v.face = want; v.gunAngle = want; };
     if (v.unit === 'trooper') {
-      v.face = turnTo(v.face ?? v.angle, want ?? (walking ? v.angle : v.face ?? v.angle), 10 * dt);
+      if (walking && !target) v.face = v.angle;
+      v.face ??= v.angle;
       v.gunAngle = v.face;
-    } else if (want != null) v.gunAngle = turnTo(v.gunAngle || v.angle, want, 6 * dt);
+    }
     if (v.unit === 'trooper') {
       const T = U.trooper;
       if (target) {
         // shots leave the weapons: the minigun in the right hand, the launcher in the left
-        if (v.cooldown <= 0) { this.hit(target, T.gun[i], src); this.fx('shot', icuAt(v, v.gunAngle, 1.67, 1.34), { x2: target.x, y2: target.y, color, life: .1 }); v.cooldown += T.gunPeriod[i]; }
-        if (v.rocketCooldown <= 0) { this.fx('shot', icuAt(v, v.gunAngle, 1.33, -1.34), { x2: target.x, y2: target.y, color, life: .18, heavy: true }); this.splash(target, T.grenade[i], T.grenadeRadius, src); v.rocketCooldown = T.grenadePeriod; }
+        if (v.cooldown <= 0) { snap(); this.hit(target, T.gun[i], src); this.fx('shot', icuAt(v, v.gunAngle, 1.67, 1.34), { x2: target.x, y2: target.y, color, life: .1 }); v.cooldown += T.gunPeriod[i]; }
+        if (v.rocketCooldown <= 0) { snap(); this.fx('shot', icuAt(v, v.gunAngle, 1.33, -1.34), { x2: target.x, y2: target.y, color, life: .18, heavy: true }); this.splash(target, T.grenade[i], T.grenadeRadius, src); v.rocketCooldown = T.grenadePeriod; }
       } else { v.cooldown = Math.max(0, v.cooldown); v.rocketCooldown = Math.max(0, v.rocketCooldown); }
     } else if (v.unit === 'truck') {
       // missiles stack up to four while nothing is in sight, then all go at once
       const T = U.truck;
       if (v.stock < T.stock) { v.reload += dt; if (v.reload >= T.reload) { v.reload -= T.reload; v.stock++; } } else v.reload = 0;
       if (target && v.stock > 0) {
+        snap();
         for (let n = 0; n < v.stock; n++) this.icuMissile(v, pool[n % pool.length], T.missile[i], T.radius, n, v.stock);
         v.stock = 0;
       }
     } else {
       const T = U.tank;
-      if (target && v.cooldown <= 0) { this.icuRail(icuAt(icuAt(v, v.angle, -.38, 0), v.gunAngle, 4.27, 0), target, T.rail, T.range, T.width, src, true); v.cooldown = T.railPeriod; }
+      if (target && v.cooldown <= 0) { snap(); this.icuRail(icuAt(icuAt(v, v.angle, -.38, 0), v.gunAngle, 4.27, 0), target, T.rail, T.range, T.width, src, true); v.cooldown = T.railPeriod; }
       else if (!target) v.cooldown = Math.max(0, v.cooldown);
     }
     // ramming: the tank's armor takes only part of what it deals
@@ -4203,8 +4227,8 @@ Object.assign(Game.prototype, {
     return { x: ICU_SHIP.x + Math.cos(a) * ICU_SHIP.rx, y: ICU_SHIP.y + Math.sin(a) * ICU_SHIP.ry, angle: Math.atan2(Math.cos(a) * ICU_SHIP.ry, -Math.sin(a) * ICU_SHIP.rx) };
   },
   // the ship picks for itself: machine guns and flash cannon on the enemy furthest along, the railgun on
-  // the strongest. Each weapon is a turret on the hull that turns toward its target and fires once it
-  // faces it; with nothing to shoot they turn back to the bow.
+  // the strongest. Each weapon is a turret on the hull that snaps onto its target as it fires and keeps
+  // that aim (on the hull) until its next shot.
   icuShip(t, dt) {
     const S = TOWER.icu.units.ship, sh = t.ship ??= { a: -Math.PI / 2, gun: 0, flash: 1, rail: 2 }, aim = sh.aim ??= { mgL: 0, mgR: 0, flash: 0, rail: 0 };
     sh.a += dt * Math.PI * 2 / S.lap;
@@ -4215,23 +4239,20 @@ Object.assign(Game.prototype, {
     const first = alive(sh.lockFirst) ?? (live.length ? live.reduce((a, b) => b.progress > a.progress ? b : a) : null), big = alive(sh.lockBig) ?? (live.length ? live.reduce((a, b) => this.durability(b) > this.durability(a) ? b : a) : null);
     sh.lockFirst = first?.id ?? null; sh.lockBig = big?.id ?? null;
     // turret pivots on the hull and barrel lengths, in art units; with nothing to shoot a turret keeps its aim
-    const W = { mgL: [-16.4, -9.4, 11.6, first], mgR: [-16.4, 9.4, 11.6, first], flash: [-44, 0, 9, first], rail: [20, 0, 31.6, big] }, ready = {}, muzzle = {};
-    for (const [id, [px, py, len, e]] of Object.entries(W)) {
-      const pv = icuAt(o, o.angle, px * k, py * k), want = e ? angleDiff(Math.atan2(e.y - pv.y, e.x - pv.x), o.angle) : aim[id];
-      aim[id] = turnTo(aim[id], want, 5 * dt);
-      ready[id] = !!e && Math.abs(angleDiff(want, aim[id])) < .2;
-      muzzle[id] = icuAt(pv, o.angle + aim[id], len * k, 0);
-    }
+    const W = { mgL: [-16.4, -9.4, 11.6, first], mgR: [-16.4, 9.4, 11.6, first], flash: [-44, 0, 9, first], rail: [20, 0, 31.6, big] };
+    // point a turret at its target and return its muzzle
+    const fire = id => { const [px, py, len, e] = W[id], pv = icuAt(o, o.angle, px * k, py * k); aim[id] = angleDiff(Math.atan2(e.y - pv.y, e.x - pv.x), o.angle); return icuAt(pv, o.angle + aim[id], len * k, 0); };
     if (!live.length) return;
     if (sh.gun <= 0) {
-      // the two guns take turns; if the other one isn't on target yet, the same one fires again
-      const next = sh.side === 'mgL' ? 'mgR' : 'mgL', side = ready[next] ? next : ready[sh.side] ? sh.side : null;
-      if (side) { sh.side = side; this.hit(first, S.gun, t); this.fx('shot', muzzle[side], { x2: first.x, y2: first.y, color: '#e6f0fa', life: .1, ship: true }); sh.gun += S.gunPeriod; }
+      // the two guns take turns
+      const side = sh.side === 'mgL' ? 'mgR' : 'mgL', m = fire(side);
+      { sh.side = side; this.hit(first, S.gun, t); this.fx('shot', m, { x2: first.x, y2: first.y, color: '#e6f0fa', life: .1, ship: true }); sh.gun += S.gunPeriod; }
     }
-    if (sh.flash <= 0 && ready.flash) { this.fx('shot', muzzle.flash, { x2: first.x, y2: first.y, color: '#eef5fc', life: .3, heavy: true, ship: true }); this.fx('flash', first, { r: S.flashRadius, color: '#eef5fc', life: .55 }); this.splash(first, S.flash, S.flashRadius, t); sh.flash = S.flashPeriod; }
-    if (sh.rail <= 0 && ready.rail) {
+    if (sh.flash <= 0) { this.fx('shot', fire('flash'), { x2: first.x, y2: first.y, color: '#eef5fc', life: .3, heavy: true, ship: true }); this.fx('flash', first, { r: S.flashRadius, color: '#eef5fc', life: .55 }); this.splash(first, S.flash, S.flashRadius, t); sh.flash = S.flashPeriod; }
+    if (sh.rail <= 0) {
+      const m = fire('rail');
       this.hit(big, S.rail + Math.min(S.railCap, S.railPct * (big.maxHp + (big.maxShield ?? 0))), t);
-      this.fx('rail', muzzle.rail, { x2: big.x, y2: big.y, color: '#9fd3ff', life: .5, ship: true });
+      this.fx('rail', m, { x2: big.x, y2: big.y, color: '#9fd3ff', life: .5, ship: true });
       sh.rail = S.railPeriod;
     }
   },
