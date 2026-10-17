@@ -696,7 +696,7 @@ document.addEventListener('click',e=>{if(performance.now()-swipeAt<400&&e.target
 // a slot that cannot be used says why on release, unless the finger swiped across the slots
 function warnTap(e,msg){const id=e.pointerId,x=e.clientX,up=ev=>{if(ev.pointerId!==id)return;window.removeEventListener('pointerup',up);if(Math.abs(ev.clientX-x)<30)warn(msg);};window.addEventListener('pointerup',up);}
 
-function home(){fitLoadout(profile);if(game&&!game.ended){game.paused=true;savedRun=game.snapshot();}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p>버전 4.7.7</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
+function home(){fitLoadout(profile);if(game&&!game.ended){game.paused=true;savedRun=game.snapshot();}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p>버전 4.7.8</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
 function openDialog(title,body,buttons,kind='dialog'){if(kind!=='result')sound(kind.startsWith('msg')?'question':'open');dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2><span>${title}</span>${button('dialog-x','<i>×</i>','xp-x','aria-label="닫기"')}</h2>${body}<div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('.dialog').classList.toggle('msgbox',kind.startsWith('msg'));(modal.querySelector('.xp-yes')??modal.querySelector('.dialog-actions button')??modal.querySelector('button'))?.focus();backNavigation?.sync?.();}
 // Yes/no question in a Windows message box: icon, text, then [예] [아니요] on the right.
 const QUESTION='<svg class="xp-qicon" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="14" fill="#2f6fd8" stroke="#fff" stroke-width="2"/><text x="16" y="22.5" text-anchor="middle" font-size="19" font-weight="700" fill="#fff">?</text></svg>';
@@ -4394,51 +4394,42 @@ Object.defineProperty(exports,"LEGACY_ENEMIES",{enumerable:true,get:()=>LEGACY_E
 Object.defineProperty(exports,"LEGACY_LATE_STATS",{enumerable:true,get:()=>LEGACY_LATE_STATS});
 },
 "navigation.js":function(require,exports){
-// A bounded, same-document history pair turns browser Back into an app action.
+// Guard entries in this page's own history turn browser Back into an app action.
 // Explicit exit releases the guard. Reloads reuse it instead of adding entries.
 const MARK='grid-defense-back-v1';
 function installBackNavigation(onBack,win=window,hold=()=>true){
- const history=win.history;let leaving=false,dropping=0;
+ const history=win.history,DEPTH=4;let leaving=false,dropping=0,want=false,stale=false,pending=0;
  const state=()=>history.state?.[MARK];
- function ensureGuard(){
-  if(leaving)return;
-  let entry=state();
-  if(!entry){
-   // Navigation.canGoBack omits cross-origin predecessors, so use session history.
-   const hasPrevious=history.length>1;
-   entry={position:'base',hasPrevious};
-   history.replaceState({...history.state,[MARK]:entry},'',win.location.href);
-  }
-  if(entry.position==='base'&&hold())history.pushState({...history.state,[MARK]:{...entry,position:'guard'}},'',win.location.href);
- }
- // Called after every screen or dialog change: arm the guard when back should be
- // caught, drop it (one step back inside this page) when it should not.
- // Settled on the next tick so a dialog closing into a new screen counts once.
- let pending=0;
- function sync(){
-  if(pending)return;
+ // guard entries are numbered 1..DEPTH above the page's own entry (0); older saves' single guard counts as 1
+ const depth=()=>{const e=state();return !e?-1:e.position==='guard'?(e.depth??1):0;};
+ let at=-1;
+ const active=()=>win.navigator?.userActivation?.isActive??true;
+ function base(){let entry=state();if(!entry){entry={position:'base',hasPrevious:history.length>1};history.replaceState({...history.state,[MARK]:entry},'',win.location.href);}return entry;}
+ // Chrome's Back button skips every entry of a page that added entries without a tap or key press made
+ // after its last Back (one from before the Back no longer counts). So after a Back the used guards
+ // come back only with the next tap; until then the ones left above the page catch further Backs.
+ function fill(){if(leaving||!hold())return;const entry=base();let d=Math.max(0,depth());
+  while(d<DEPTH){d++;history.pushState({...history.state,[MARK]:{position:'guard',depth:d,hasPrevious:entry.hasPrevious}},'',win.location.href);}
+  at=d;want=false;}
+ function drop(){const d=depth();if(d>0){dropping=Date.now();history.go(-d);}}
+ // after every screen or dialog change: arm the guards when Back should be caught, drop them when not
+ function sync(){if(pending)return;
   pending=setTimeout(()=>{pending=0;if(leaving||dropping)return;
-   try{const at=state()?.position;
-    if(at!=='guard')ensureGuard();
-    else if(!hold()){dropping=Date.now();history.back();}}catch{}},0);
- }
- function pop(){
-  if(leaving)return;
-  if(dropping&&Date.now()-dropping<800){dropping=0;try{ensureGuard();}catch{}return;}
-  dropping=0;
-  if(state()?.position==='base'){onBack();try{ensureGuard();}catch{}}
- }
- function exit(){
-  if(leaving)return;
-  leaving=true;
-  const entry=state();
-  if(entry?.hasPrevious)history.go(entry.position==='guard'?-2:-1);
+   try{if(!hold())drop();else if(depth()<DEPTH){if(!stale&&active())fill();else want=true;}}catch{}},0);}
+ function pop(){if(leaving)return;const d=depth();
+  if(dropping&&Date.now()-dropping<800){dropping=0;at=d;return;}
+  dropping=0;const back=d<at;at=d;if(!back)return;
+  want=stale=true;onBack();}
+ // the first tap or key after a Back puts the used guards back
+ const refill=()=>{if(!active())return;stale=false;if(want&&!leaving&&!dropping)try{fill();}catch{}};
+ for(const type of ['pointerup','pointerdown','touchend','keydown','click'])win.addEventListener(type,refill,{capture:true,passive:true});
+ function exit(){if(leaving)return;leaving=true;const entry=state();
+  if(entry?.hasPrevious)history.go(-(Math.max(0,depth())+1));
   else if(win.self===win.top)win.location.replace('about:blank');
-  else leaving=false;
- }
- try{ensureGuard();}catch{return {exit(){},sync(){}};}
+  else leaving=false;}
+ try{base();if(hold())fill();else at=depth();}catch{return {exit(){},sync(){}};}
  win.addEventListener('popstate',pop);
- win.addEventListener('pageshow',e=>{if(e.persisted){leaving=false;try{ensureGuard();}catch{}}});
+ win.addEventListener('pageshow',e=>{if(e.persisted){leaving=false;at=depth();want=stale=true;}});
  return {exit,sync};
 }
 
