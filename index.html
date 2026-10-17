@@ -607,8 +607,8 @@ const MODULES=[
  // explosions: every explosion's radius (any splash from a tower or its units), then the 폭발 label (bomb, plane, robot)
  M('blast1','rare','익스플로전','burst',['#'],'폭발 범위 +9.5%',{splash:.095}),
  M('creeper','rare','폭발 마니아','burst',['#.#','.#.'],'폭발 타워 공격력 +12.5%',{'dmg.blast':.125}),
- // the 연사 label's magazines (towers that fire bursts); a share of a round carries over to the next reload
- M('rapidmania','rare','연사 마니아','chev',['#','#'],'연사 타워 장탄수 +22%',{'ammo.rapid':.22}),
+ // every tower's magazine (towers that fire bursts: soldier, laser); a share of a round carries over to the next reload
+ M('rapidmania','rare','강화 탄창','chev',['#','#'],'장탄수 +22%',{ammo:.22}),
  // the 스포너 label (garage, robot): launch speed, added up like buying power (gap = base ÷ (1 + sum))
  M('spawnmania','rare','스포너 마니아','clock',['###'],'스포너 타워 스폰 속도 +15%',{'spawnRate.summon':.15}),
  // units (garage cars, robots, skeletons): health, and healing a share of it every second, even while hit
