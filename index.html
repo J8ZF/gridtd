@@ -503,7 +503,7 @@ const SOFT={spawn:[.5,.75],cost:[.3,.6],srange:[5,12],sboost:[.25,.6],sell:[.05,
 const WHOLE=new Set(['placement','farmLimit']);
 function soft(key,sum){const s=SOFT[key];if(!s||sum<=s[0])return sum;const [a,b]=s;const v=a+(b-a)*(1-Math.exp(-(sum-a)/(b-a)));return WHOLE.has(key)?Math.floor(v+1e-9):v;}
 // stats a tower reads through towerMods (softened there, after all-tower and label pieces are added)
-const TOWER_KEYS=new Set(['dmg','range','fire','splash','vhp','spawn','spawnRate','srange','sboost','income','cost','ammo']);
+const TOWER_KEYS=new Set(['dmg','range','fire','splash','vhp','spawn','spawnRate','srange','sboost','income','cost','ammo','firstHit']);
 const GRADE=Object.fromEntries(GRADES.map((g,i)=>[g.id,{...g,rank:i}]));
 const TAGS={blast:'폭발',close:'근거리',long:'원거리',rapid:'연사',energy:'에너지',summon:'스포너',support:'지원',econ:'경제'};
 const TOWER_TAGS={soldier:['rapid'],bomb:['close','blast'],sniper:['long'],farm:['econ'],flame:['close'],tesla:['energy'],minigun:['rapid'],shotgun:['close'],spawner:['summon'],plane:['rapid','blast'],commander:['support'],gauss:['close','energy','econ'],laser:['long','energy'],agent:['long','econ'],robot:['summon','blast']};
@@ -615,6 +615,9 @@ const MODULES=[
  M('energymania','rare','에너지 마니아','bolt',['#.','##','.#'],'에너지 타워 공격력 +16%',{'dmg.energy':.16}),
  // the 근거리 label (bomb, flame, shotgun, gauss): attack speed and a touch of range; the 지원 label (commander): range
  M('closemania','rare','근거리 마니아','blade',['##'],'근거리 타워 공격 속도 +5.9% · 사거리 +1%',{'fire.close':.059,'range.close':.01}),
+ // the 원거리 label (sniper, laser, agent): each tower's first hit on each enemy. Big single shots gain the most;
+ // the laser, which ticks, hardly gains (it already takes 에너지 마니아)
+ M('longmania','rare','원거리 마니아','scope',['#.','#.','##'],'원거리 타워가 적에게 주는 첫 피해 +28%',{'firstHit.long':.28}),
  M('supportmania','rare','지원 마니아','flag',['#'],'지원 타워 사거리 +5.1%',{'range.support':.051}),
  // the 스포너 label (garage, robot): launch speed, added up like buying power (gap = base ÷ (1 + sum))
  M('spawnmania','rare','스포너 마니아','clock',['###'],'스포너 타워 스폰 속도 +15%',{'spawnRate.summon':.15}),
@@ -659,7 +662,7 @@ function effects(placed,opt={}){const out={},count={},amp=boosts(placed);placed.
 // Multipliers for one tower kind under a set of effects.
 // A one-tower cut to the launch gap (전차 설계도) shortens what the board's cut leaves, so the gap never reaches 0.
 function towerMods(fx,kind){const tags=TOWER_TAGS[kind]??[],base=key=>soft(key,(fx[key]??0)+tags.reduce((a,t)=>a+(fx[key+'.'+t]??0),0)),own=key=>fx[key+'@'+kind]??0,sum=key=>base(key)+own(key);
- return {dmg:1+sum('dmg'),range:1+sum('range'),fire:1+sum('fire'),splash:1+sum('splash'),vhp:1+sum('vhp'),spawn:(1-base('spawn'))*(1-own('spawn'))/(1+sum('spawnRate')),srange:sum('srange'),sboost:sum('sboost'),income:1+sum('income'),cost:1-sum('cost'),ammo:1+sum('ammo')};}
+ return {dmg:1+sum('dmg'),range:1+sum('range'),fire:1+sum('fire'),splash:1+sum('splash'),vhp:1+sum('vhp'),spawn:(1-base('spawn'))*(1-own('spawn'))/(1+sum('spawnRate')),srange:sum('srange'),sboost:sum('sboost'),income:1+sum('income'),cost:1-sum('cost'),ammo:1+sum('ammo'),firstHit:sum('firstHit')};}
 // Draw rates of the grades that have pieces (the others are left out and the rest share their rates).
 function rates(){const live=GRADES.filter(g=>BY_GRADE[g.id].length),t=live.reduce((a,g)=>a+g.rate,0);return live.map(g=>({...g,rate:g.rate/t}));}
 // One draw: grade by rate, then any piece of that grade.
@@ -775,7 +778,7 @@ document.addEventListener('click',e=>{if(performance.now()-swipeAt<400&&e.target
 function warnTap(e,msg){const id=e.pointerId,x=e.clientX,up=ev=>{if(ev.pointerId!==id)return;window.removeEventListener('pointerup',up);if(Math.abs(ev.clientX-x)<30)warn(msg);};window.addEventListener('pointerup',up);}
 
 // the game's version, shown on the title screen and in the 정보 window
-const APP_VERSION='4.10.14';
+const APP_VERSION='4.10.15';
 function home(){fitLoadout(profile);if(cloudWaiting)setTimeout(()=>cloudSync(),0);if(game&&!game.ended){game.paused=true;savedRun=game.snapshot();}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p data-action="version-tap">버전 ${APP_VERSION}</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
 function openDialog(title,body,buttons,kind='dialog'){if(kind!=='result')sound(kind.startsWith('msg')?'question':'open');dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2><span>${title}</span>${button('dialog-x','<i>×</i>','xp-x','aria-label="닫기"')}</h2><div class="dialog-body">${body}</div><div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('.dialog').classList.toggle('msgbox',kind.startsWith('msg'));(modal.querySelector('.xp-yes')??modal.querySelector('.dialog-actions button')??modal.querySelector('button'))?.focus();backNavigation?.sync?.();}
 // Yes/no question in a Windows message box: icon, text, then [예] [아니요] on the right.
@@ -860,7 +863,7 @@ function effectLines(raw){const pct=v=>`${Math.ceil(Math.round(v*1e6)/1e2)/100}%
   const [key]=k.split('.'),t=k.includes('.')?tag(k)+' 타워 ':'모든 타워 ',sp=MODS.SOFT[key],unit=['srange','placement','health','startCash','regen','repair','farmLimit','intermission'].includes(key);let v=MODS.soft(key,r);if(unit)v=Math.ceil(Math.round(v*1e4)/1e2)/100;let tapered=sp&&r>sp[0]+1e-9,plain=key==='sell'?`${Math.round(70+r*100)}%`:unit?`${Math.round(r*10)/10}`:pct(r);
   // a label piece adds on top of the all-tower pieces of its kind and they taper together: show what it adds
   if(sp&&k.includes('.')&&MODS.TOWER_KEYS.has(key)&&raw[key]){const g=raw[key];v=MODS.soft(key,g+r)-MODS.soft(key,g);tapered=g+r>sp[0]+1e-9;}
-  const line={dmg:`${t}공격력 +${pct(v)}`,range:`${t}사거리 +${pct(v)}`,fire:`${t}공격 속도 +${pct(v)}`,ammo:`${t}장탄수 +${pct(v)}`,splash:`${k.includes('.')?t:''}폭발 범위 +${pct(v)}`,vhp:`유닛 체력 +${pct(v)}`,uregen:`유닛 체력 초당 ${pct(v)} 회복`,spawn:`스포너 출격 주기 -${pct(v)}`,spawnRate:`${t}출격 주기 -${pct(1-1/(1+v))}`,srange:`지원 범위 +${v}칸`,sboost:`지원 효과 +${pct(v)}p`,income:`경제 수입 +${pct(v)}`,cost:`${k.includes('.')?t:''}설치 비용 -${pct(v)}`,upgrade:`업그레이드 비용 -${pct(1-1/(1+v))}`,sell:`판매 환급 ${Math.round(70+v*100)}%`,boss:`보스에게 주는 피해 +${pct(v)}`,shield:`보호막 적에게 주는 피해 +${pct(v)}`,cash:`피해 캐시 +${pct(v)}`,camoDmg:`히든에게 주는 피해 +${pct(v)}`,bossStunMul:`보스 마비 -${pct(1-v)}`,stunMul:`모든 마비 -${pct(1-v)}`,placement:`최대 배치 +${v}`,health:`기지 체력 +${v}`,startCash:`시작 캐시 +${v}`,regen:`웨이브마다 기지 체력 +${v}`,repair:`${MODS.REPAIR_PERIOD}초마다 기지 체력 +${v}`,waveBonus:`웨이브 보상 +${pct(v)}`,reward:`보상 +${pct(v)}`,bossCash:`보스 캐시 +${pct(v)}`,camoShift:`히든 감지 레벨 -${v}`,farmLimit:`농장 한도 +${v}`,intermission:`인터미션 +${v}초`,skeleton:`매 웨이브 스켈레톤 ${v}~${v*5}마리`,slots:`타워 장착 칸 +${Math.min(5,v)}`,revive:`한 번 웨이브 다시 시작 · 기지 체력 ${Math.min(Math.round(v),Math.round(100+MODS.soft('health',raw.health??0)))}`,speedMul:`모든 적 이동 속도 -${pct(1-v)}`}[key];
+  const line={dmg:`${t}공격력 +${pct(v)}`,range:`${t}사거리 +${pct(v)}`,fire:`${t}공격 속도 +${pct(v)}`,ammo:`${t}장탄수 +${pct(v)}`,firstHit:`${t}첫 피해 +${pct(v)}`,splash:`${k.includes('.')?t:''}폭발 범위 +${pct(v)}`,vhp:`유닛 체력 +${pct(v)}`,uregen:`유닛 체력 초당 ${pct(v)} 회복`,spawn:`스포너 출격 주기 -${pct(v)}`,spawnRate:`${t}출격 주기 -${pct(1-1/(1+v))}`,srange:`지원 범위 +${v}칸`,sboost:`지원 효과 +${pct(v)}p`,income:`경제 수입 +${pct(v)}`,cost:`${k.includes('.')?t:''}설치 비용 -${pct(v)}`,upgrade:`업그레이드 비용 -${pct(1-1/(1+v))}`,sell:`판매 환급 ${Math.round(70+v*100)}%`,boss:`보스에게 주는 피해 +${pct(v)}`,shield:`보호막 적에게 주는 피해 +${pct(v)}`,cash:`피해 캐시 +${pct(v)}`,camoDmg:`히든에게 주는 피해 +${pct(v)}`,bossStunMul:`보스 마비 -${pct(1-v)}`,stunMul:`모든 마비 -${pct(1-v)}`,placement:`최대 배치 +${v}`,health:`기지 체력 +${v}`,startCash:`시작 캐시 +${v}`,regen:`웨이브마다 기지 체력 +${v}`,repair:`${MODS.REPAIR_PERIOD}초마다 기지 체력 +${v}`,waveBonus:`웨이브 보상 +${pct(v)}`,reward:`보상 +${pct(v)}`,bossCash:`보스 캐시 +${pct(v)}`,camoShift:`히든 감지 레벨 -${v}`,farmLimit:`농장 한도 +${v}`,intermission:`인터미션 +${v}초`,skeleton:`매 웨이브 스켈레톤 ${v}~${v*5}마리`,slots:`타워 장착 칸 +${Math.min(5,v)}`,revive:`한 번 웨이브 다시 시작 · 기지 체력 ${Math.min(Math.round(v),Math.round(100+MODS.soft('health',raw.health??0)))}`,speedMul:`모든 적 이동 속도 -${pct(1-v)}`}[key];
   const tail=key==='spawn'?` → 정비소 ${gap('spawner')}초 · 로봇 ${gap('robot')}초`:'';
   if(line)out.push((tapered?`${line} (체감 · 합 ${plain})`:line)+tail);}
  return out;}
@@ -3788,7 +3791,7 @@ class Game{
  intermissionSeconds(){return this.modifier('speedrun')?0:ECONOMY.intermissionSeconds+(this.mods.intermission??0);}
  modifier(id){return !!this.modifiers?.includes(id);}
  camoLevel(kind){const c=TOWER[kind]?.camoLevel;return c==null?99:Math.max(1,c-(this.mods.camoShift??0));}
- damageMul(source,e){if(!source?.kind||!TOWER[source.kind]||source.kind==='icu')return 1;let m=this.km(source.kind).dmg;const d=this.enemyData(e);if(d.boss)m*=1+(this.mods.boss??0);if((e.shield??0)>0)m*=1+(this.mods.shield??0);if(d.camo)m*=1+(this.mods.camoDmg??0);return m;}
+ damageMul(source,e){if(!source?.kind||!TOWER[source.kind]||source.kind==='icu')return 1;const km=this.km(source.kind);let m=km.dmg;if(km.firstHit&&source.id!=null){const seen=e.firstHit??=[];if(!seen.includes(source.id)){seen.push(source.id);m*=1+km.firstHit;}}const d=this.enemyData(e);if(d.boss)m*=1+(this.mods.boss??0);if((e.shield??0)>0)m*=1+(this.mods.shield??0);if(d.camo)m*=1+(this.mods.camoDmg??0);return m;}
  canAfford(cents){return this.cheats.cash||this.cash>=cents;}
  spend(cents){if(!this.canAfford(cents))return false;if(!this.cheats.cash)this.addCash(-cents);return true;}
  random(){this.rng=(1664525*this.rng+1013904223)>>>0;return this.rng/4294967296;}
