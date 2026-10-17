@@ -670,7 +670,7 @@ const MODULES=[
  M('formation','myth','편대 비행','plane',['#.#','###','.#.'],'[비행기] 하나마다 비행기 1대 더 출격 · 대가: 가격 +50%',{'wing@plane':1,'price@plane':.5}),
  // 4.11.24 스포너 중독자: on a skip each 정비소·로봇 launches at once (one unit per piece) and its cooldown starts over;
  // with any piece an upgrade launches one too. ICU 전선 is left alone
- M('addict','myth','스포너 중독자','spawner',['##','#.'],'웨이브를 스킵하면 스포너의 쿨타임이 리셋됩니다',{addict:1}),
+ M('addict','myth','스포너 중독자','spawner',['.#','#.','.#'],'웨이브를 스킵하면 스포너의 쿨타임이 리셋됩니다',{addict:1}),
  // 4.11.22 부활: when the base falls, that wave starts over (towers and cash stay, base 50); one restart per piece
  M('rebirth','myth','부활','rebirth',['##','.#'],'기지가 무너지면 그 웨이브를 처음부터 다시 시작 (타워·캐시 그대로, 기지 체력 50)',{rebirth:1}),
  // genesis (4.11.10, back from the old set): 해골 공장 as it was; 그리고, 최종장 is now 8×4 (was 8×5)
@@ -824,7 +824,7 @@ document.addEventListener('click',e=>{if(performance.now()-swipeAt<400&&e.target
 function warnTap(e,msg){const id=e.pointerId,x=e.clientX,up=ev=>{if(ev.pointerId!==id)return;window.removeEventListener('pointerup',up);if(Math.abs(ev.clientX-x)<30)warn(msg);};window.addEventListener('pointerup',up);}
 
 // the game's version, shown on the title screen and in the 정보 window
-const APP_VERSION='4.11.24';
+const APP_VERSION='4.11.25';
 function home(){fitLoadout(profile);if(cloudWaiting)setTimeout(()=>cloudSync(),0);if(game&&!game.ended){if(game.config.tutorial){game=null;coachStop();}else{game.paused=true;savedRun=game.snapshot();}}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p data-action="version-tap">버전 ${APP_VERSION}</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
 function openDialog(title,body,buttons,kind='dialog'){if(kind!=='result')sound(kind.startsWith('msg')?'question':'open');dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2><span>${title}</span>${button('dialog-x','<i>×</i>','xp-x','aria-label="닫기"')}</h2><div class="dialog-body">${body}</div><div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('.dialog').classList.toggle('msgbox',kind.startsWith('msg'));(modal.querySelector('.xp-yes')??modal.querySelector('.dialog-actions button')??modal.querySelector('button'))?.focus();backNavigation?.sync?.();}
 // Yes/no question in a Windows message box: icon, text, then [예] [아니요] on the right.
