@@ -485,7 +485,7 @@ const DECAY=.7;
 // Stats that would break the game if piled up have no lock; past a point [from] each extra bit
 // counts for less and less, closing in on [toward] without reaching it (like stacking ×0.7s):
 // value = from + (toward-from)·(1 - e^(-(sum-from)/(toward-from))). Below [from] it adds up as is.
-const SOFT={stun:[.5,.8],range:[.3,.8],splash:[.5,1.5],vhp:[.5,1.5],spawn:[.5,.75],cost:[.3,.6],upgrade:[.4,.8],srange:[5,12],sboost:[.25,.6],sell:[.05,.15],shield:[.5,1.5],camoDmg:[.5,1],placement:[9,20],health:[100,300],startCash:[1200,3000],regen:[12,30],farmLimit:[3,6],intermission:[15,40]};
+const SOFT={range:[.3,.8],splash:[.5,1.5],vhp:[.5,1.5],spawn:[.5,.75],cost:[.3,.6],upgrade:[.4,.8],srange:[5,12],sboost:[.25,.6],sell:[.05,.15],shield:[.5,1.5],camoDmg:[.5,1],placement:[9,20],health:[100,300],startCash:[1200,3000],regen:[12,30],farmLimit:[3,6],intermission:[15,40]};
 const WHOLE=new Set(['placement','farmLimit']);
 function soft(key,sum){const s=SOFT[key];if(!s||sum<=s[0])return sum;const [a,b]=s;const v=a+(b-a)*(1-Math.exp(-(sum-a)/(b-a)));return WHOLE.has(key)?Math.floor(v+1e-9):v;}
 // stats a tower reads through towerMods (softened there, after all-tower and label pieces are added)
@@ -530,7 +530,7 @@ const MODULES=[
  M('resale','rare','중고 거래','coin',['#'],'판매 환급 +5%p (75%부터 체감)',{sell:.05}),
  M('hunter','rare','보스 사냥꾼','skull',['##','##'],'보스 피해 +6%',{boss:.06}),
  M('breaker','rare','방패 파쇄기','shield',['##'],'보호막 적 피해 +15% (+50%부터 체감)',{shield:.15}),
- M('insulate','rare','절연 처리','bolt',['#'],'보스 마비 시간 -20% (-50%부터 체감)',{bossStunMul:.8}),
+ M('insulate','rare','절연 처리','bolt',['#'],'보스 마비 시간 -20%',{bossStunMul:.8}),
  M('fastpay','rare','빠른 정산','coin',['##'],'피해 캐시 +8%',{cash:.08}),
  // legend: game rules — relatively simple shapes; myth and genesis get odd ones
  M('permit','legend','증축 허가','house',['####','##..'],'최대 배치 +3 (+9부터 체감)',{placement:3}),
@@ -538,7 +538,7 @@ const MODULES=[
  M('reserve','legend','비상 자금','coins',['##','##','#.'],'시작 캐시 +400 (+1,200부터 체감)',{startCash:400}),
  M('repair','legend','자가 수리','heart',['.##','##.'],'웨이브마다 기지 체력 +5 (+12부터 체감)',{regen:5}),
  M('bonus','legend','성과급','star',['##','##','##'],'웨이브 보상 +15%',{waveBonus:.15}),
- M('absorber','legend','충격 흡수 장치','bolt',['.#','##'],'모든 마비 시간 절반 (-50%부터 체감)',{stunMul:.5}),
+ M('absorber','legend','충격 흡수 장치','bolt',['.#','##'],'모든 마비 시간 절반',{stunMul:.5}),
  M('nightbook','legend','야간 작전 교본','eye',['##','#.'],'히든 감지 레벨 -1 · 2개째 -1 더 · 3개째부터 히든 피해 +15%, 이후 ×0.7',{camoShift:1},{dup:[{camoShift:1},{camoDmg:.15}]}),
  M('coop','legend','협동조합','leaf',['#..','#..','###'],'농장 한도 +1 (+3부터 체감) · 경제 타워 수입 +10%',{farmLimit:1,'income.econ':.1}),
  M('rest','legend','긴 휴식','clock',['#'],'인터미션 +5초 (+15초부터 체감)',{intermission:5}),
@@ -590,12 +590,10 @@ function effects(placed,opt={}){const out={},count={};for(const p of placed){con
 // A one-tower cut to the launch gap (전차 설계도) shortens what the board's cut leaves, so the gap never reaches 0.
 function towerMods(fx,kind){const tags=TOWER_TAGS[kind]??[],base=key=>soft(key,(fx[key]??0)+tags.reduce((a,t)=>a+(fx[key+'.'+t]??0),0)),own=key=>fx[key+'@'+kind]??0,sum=key=>base(key)+own(key);
  return {dmg:1+sum('dmg'),range:1+sum('range'),fire:1+sum('fire'),splash:1+sum('splash'),vhp:1+sum('vhp'),spawn:(1-base('spawn'))*(1-own('spawn')),srange:sum('srange'),sboost:sum('sboost'),income:1+sum('income'),cost:1-sum('cost')};}
-// Share of a stun that still lands: the cuts multiply, then the total cut tapers past 50% toward 80%.
-function stunScale(fx,boss){return 1-soft('stun',1-(fx.stunMul??1)*(boss?(fx.bossStunMul??1):1));}
 // One draw: grade by rate, then any piece of that grade.
 function draw(random=Math.random){let r=random(),grade=GRADES[0].id;for(const g of GRADES){if(r<g.rate){grade=g.id;break;}r-=g.rate;}const list=BY_GRADE[grade];return list[Math.floor(random()*list.length)].id;}
 
-for(const [k,v] of Object.entries({SKELETON,skeletonRoster,BOARD,START_CELLS,PULL_COST,SOFT,soft,TOWER_KEYS,DECAY,GRADES,GRADE,TAGS,TOWER_TAGS,MODULES,MODULE,BY_GRADE,cells,size,cellCost,neighbours,buyable,layout,fits,effects,towerMods,stunScale,draw}))Object.defineProperty(exports,k,{enumerable:true,get:()=>v});
+for(const [k,v] of Object.entries({SKELETON,skeletonRoster,BOARD,START_CELLS,PULL_COST,SOFT,soft,TOWER_KEYS,DECAY,GRADES,GRADE,TAGS,TOWER_TAGS,MODULES,MODULE,BY_GRADE,cells,size,cellCost,neighbours,buyable,layout,fits,effects,towerMods,draw}))Object.defineProperty(exports,k,{enumerable:true,get:()=>v});
 },
 "app.js":function(require,exports){
 const {enemyMoveSpeed,CODEX_GROUPS,SCALE}=require("data.js");
@@ -698,7 +696,7 @@ document.addEventListener('click',e=>{if(performance.now()-swipeAt<400&&e.target
 // a slot that cannot be used says why on release, unless the finger swiped across the slots
 function warnTap(e,msg){const id=e.pointerId,x=e.clientX,up=ev=>{if(ev.pointerId!==id)return;window.removeEventListener('pointerup',up);if(Math.abs(ev.clientX-x)<30)warn(msg);};window.addEventListener('pointerup',up);}
 
-function home(){fitLoadout(profile);if(game&&!game.ended){game.paused=true;savedRun=game.snapshot();}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p>버전 4.7.2</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
+function home(){fitLoadout(profile);if(game&&!game.ended){game.paused=true;savedRun=game.snapshot();}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p>버전 4.7.3</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
 function openDialog(title,body,buttons,kind='dialog'){if(kind!=='result')sound(kind.startsWith('msg')?'question':'open');dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2><span>${title}</span>${button('dialog-x','<i>×</i>','xp-x','aria-label="닫기"')}</h2>${body}<div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('.dialog').classList.toggle('msgbox',kind.startsWith('msg'));(modal.querySelector('.xp-yes')??modal.querySelector('.dialog-actions button')??modal.querySelector('button'))?.focus();backNavigation?.sync?.();}
 // Yes/no question in a Windows message box: icon, text, then [예] [아니요] on the right.
 const QUESTION='<svg class="xp-qicon" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="14" fill="#2f6fd8" stroke="#fff" stroke-width="2"/><text x="16" y="22.5" text-anchor="middle" font-size="19" font-weight="700" fill="#fff">?</text></svg>';
@@ -778,8 +776,7 @@ function effectLines(raw){const pct=v=>`${Math.round(v*1000)/10}%`,out=[],tag=k=
   const [key]=k.split('.'),t=k.includes('.')?tag(k)+' ':'모든 타워 ',sp=MODS.SOFT[key],unit=['srange','placement','health','startCash','regen','farmLimit','intermission'].includes(key);let v=MODS.soft(key,r),tapered=sp&&r>sp[0]+1e-9,plain=key==='sell'?`${Math.round(70+r*100)}%`:unit?`${Math.round(r*10)/10}`:pct(r);
   // a label piece adds on top of the all-tower pieces of its kind and they taper together: show what it adds
   if(sp&&k.includes('.')&&MODS.TOWER_KEYS.has(key)&&raw[key]){const g=raw[key];v=MODS.soft(key,g+r)-MODS.soft(key,g);tapered=g+r>sp[0]+1e-9;}
-  if(key==='stunMul'||key==='bossStunMul'){const boss=key==='bossStunMul',cut=1-(raw.stunMul??1)*(boss?r:1);v=1-MODS.stunScale(raw,boss);tapered=cut>MODS.SOFT.stun[0]+1e-9;plain=pct(cut);}
-  const line={dmg:`${t}공격력 +${pct(v)}`,range:`${t}사거리 +${pct(v)}`,fire:`${t}공격 속도 +${pct(v)}`,splash:`${t}폭발 범위 +${pct(v)}`,vhp:`소환 차량 체력 +${pct(v)}`,spawn:`소환 출격 주기 -${pct(v)}`,srange:`지원 범위 +${v}칸`,sboost:`지원 효과 +${pct(v)}p`,income:`경제 수입 +${pct(v)}`,cost:`${k.includes('.')?t:''}설치 비용 -${pct(v)}`,upgrade:`업그레이드 비용 -${pct(v)}`,sell:`판매 환급 ${Math.round(70+v*100)}%`,boss:`보스에게 주는 피해 +${pct(v)}`,shield:`보호막 적에게 주는 피해 +${pct(v)}`,cash:`피해 캐시 +${pct(v)}`,camoDmg:`히든에게 주는 피해 +${pct(v)}`,bossStunMul:`보스 마비 -${pct(v)}`,stunMul:`모든 마비 -${pct(v)}`,placement:`최대 배치 +${v}`,health:`기지 체력 +${v}`,startCash:`시작 캐시 +${v}`,regen:`웨이브마다 기지 체력 +${v}`,waveBonus:`웨이브 보상 +${pct(v)}`,camoShift:`히든 감지 레벨 -${v}`,farmLimit:`농장 한도 +${v}`,intermission:`인터미션 +${v}초`,skeleton:`매 웨이브 스켈레톤 ${v}~${v*5}마리`,slots:`타워 장착 칸 +${Math.min(5,v)}`,revive:`한 번 웨이브 다시 시작 · 기지 체력 ${Math.min(Math.round(v),Math.round(100+MODS.soft('health',raw.health??0)))}`,speedMul:`모든 적 이동 속도 -${pct(1-v)}`}[key];
+  const line={dmg:`${t}공격력 +${pct(v)}`,range:`${t}사거리 +${pct(v)}`,fire:`${t}공격 속도 +${pct(v)}`,splash:`${t}폭발 범위 +${pct(v)}`,vhp:`소환 차량 체력 +${pct(v)}`,spawn:`소환 출격 주기 -${pct(v)}`,srange:`지원 범위 +${v}칸`,sboost:`지원 효과 +${pct(v)}p`,income:`경제 수입 +${pct(v)}`,cost:`${k.includes('.')?t:''}설치 비용 -${pct(v)}`,upgrade:`업그레이드 비용 -${pct(v)}`,sell:`판매 환급 ${Math.round(70+v*100)}%`,boss:`보스에게 주는 피해 +${pct(v)}`,shield:`보호막 적에게 주는 피해 +${pct(v)}`,cash:`피해 캐시 +${pct(v)}`,camoDmg:`히든에게 주는 피해 +${pct(v)}`,bossStunMul:`보스 마비 -${pct(1-v)}`,stunMul:`모든 마비 -${pct(1-v)}`,placement:`최대 배치 +${v}`,health:`기지 체력 +${v}`,startCash:`시작 캐시 +${v}`,regen:`웨이브마다 기지 체력 +${v}`,waveBonus:`웨이브 보상 +${pct(v)}`,camoShift:`히든 감지 레벨 -${v}`,farmLimit:`농장 한도 +${v}`,intermission:`인터미션 +${v}초`,skeleton:`매 웨이브 스켈레톤 ${v}~${v*5}마리`,slots:`타워 장착 칸 +${Math.min(5,v)}`,revive:`한 번 웨이브 다시 시작 · 기지 체력 ${Math.min(Math.round(v),Math.round(100+MODS.soft('health',raw.health??0)))}`,speedMul:`모든 적 이동 속도 -${pct(1-v)}`}[key];
   const tail=key==='spawn'?` → 정비소 ${gap('spawner')}초 · 로봇 ${gap('robot')}초`:'';
   if(line)out.push((tapered?`${line} (체감 · 합 ${plain})`:line)+tail);}
  return out;}
@@ -3612,7 +3609,7 @@ class Game{
   if(state.cast){
    state.cast.remaining-=dt;if(state.cast.remaining>1e-8)return;
    const cast=state.cast,duration=cast.type==='entry'?config.entryStun:config.stun,hit=[];
-   for(const id of cast.targets){const t=this.towers.find(t=>t.id===id);if(!t||t.kind==='plane'||t.disabled>0||t.stunGrace>0)continue;const sec=duration*MODS.stunScale(this.mods,true);t.disabled=sec;t.stunGrace=sec+config.grace;hit.push(t.id);}
+   for(const id of cast.targets){const t=this.towers.find(t=>t.id===id);if(!t||t.kind==='plane'||t.disabled>0||t.stunGrace>0)continue;const sec=duration*(this.mods.stunMul??1)*(this.mods.bossStunMul??1);t.disabled=sec;t.stunGrace=sec+config.grace;hit.push(t.id);}
    this.fx('pulse',e,{r:(cast.type==='entry'?10:config.range)*SCALE,color:ENEMIES[e.kind].color,life:.7});
    if(cast.type==='entry')state.entryDone=true;else state.repeats++;
    state.cast=null;state.cooldown=config.minInterval+this.random()*(config.maxInterval-config.minInterval);
@@ -3650,7 +3647,7 @@ class Game{
   if(e.hp<=0){e.dead=true;this.kills++;this.fx('death',e,{r:(d.boss?.55:.24)*FX,color:d.color,life:.24});if(e.kind===this.finalKind&&!e.legacy)this.corpses.push({kind:e.kind,x:e.x,y:e.y,angle:e.angle??0});if(d.boss&&!e.legacy)this.notify('bossLine',e.kind,'death');
    if(d.deathPool)this.spawn(d.deathPool[Math.floor(this.random()*d.deathPool.length)],e.progress,false,e.variant,e.legacy,e.lane);
    if(d.deathSpawn){let n=0;for(const ds of [d.deathSpawn].flat())for(let i=0;i<ds.count;i++,n++)this.spawn(ds.kind,Math.max(0,e.progress-n*.12*SCALE),false,e.variant,e.legacy);}
-   if(d.deathStun){const a=d.deathStun;for(const t of this.towers)if(t.kind!=='plane'&&(e.legacy||t.stunGrace<=0)&&distance(t,e)<a.radius){const sec=a.seconds*MODS.stunScale(this.mods,false);t.disabled=Math.max(t.disabled,sec);t.stunGrace=Math.max(t.stunGrace,sec+a.grace);}this.fx('pulse',e,{r:a.radius,color:d.color,life:.5});}
+   if(d.deathStun){const a=d.deathStun;for(const t of this.towers)if(t.kind!=='plane'&&(e.legacy||t.stunGrace<=0)&&distance(t,e)<a.radius){const sec=a.seconds*(this.mods.stunMul??1);t.disabled=Math.max(t.disabled,sec);t.stunGrace=Math.max(t.stunGrace,sec+a.grace);}this.fx('pulse',e,{r:a.radius,color:d.color,life:.5});}
   }return dealt;
  }
  splash(point,damage,radius,source,center=false){radius*=TOWER[source?.kind]?this.km(source.kind).splash:1;for(const e of [...this.enemies])if(!e.dead){const r=distance(e,point);if(r<=radius)this.hit(e,damage*(center?1+.75*(1-r/radius):1),source);}this.fx('blast',point,{r:radius,color:TOWER[source?.kind]?.color??'#edbf86',life:.32});}
@@ -3995,7 +3992,7 @@ Game.prototype.auraStep=function(e,d,dt){const A=d.aura;e.auraClock=(e.auraClock
 // 가디언 프라임: shoots the nearest ground towers (stun) and now and then jams every tower on the field
 Game.prototype.jammerStep=function(e,J,dt){const s=e.jm??={shot:J.shot.first,jam:J.jam.first};s.shot-=dt;s.jam-=dt;
  if(s.shot<=0){const R=J.shot.range*SCALE,ts=this.towers.filter(t=>t.kind!=='plane'&&t.disabled<=0&&(t.stunGrace??0)<=0&&distance(t,e)<=R).sort((a,b)=>distance(a,e)-distance(b,e)).slice(0,J.shot.count);
-  if(ts.length){for(const t of ts){const sec=J.shot.stun*MODS.stunScale(this.mods,true);t.disabled=sec;t.stunGrace=sec+J.shot.grace;
+  if(ts.length){for(const t of ts){const sec=J.shot.stun*(this.mods.stunMul??1)*(this.mods.bossStunMul??1);t.disabled=sec;t.stunGrace=sec+J.shot.grace;
     this.fx('shot',e,{x2:t.x,y2:t.y,color:'#ff6b6b',life:.3,heavy:true});this.fx('pulse',t,{r:.5*FX,color:'#ff6b6b',life:.4});}s.shot=J.shot.period;}else s.shot=1;}
  if(s.jam<=0){s.jam=J.jam.period;this.jamTowers(e,J.jam);}};
 Game.prototype.jamTowers=function(e,J){this.jam={left:J.seconds,total:J.seconds,mul:J.mul,kind:e.kind};this.fx('pulse',e,{r:14*SCALE,color:'#ff6b6b',life:.9});this.notify('jam',e.kind,J.seconds,J.mul);};
