@@ -7,6 +7,10 @@
 - 프로젝트: `nuker-2f286`
 - Authentication: Google 로그인 사용, 승인된 도메인에 `gridtd.unbrik.ro`
 - Firestore: `(default)` 데이터베이스, 위치 `asia-northeast3`
+- 로그인은 구글 로그인 버튼(Google Identity Services, `accounts.google.com/gsi/client`)으로 받은 ID 토큰을 Firebase에 넘깁니다(`signInWithCredential`). 그래서 로그인 창에 firebaseapp.com이 아니라 `gridtd.unbrik.ro`가 보입니다.
+  - 웹 클라이언트 ID: `1036223456136-2cdcjsnu2gmmo7ig66o4no33d3d4bcfo.apps.googleusercontent.com` (`index.html`의 `CLOUD.clientId`)
+  - Google Cloud 콘솔 → API 및 서비스 → 사용자 인증 정보 → Web client (auto created by Google Service)의 **승인된 자바스크립트 원본**에 `https://gridtd.unbrik.ro`
+  - 버튼 스크립트를 못 불러오면 예전 Firebase 팝업 로그인 버튼으로 돌아갑니다.
 - 게임은 Firebase Auth SDK(`www.gstatic.com/firebasejs/10.12.2/`)만 불러오고, Firestore는 REST API에 ID 토큰을 붙여 씁니다.
 - `firebaseConfig`의 apiKey는 공개 식별자입니다. 접근은 아래 보안 규칙과 승인된 도메인이 막습니다.
 
