@@ -805,7 +805,7 @@ document.addEventListener('click',e=>{if(performance.now()-swipeAt<400&&e.target
 function warnTap(e,msg){const id=e.pointerId,x=e.clientX,up=ev=>{if(ev.pointerId!==id)return;window.removeEventListener('pointerup',up);if(Math.abs(ev.clientX-x)<30)warn(msg);};window.addEventListener('pointerup',up);}
 
 // the game's version, shown on the title screen and in the 정보 window
-const APP_VERSION='4.11.2';
+const APP_VERSION='4.11.3';
 function home(){fitLoadout(profile);if(cloudWaiting)setTimeout(()=>cloudSync(),0);if(game&&!game.ended){if(game.config.tutorial){game=null;coachStop();}else{game.paused=true;savedRun=game.snapshot();}}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p data-action="version-tap">버전 ${APP_VERSION}</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
 function openDialog(title,body,buttons,kind='dialog'){if(kind!=='result')sound(kind.startsWith('msg')?'question':'open');dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2><span>${title}</span>${button('dialog-x','<i>×</i>','xp-x','aria-label="닫기"')}</h2><div class="dialog-body">${body}</div><div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('.dialog').classList.toggle('msgbox',kind.startsWith('msg'));(modal.querySelector('.xp-yes')??modal.querySelector('.dialog-actions button')??modal.querySelector('button'))?.focus();backNavigation?.sync?.();}
 // Yes/no question in a Windows message box: icon, text, then [예] [아니요] on the right.
@@ -4150,7 +4150,7 @@ Object.assign(Game.prototype, {
     v.rocketCooldown -= dt;
     // facing (4.11.1): weapons turn only when they fire, snapping onto the target with the shot; between shots
     // they keep that aim. A trooper keeps facing its last shot while it stands and faces the road when it walks on.
-    // The tank is the exception (4.11.2): its turret keeps swinging round to follow its target.
+    // The tank is the exception (4.11.2): its turret keeps swinging round to follow its target, like the ship's turrets.
     const want = target ? Math.atan2(target.y - v.y, target.x - v.x) : null;
     const snap = () => { if (v.unit === 'trooper') v.face = want; v.gunAngle = want; };
     if (v.unit === 'trooper') {
@@ -4228,8 +4228,8 @@ Object.assign(Game.prototype, {
     return { x: ICU_SHIP.x + Math.cos(a) * ICU_SHIP.rx, y: ICU_SHIP.y + Math.sin(a) * ICU_SHIP.ry, angle: Math.atan2(Math.cos(a) * ICU_SHIP.ry, -Math.sin(a) * ICU_SHIP.rx) };
   },
   // the ship picks for itself: machine guns and flash cannon on the enemy furthest along, the railgun on
-  // the strongest. Each weapon is a turret on the hull that snaps onto its target as it fires and keeps
-  // that aim (on the hull) until its next shot.
+  // the strongest. Each weapon is a turret on the hull that turns toward its target and fires once it
+  // faces it; with nothing to shoot they turn back to the bow.
   icuShip(t, dt) {
     const S = TOWER.icu.units.ship, sh = t.ship ??= { a: -Math.PI / 2, gun: 0, flash: 1, rail: 2 }, aim = sh.aim ??= { mgL: 0, mgR: 0, flash: 0, rail: 0 };
     sh.a += dt * Math.PI * 2 / S.lap;
@@ -4240,20 +4240,23 @@ Object.assign(Game.prototype, {
     const first = alive(sh.lockFirst) ?? (live.length ? live.reduce((a, b) => b.progress > a.progress ? b : a) : null), big = alive(sh.lockBig) ?? (live.length ? live.reduce((a, b) => this.durability(b) > this.durability(a) ? b : a) : null);
     sh.lockFirst = first?.id ?? null; sh.lockBig = big?.id ?? null;
     // turret pivots on the hull and barrel lengths, in art units; with nothing to shoot a turret keeps its aim
-    const W = { mgL: [-16.4, -9.4, 11.6, first], mgR: [-16.4, 9.4, 11.6, first], flash: [-44, 0, 9, first], rail: [20, 0, 31.6, big] };
-    // point a turret at its target and return its muzzle
-    const fire = id => { const [px, py, len, e] = W[id], pv = icuAt(o, o.angle, px * k, py * k); aim[id] = angleDiff(Math.atan2(e.y - pv.y, e.x - pv.x), o.angle); return icuAt(pv, o.angle + aim[id], len * k, 0); };
+    const W = { mgL: [-16.4, -9.4, 11.6, first], mgR: [-16.4, 9.4, 11.6, first], flash: [-44, 0, 9, first], rail: [20, 0, 31.6, big] }, ready = {}, muzzle = {};
+    for (const [id, [px, py, len, e]] of Object.entries(W)) {
+      const pv = icuAt(o, o.angle, px * k, py * k), want = e ? angleDiff(Math.atan2(e.y - pv.y, e.x - pv.x), o.angle) : aim[id];
+      aim[id] = turnTo(aim[id], want, 5 * dt);
+      ready[id] = !!e && Math.abs(angleDiff(want, aim[id])) < .2;
+      muzzle[id] = icuAt(pv, o.angle + aim[id], len * k, 0);
+    }
     if (!live.length) return;
     if (sh.gun <= 0) {
-      // the two guns take turns
-      const side = sh.side === 'mgL' ? 'mgR' : 'mgL', m = fire(side);
-      { sh.side = side; this.hit(first, S.gun, t); this.fx('shot', m, { x2: first.x, y2: first.y, color: '#e6f0fa', life: .1, ship: true }); sh.gun += S.gunPeriod; }
+      // the two guns take turns; if the other one isn't on target yet, the same one fires again
+      const next = sh.side === 'mgL' ? 'mgR' : 'mgL', side = ready[next] ? next : ready[sh.side] ? sh.side : null;
+      if (side) { sh.side = side; this.hit(first, S.gun, t); this.fx('shot', muzzle[side], { x2: first.x, y2: first.y, color: '#e6f0fa', life: .1, ship: true }); sh.gun += S.gunPeriod; }
     }
-    if (sh.flash <= 0) { this.fx('shot', fire('flash'), { x2: first.x, y2: first.y, color: '#eef5fc', life: .3, heavy: true, ship: true }); this.fx('flash', first, { r: S.flashRadius, color: '#eef5fc', life: .55 }); this.splash(first, S.flash, S.flashRadius, t); sh.flash = S.flashPeriod; }
-    if (sh.rail <= 0) {
-      const m = fire('rail');
+    if (sh.flash <= 0 && ready.flash) { this.fx('shot', muzzle.flash, { x2: first.x, y2: first.y, color: '#eef5fc', life: .3, heavy: true, ship: true }); this.fx('flash', first, { r: S.flashRadius, color: '#eef5fc', life: .55 }); this.splash(first, S.flash, S.flashRadius, t); sh.flash = S.flashPeriod; }
+    if (sh.rail <= 0 && ready.rail) {
       this.hit(big, S.rail + Math.min(S.railCap, S.railPct * (big.maxHp + (big.maxShield ?? 0))), t);
-      this.fx('rail', m, { x2: big.x, y2: big.y, color: '#9fd3ff', life: .5, ship: true });
+      this.fx('rail', muzzle.rail, { x2: big.x, y2: big.y, color: '#9fd3ff', life: .5, ship: true });
       sh.rail = S.railPeriod;
     }
   },
