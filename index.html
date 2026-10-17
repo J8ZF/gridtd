@@ -313,6 +313,7 @@ img.tower-icon,img.enemy-icon{flex-shrink:0}
 .dialog{display:flex;flex-direction:column;overflow:hidden}
 .dialog>h2,.dialog>.dialog-actions{flex:none}
 .dialog-body{flex:0 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;margin:0 -16px;padding:0 16px}
+.nowrap{white-space:nowrap}
 .dialog-body .guide-tabs{position:sticky;top:0;z-index:1;background:var(--bg)}
 .dialog.msgbox{max-width:340px}
 .xp-msg{display:flex;gap:14px;align-items:flex-start;padding:4px 2px 6px}
@@ -714,7 +715,7 @@ document.addEventListener('click',e=>{if(performance.now()-swipeAt<400&&e.target
 function warnTap(e,msg){const id=e.pointerId,x=e.clientX,up=ev=>{if(ev.pointerId!==id)return;window.removeEventListener('pointerup',up);if(Math.abs(ev.clientX-x)<30)warn(msg);};window.addEventListener('pointerup',up);}
 
 // the game's version, shown on the title screen and in the 정보 window
-const APP_VERSION='4.9.9';
+const APP_VERSION='4.9.10';
 function home(){fitLoadout(profile);if(cloudWaiting)setTimeout(()=>cloudSync(),0);if(game&&!game.ended){game.paused=true;savedRun=game.snapshot();}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p data-action="version-tap">버전 ${APP_VERSION}</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
 function openDialog(title,body,buttons,kind='dialog'){if(kind!=='result')sound(kind.startsWith('msg')?'question':'open');dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2><span>${title}</span>${button('dialog-x','<i>×</i>','xp-x','aria-label="닫기"')}</h2><div class="dialog-body">${body}</div><div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('.dialog').classList.toggle('msgbox',kind.startsWith('msg'));(modal.querySelector('.xp-yes')??modal.querySelector('.dialog-actions button')??modal.querySelector('button'))?.focus();backNavigation?.sync?.();}
 // Yes/no question in a Windows message box: icon, text, then [예] [아니요] on the right.
@@ -1208,7 +1209,7 @@ function openMenu(id){const drop=$('#menu-drop'),bar=$('.xp-menubar');if(!drop||
  drop.style.left=Math.max(0,Math.min(btn.offsetLeft,bar.clientWidth-190))+'px';drop.style.top=(bar.offsetTop+bar.offsetHeight)+'px';drop.hidden=false;}
 function closeMenu(){menuOpen='';const drop=$('#menu-drop');if(drop){drop.hidden=true;drop.innerHTML='';}for(const b of document.querySelectorAll('.xp-menu.open'))b.classList.remove('open');}
 document.addEventListener('pointerdown',e=>{if(menuOpen&&!e.target.closest?.('#menu-drop,.xp-menubar'))closeMenu();},true);
-function about(){openDialog('그리드 타워 디펜스 정보',`<p>그리드 타워 디펜스 ${APP_VERSION}<br>보더랜드 · 쉬움 25웨이브 · 쉽지 않음 30웨이브</p><p class="muted small">효과음: Kenney UI Audio (CC0) · KDE Ocean 사운드, Guilherme Marçal Silva (CC BY-SA 4.0)</p>`,button('close-dialog','확인','primary'));}
+function about(){openDialog('그리드 타워 디펜스 정보',`<p>그리드 타워 디펜스 ${APP_VERSION}<br>보더랜드 · ${Object.values(DIFFICULTIES).map(d=>`<span class="nowrap">${d.name} ${d.count}웨이브</span>`).join(' · ')}</p><p class="muted small">효과음: Kenney UI Audio (CC0) · KDE Ocean 사운드, Guilherme Marçal Silva (CC BY-SA 4.0)</p>`,button('close-dialog','확인','primary'));}
 function pauseMenu(){if(!game||game.ended)return;game.paused=true;save();openDialog('일시정지',`<p>${game.map.name} · ${game.config.name}<br>웨이브 ${game.wave} / ${game.config.count} · ${seconds(game.time)}</p>`,(game.started?button('run','계속하기','primary'):button('close-dialog','닫기','primary'))+button('guide','조작 안내')+button('battle-settings','설정')+button('battle-home','메인 메뉴로 돌아가기'),'pause');updateBattleUI();}
 function requestExit(){if(game&&!game.ended)game.paused=true;save();msgBox('그리드 타워 디펜스','<p>정말 나가시겠습니까?</p>','confirm-exit','','msg-exit');}
 function handleAppBack(){
