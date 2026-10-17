@@ -663,7 +663,7 @@ const MODULES=[
  M('pile','legend','파일 벙커','shield',['###','.#.'],'적 보호막에 주는 피해 +52%',{shield:.52}),
  // myth (4.11.13): one tower each. 프로젝트 리콘 fires the soldier's whole magazine as one round, then reloads
  // (attack speed shortens the reload); 편대 비행 comes back unchanged
- M('recon','myth','프로젝트 리콘','soldier',['##','##'],'[군인] 탄창을 한 발에 모아 쏘고 재장전 · 2개째부터 공격력 +23.5%, 대가: 가격 +18%, 이후 ×0.7',{'recon@soldier':1},{dup:[{'dmg@soldier':.235,'price@soldier':.18}]}),
+ M('recon','myth','프로젝트 리콘','soldier',['##','##'],'[군인] 탄창을 한 발에 모아 쏘고 재장전 · 2개째부터 하나마다 공격력 +23.5%, 대가: 가격 +18%',{'recon@soldier':1},{dup:[{'dmg@soldier':.235,'price@soldier':.18}],stack:true}),
  M('formation','myth','편대 비행','plane',['#.#','###','.#.'],'[비행기] 비행기 2대 출격 · 대가: 가격 +50% · 2개째부터 공격력 +30%, 이후 ×0.7',{'wing@plane':1,'price@plane':.5},{dup:[{'dmg@plane':.3}]}),
  // genesis (4.11.10, back from the old set): 해골 공장 as it was; 그리고, 최종장 is now 8×4 (was 8×5)
  M('skeleton','genesis','해골 공장','skull',['###','###'],'매 웨이브 기지에서 체력 10 스켈레톤이 길을 따라 걸어 나감 · 2웨이브마다 1마리 추가 · 5마리가 되면 1마리씩 거대 해골(체력 120)로, 그다음 적을 베며 걷는 해골 기사로 바뀜',{skeleton:1}),
@@ -694,7 +694,7 @@ function boosts(placed){const amp=placed.map(()=>1),map=new Map();placed.forEach
  placed.forEach((b,k)=>{const a=MODULE[b.id]?.amp;if(!a||!Number.isInteger(b.x))return;const near=new Set();for(const [dx,dy] of cells(b.id,b.r??0))for(const n of neighbours((b.y+dy)*BOARD+b.x+dx)){const j=map.get(n);if(j!=null&&j!==k)near.add(j);}
   for(const j of near){const g=MODULE[placed[j].id].grade;if(g==='common'||g==='rare')amp[j]+=a;}});return amp;}
 // Sum of the effects on the board.
-function effects(placed,opt={}){const out={},count={},amp=boosts(placed);placed.forEach((p,pi)=>{const m=MODULE[p.id];if(!m||m.pending)return;const n=count[p.id]=(count[p.id]??0)+1;let fx=m.fx,f=amp[pi];if(n>1&&m.dup){const k=n-2,L=m.dup.length;fx=m.dup[Math.min(k,L-1)];if(k>=L)f*=DECAY**(k-L+1);}
+function effects(placed,opt={}){const out={},count={},amp=boosts(placed);placed.forEach((p,pi)=>{const m=MODULE[p.id];if(!m||m.pending)return;const n=count[p.id]=(count[p.id]??0)+1;let fx=m.fx,f=amp[pi];if(n>1&&m.dup){const k=n-2,L=m.dup.length;fx=m.dup[Math.min(k,L-1)];if(k>=L&&!m.stack)f*=DECAY**(k-L+1);}
   for(const [k,v] of Object.entries(fx)){if(k.endsWith('Mul'))out[k]=(out[k]??1)*(1-(1-v)*f);else out[k]=(out[k]??0)+v*f;}});
  if(!opt.raw)for(const k of Object.keys(out))if(!TOWER_KEYS.has(k.split('.')[0]))out[k]=soft(k,out[k]);return out;}
 // Multipliers for one tower kind under a set of effects.
@@ -816,7 +816,7 @@ document.addEventListener('click',e=>{if(performance.now()-swipeAt<400&&e.target
 function warnTap(e,msg){const id=e.pointerId,x=e.clientX,up=ev=>{if(ev.pointerId!==id)return;window.removeEventListener('pointerup',up);if(Math.abs(ev.clientX-x)<30)warn(msg);};window.addEventListener('pointerup',up);}
 
 // the game's version, shown on the title screen and in the 정보 window
-const APP_VERSION='4.11.15';
+const APP_VERSION='4.11.16';
 function home(){fitLoadout(profile);if(cloudWaiting)setTimeout(()=>cloudSync(),0);if(game&&!game.ended){if(game.config.tutorial){game=null;coachStop();}else{game.paused=true;savedRun=game.snapshot();}}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p data-action="version-tap">버전 ${APP_VERSION}</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
 function openDialog(title,body,buttons,kind='dialog'){if(kind!=='result')sound(kind.startsWith('msg')?'question':'open');dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2><span>${title}</span>${button('dialog-x','<i>×</i>','xp-x','aria-label="닫기"')}</h2><div class="dialog-body">${body}</div><div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('.dialog').classList.toggle('msgbox',kind.startsWith('msg'));(modal.querySelector('.xp-yes')??modal.querySelector('.dialog-actions button')??modal.querySelector('button'))?.focus();backNavigation?.sync?.();}
 // Yes/no question in a Windows message box: icon, text, then [예] [아니요] on the right.
