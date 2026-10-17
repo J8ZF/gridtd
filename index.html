@@ -613,6 +613,9 @@ const MODULES=[
  // laser): attack, a little under 폭발 마니아 per cell since two of its towers carry other labels too
  M('rapidmania2','rare','연사 마니아','chev',['.#','#.'],'연사 타워 사거리 +4.5% · 공격 속도 +3.5%',{'range.rapid':.045,'fire.rapid':.035}),
  M('energymania','rare','에너지 마니아','bolt',['#.','##','.#'],'에너지 타워 공격력 +16%',{'dmg.energy':.16}),
+ // the 근거리 label (bomb, flame, shotgun, gauss): attack speed and a touch of range; the 지원 label (commander): range
+ M('closemania','rare','근거리 마니아','blade',['##'],'근거리 타워 공격 속도 +5.9% · 사거리 +1%',{'fire.close':.059,'range.close':.01}),
+ M('supportmania','rare','지원 마니아','flag',['#'],'지원 타워 사거리 +5.1%',{'range.support':.051}),
  // the 스포너 label (garage, robot): launch speed, added up like buying power (gap = base ÷ (1 + sum))
  M('spawnmania','rare','스포너 마니아','clock',['###'],'스포너 타워 스폰 속도 +15%',{'spawnRate.summon':.15}),
  // units (garage cars, robots, skeletons): health, and healing a share of it every second, even while hit
@@ -772,7 +775,7 @@ document.addEventListener('click',e=>{if(performance.now()-swipeAt<400&&e.target
 function warnTap(e,msg){const id=e.pointerId,x=e.clientX,up=ev=>{if(ev.pointerId!==id)return;window.removeEventListener('pointerup',up);if(Math.abs(ev.clientX-x)<30)warn(msg);};window.addEventListener('pointerup',up);}
 
 // the game's version, shown on the title screen and in the 정보 window
-const APP_VERSION='4.10.13';
+const APP_VERSION='4.10.14';
 function home(){fitLoadout(profile);if(cloudWaiting)setTimeout(()=>cloudSync(),0);if(game&&!game.ended){game.paused=true;savedRun=game.snapshot();}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p data-action="version-tap">버전 ${APP_VERSION}</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
 function openDialog(title,body,buttons,kind='dialog'){if(kind!=='result')sound(kind.startsWith('msg')?'question':'open');dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2><span>${title}</span>${button('dialog-x','<i>×</i>','xp-x','aria-label="닫기"')}</h2><div class="dialog-body">${body}</div><div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('.dialog').classList.toggle('msgbox',kind.startsWith('msg'));(modal.querySelector('.xp-yes')??modal.querySelector('.dialog-actions button')??modal.querySelector('button'))?.focus();backNavigation?.sync?.();}
 // Yes/no question in a Windows message box: icon, text, then [예] [아니요] on the right.
