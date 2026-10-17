@@ -617,9 +617,9 @@ const MODULES=[
  M('blast1','rare','익스플로전','burst',['#'],'폭발 범위 +9.5%',{splash:.095},{pal:'blast'}),
  M('creeper','rare','폭발 마니아','burst',['#.#','.#.'],'폭발 타워 공격력 +12.5%',{'dmg.blast':.125},{pal:'blast'}),
  // every tower's magazine (towers that fire bursts: soldier, laser); a share of a round carries over to the next reload
- // critical multiplier: ×2 becomes ×2.1 with one. Kept small: once chance reaches 100% each one adds 0.1 of the
- // base damage to every hit (5% per cell), more than attack gives, so piling them up after 치명타 pays but doesn't run away
- M('jackpot','rare','잭팟','star',['##'],'치명타 배율 +0.1배',{critDmg:.1},{pal:'fire'}),
+ // critical multiplier: ×2 becomes ×2.14 with one. Chance never reaches 100% (it tapers past 50%), so at 76-88%
+ // each one adds about 0.11-0.12 of the base damage to every hit, 5-6% per cell
+ M('jackpot','rare','잭팟','star',['##'],'치명타 배율 +0.14배',{critDmg:.14},{pal:'fire'}),
  M('rapidmania','rare','강화 탄창','chev',['#','#'],'장탄수 +22%',{ammo:.22},{pal:'fire'}),
  // the 연사 label (soldier, minigun, plane): a little range and attack speed; the 에너지 label (tesla, gauss,
  // laser): attack, a little under 폭발 마니아 per cell since two of its towers carry other labels too
@@ -790,7 +790,7 @@ document.addEventListener('click',e=>{if(performance.now()-swipeAt<400&&e.target
 function warnTap(e,msg){const id=e.pointerId,x=e.clientX,up=ev=>{if(ev.pointerId!==id)return;window.removeEventListener('pointerup',up);if(Math.abs(ev.clientX-x)<30)warn(msg);};window.addEventListener('pointerup',up);}
 
 // the game's version, shown on the title screen and in the 정보 window
-const APP_VERSION='4.10.19';
+const APP_VERSION='4.10.20';
 function home(){fitLoadout(profile);if(cloudWaiting)setTimeout(()=>cloudSync(),0);if(game&&!game.ended){game.paused=true;savedRun=game.snapshot();}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p data-action="version-tap">버전 ${APP_VERSION}</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
 function openDialog(title,body,buttons,kind='dialog'){if(kind!=='result')sound(kind.startsWith('msg')?'question':'open');dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2><span>${title}</span>${button('dialog-x','<i>×</i>','xp-x','aria-label="닫기"')}</h2><div class="dialog-body">${body}</div><div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('.dialog').classList.toggle('msgbox',kind.startsWith('msg'));(modal.querySelector('.xp-yes')??modal.querySelector('.dialog-actions button')??modal.querySelector('button'))?.focus();backNavigation?.sync?.();}
 // Yes/no question in a Windows message box: icon, text, then [예] [아니요] on the right.
