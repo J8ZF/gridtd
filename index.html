@@ -508,7 +508,7 @@ const CRIT_FREE=.98,critBonus=sum=>sum<=CRIT_FREE?Math.max(0,sum):CRIT_FREE*(1+M
 // Stats that would break the game if piled up have no lock; past a point [from] each extra bit
 // counts for less and less, closing in on [toward] without reaching it (like stacking ×0.7s):
 // value = from + (toward-from)·(1 - e^(-(sum-from)/(toward-from))). Below [from] it adds up as is.
-const SOFT={spawn:[.5,.75],cost:[.3,.6],srange:[5,12],sboost:[.25,.6],sell:[.05,.15],shield:[.5,1.5],camoDmg:[.5,1],placement:[9,20],health:[100,300],farmLimit:[3,6],intermission:[15,40]};
+const SOFT={spawn:[.5,.75],cost:[.3,.6],srange:[5,12],sboost:[.25,.6],sell:[.05,.15],shield:[.5,1.5],camoDmg:[.5,1],health:[100,300],farmLimit:[3,6],intermission:[15,40]};
 const WHOLE=new Set(['placement','farmLimit']);
 function soft(key,sum){const s=SOFT[key];if(!s||sum<=s[0])return sum;const [a,b]=s;const v=a+(b-a)*(1-Math.exp(-(sum-a)/(b-a)));return WHOLE.has(key)?Math.floor(v+1e-9):v;}
 // stats a tower reads through towerMods (softened there, after all-tower and label pieces are added)
@@ -644,7 +644,10 @@ const MODULES=[
  M('build2','rare','건설 장비 II','gear',['##','.#'],`${REPAIR_PERIOD}초마다 기지 체력 +50`,{repair:50},{pal:'base'}),
  // legend: 축전지 raises the effect of every common and rare piece touching it (side by side) by `amp`;
  // a piece touching several 축전지 gets each one's share added up
- M('battery','legend','축전지','bolt',['#'],'붙어 있는 일반·희귀 모듈 효과 +33%',{},{amp:.33})];
+ M('battery','legend','축전지','bolt',['#'],'붙어 있는 일반·희귀 모듈 효과 +33%',{},{amp:.33}),
+ // more towers on the map; and the bosses (every enemy marked boss: the mid-wave ones and the last)
+ M('maximizer','legend','맥시마이저','house',['..#','##.'],'최대 배치 +5',{placement:5}),
+ M('finalcounter','legend','막판 카운터','skull',['#','#'],'보스에게 주는 피해 +10.5%',{boss:.105})];
 // 해골 공장's skeletons walk the road backwards from the base and ram enemies with what is left of
 // their health, like the garage's cars. Knights also cut the nearest enemy within reach as they walk.
 // `gap` seconds between skeletons when several come out.
@@ -793,7 +796,7 @@ document.addEventListener('click',e=>{if(performance.now()-swipeAt<400&&e.target
 function warnTap(e,msg){const id=e.pointerId,x=e.clientX,up=ev=>{if(ev.pointerId!==id)return;window.removeEventListener('pointerup',up);if(Math.abs(ev.clientX-x)<30)warn(msg);};window.addEventListener('pointerup',up);}
 
 // the game's version, shown on the title screen and in the 정보 window
-const APP_VERSION='4.10.21';
+const APP_VERSION='4.10.22';
 function home(){fitLoadout(profile);if(cloudWaiting)setTimeout(()=>cloudSync(),0);if(game&&!game.ended){game.paused=true;savedRun=game.snapshot();}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p data-action="version-tap">버전 ${APP_VERSION}</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
 function openDialog(title,body,buttons,kind='dialog'){if(kind!=='result')sound(kind.startsWith('msg')?'question':'open');dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2><span>${title}</span>${button('dialog-x','<i>×</i>','xp-x','aria-label="닫기"')}</h2><div class="dialog-body">${body}</div><div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('.dialog').classList.toggle('msgbox',kind.startsWith('msg'));(modal.querySelector('.xp-yes')??modal.querySelector('.dialog-actions button')??modal.querySelector('button'))?.focus();backNavigation?.sync?.();}
 // Yes/no question in a Windows message box: icon, text, then [예] [아니요] on the right.
