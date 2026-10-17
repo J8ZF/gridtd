@@ -584,58 +584,58 @@ const RETIRED=[
 // attack and attack speed but not range. Upgrade cuts add up as buying power (upgrade = sum, price =
 // cost ÷ (1 + sum)), so every piece buys as much again as the one before; the shown cut is 1 - 1/(1 + sum).
 const MODULES=[
- M('atk1','common','공격력 I','blade',['#'],'공격력 +2.5%',{dmg:.025}),
- M('atk2','common','공격력 II','blade',['##'],'공격력 +5.5%',{dmg:.055}),
+ M('atk1','common','공격력 I','blade',['#'],'공격력 +2.5%',{dmg:.025},{pal:'c1'}),
+ M('atk2','common','공격력 II','blade',['##'],'공격력 +5.5%',{dmg:.055},{pal:'c2'}),
  M('atk3','common','공격력 III','blade',['####'],'공격력 +12.2%',{dmg:.122}),
- M('rng1','common','사거리 I','scope',['#'],'사거리 +3%',{range:.03}),
- M('rng2','common','사거리 II','scope',['#','#','#'],'사거리 +10.5%',{range:.105}),
+ M('rng1','common','사거리 I','scope',['#'],'사거리 +3%',{range:.03},{pal:'c1'}),
+ M('rng2','common','사거리 II','scope',['#','#','#'],'사거리 +10.5%',{range:.105},{pal:'c2'}),
  M('rng3','common','사거리 III','scope',['#.','##','.#'],'사거리 +14.7%',{range:.147}),
- M('spd1','common','속도 I','chev',['#'],'공격 속도 +2.3%',{fire:.023}),
- M('spd2','common','속도 II','chev',['#.','##'],'공격 속도 +8.2%',{fire:.082}),
+ M('spd1','common','속도 I','chev',['#'],'공격 속도 +2.3%',{fire:.023},{pal:'c1'}),
+ M('spd2','common','속도 II','chev',['#.','##'],'공격 속도 +8.2%',{fire:.082},{pal:'c2'}),
  M('spd3','common','속도 III','chev',['#','#','#','#','#'],'공격 속도 +15.3%',{fire:.153}),
  // critical chance: worth a little more per cell than attack (chance stops at 100% and comes in streaks)
- M('crit1','common','치명타 I','eye',['#'],'치명타 확률 +3.5%',{crit:.035}),
+ M('crit1','common','치명타 I','eye',['#'],'치명타 확률 +3.5%',{crit:.035},{pal:'c1'}),
  M('crit2','common','치명타 II','eye',['#.','.#'],'치명타 확률 +8%',{crit:.08}),
  // 4% and 10% off on their own: buying power 1/0.96 - 1 and 1/0.9 - 1
- M('disc1','common','할인 I','up',['#','#'],'업그레이드 구매력 +4.17%',{upgrade:1/24}),
+ M('disc1','common','할인 I','up',['#','#'],'업그레이드 구매력 +4.17%',{upgrade:1/24},{pal:'c1'}),
  M('disc2','common','할인 II','up',['##','##'],'업그레이드 구매력 +11.12%',{upgrade:1/9}),
- M('cash1','common','보너스 I','coin',['#'],'피해 캐시 +3.5%',{cash:.035}),
- M('cash2','common','보너스 II','coin',['##'],'피해 캐시 +7.8%',{cash:.078}),
+ M('cash1','common','보너스 I','coin',['#'],'피해 캐시 +3.5%',{cash:.035},{pal:'c1'}),
+ M('cash2','common','보너스 II','coin',['##'],'피해 캐시 +7.8%',{cash:.078},{pal:'c2'}),
  M('cash3','common','보너스 III','coin',['##','##','#.'],'피해 캐시 +22%',{cash:.22}),
  // rare, grouped by kind. Money: the battle's credit reward (a share of the base reward added to the
  // modifiers' bonus), damage cash from bosses (enemies marked boss, whatever the difficulty) on top of 보너스,
  // starting cash, and what the 경제 towers make
- M('farm1','rare','쌀먹','star',['##'],'보상 +5%',{reward:.05}),
- M('farm2','rare','쌀먹 II','star',['#.#','.#.','#.#'],'보상 +24.7%',{reward:.247}),
- M('bounty','rare','현상금','skull',['#','#'],'보스 캐시 +13%',{bossCash:.13}),
- M('wallet','rare','든든한 지갑','coins',['#','#'],'시작 캐시 +100',{startCash:100}),
- M('econmania','rare','경제 마니아','coin',['#'],'경제 타워 수입 +8%',{'income.econ':.08}),
+ M('farm1','rare','쌀먹','star',['##'],'보상 +5%',{reward:.05},{pal:'money'}),
+ M('farm2','rare','쌀먹 II','star',['#.#','.#.','#.#'],'보상 +24.7%',{reward:.247},{pal:'money'}),
+ M('bounty','rare','현상금','skull',['#','#'],'보스 캐시 +13%',{bossCash:.13},{pal:'money'}),
+ M('wallet','rare','든든한 지갑','coins',['#','#'],'시작 캐시 +100',{startCash:100},{pal:'money'}),
+ M('econmania','rare','경제 마니아','coin',['#'],'경제 타워 수입 +8%',{'income.econ':.08},{pal:'money'}),
  // explosions: every explosion's radius (any splash from a tower or its units), then the 폭발 label (bomb, plane, robot)
- M('blast1','rare','익스플로전','burst',['#'],'폭발 범위 +9.5%',{splash:.095}),
- M('creeper','rare','폭발 마니아','burst',['#.#','.#.'],'폭발 타워 공격력 +12.5%',{'dmg.blast':.125}),
+ M('blast1','rare','익스플로전','burst',['#'],'폭발 범위 +9.5%',{splash:.095},{pal:'blast'}),
+ M('creeper','rare','폭발 마니아','burst',['#.#','.#.'],'폭발 타워 공격력 +12.5%',{'dmg.blast':.125},{pal:'blast'}),
  // every tower's magazine (towers that fire bursts: soldier, laser); a share of a round carries over to the next reload
  // critical multiplier: ×2 becomes ×2.1 with one. Kept small: once chance reaches 100% each one adds 0.1 of the
  // base damage to every hit (5% per cell), more than attack gives, so piling them up after 치명타 pays but doesn't run away
- M('jackpot','rare','잭팟','star',['##'],'치명타 배율 +0.1배',{critDmg:.1}),
- M('rapidmania','rare','강화 탄창','chev',['#','#'],'장탄수 +22%',{ammo:.22}),
+ M('jackpot','rare','잭팟','star',['##'],'치명타 배율 +0.1배',{critDmg:.1},{pal:'fire'}),
+ M('rapidmania','rare','강화 탄창','chev',['#','#'],'장탄수 +22%',{ammo:.22},{pal:'fire'}),
  // the 연사 label (soldier, minigun, plane): a little range and attack speed; the 에너지 label (tesla, gauss,
  // laser): attack, a little under 폭발 마니아 per cell since two of its towers carry other labels too
- M('rapidmania2','rare','연사 마니아','chev',['.#','#.'],'연사 타워 사거리 +4.5% · 공격 속도 +3.5%',{'range.rapid':.045,'fire.rapid':.035}),
- M('energymania','rare','에너지 마니아','bolt',['#.','##','.#'],'에너지 타워 공격력 +16%',{'dmg.energy':.16}),
+ M('rapidmania2','rare','연사 마니아','chev',['.#','#.'],'연사 타워 사거리 +4.5% · 공격 속도 +3.5%',{'range.rapid':.045,'fire.rapid':.035},{pal:'mania'}),
+ M('energymania','rare','에너지 마니아','bolt',['#.','##','.#'],'에너지 타워 공격력 +16%',{'dmg.energy':.16},{pal:'mania'}),
  // the 근거리 label (bomb, flame, shotgun, gauss): attack speed and a touch of range; the 지원 label (commander): range
- M('closemania','rare','근거리 마니아','blade',['##'],'근거리 타워 공격 속도 +5.9% · 사거리 +1%',{'fire.close':.059,'range.close':.01}),
+ M('closemania','rare','근거리 마니아','blade',['##'],'근거리 타워 공격 속도 +5.9% · 사거리 +1%',{'fire.close':.059,'range.close':.01},{pal:'mania'}),
  // the 원거리 label (sniper, laser, agent): each tower's first hit on each enemy. Big single shots gain the most;
  // the laser, which ticks, hardly gains (it already takes 에너지 마니아)
- M('longmania','rare','원거리 마니아','scope',['#.','#.','##'],'원거리 타워가 적에게 주는 첫 피해 +28%',{'firstHit.long':.28}),
- M('supportmania','rare','지원 마니아','flag',['#'],'지원 타워 사거리 +5.1%',{'range.support':.051}),
+ M('longmania','rare','원거리 마니아','scope',['#.','#.','##'],'원거리 타워가 적에게 주는 첫 피해 +28%',{'firstHit.long':.28},{pal:'mania'}),
+ M('supportmania','rare','지원 마니아','flag',['#'],'지원 타워 사거리 +5.1%',{'range.support':.051},{pal:'mania'}),
  // the 스포너 label (garage, robot): launch speed, added up like buying power (gap = base ÷ (1 + sum))
- M('spawnmania','rare','스포너 마니아','clock',['###'],'스포너 타워 스폰 속도 +15%',{'spawnRate.summon':.15}),
+ M('spawnmania','rare','스포너 마니아','clock',['###'],'스포너 타워 스폰 속도 +15%',{'spawnRate.summon':.15},{pal:'unit'}),
  // units (garage cars, robots, skeletons): health, and healing a share of it every second, even while hit
- M('dummy','rare','더미 방패','shield',['#'],'유닛 체력 +4.5%',{vhp:.045}),
- M('regen1','rare','재생','heart',['##'],'유닛 체력 초당 1.8% 회복',{uregen:.018}),
+ M('dummy','rare','더미 방패','shield',['#'],'유닛 체력 +4.5%',{vhp:.045},{pal:'unit'}),
+ M('regen1','rare','재생','heart',['##'],'유닛 체력 초당 1.8% 회복',{uregen:.018},{pal:'unit'}),
  // base health that keeps climbing past 100 (every wave, or every REPAIR_PERIOD s)
- M('build1','rare','건설 장비 I','gear',['#'],'웨이브마다 기지 체력 +10',{regen:10}),
- M('build2','rare','건설 장비 II','gear',['##','.#'],`${REPAIR_PERIOD}초마다 기지 체력 +50`,{repair:50}),
+ M('build1','rare','건설 장비 I','gear',['#'],'웨이브마다 기지 체력 +10',{regen:10},{pal:'base'}),
+ M('build2','rare','건설 장비 II','gear',['##','.#'],`${REPAIR_PERIOD}초마다 기지 체력 +50`,{repair:50},{pal:'base'}),
  // legend: 축전지 raises the effect of every common and rare piece touching it (side by side) by `amp`;
  // a piece touching several 축전지 gets each one's share added up
  M('battery','legend','축전지','bolt',['#'],'붙어 있는 일반·희귀 모듈 효과 +33%',{},{amp:.33})];
@@ -787,7 +787,7 @@ document.addEventListener('click',e=>{if(performance.now()-swipeAt<400&&e.target
 function warnTap(e,msg){const id=e.pointerId,x=e.clientX,up=ev=>{if(ev.pointerId!==id)return;window.removeEventListener('pointerup',up);if(Math.abs(ev.clientX-x)<30)warn(msg);};window.addEventListener('pointerup',up);}
 
 // the game's version, shown on the title screen and in the 정보 window
-const APP_VERSION='4.10.17';
+const APP_VERSION='4.10.18';
 function home(){fitLoadout(profile);if(cloudWaiting)setTimeout(()=>cloudSync(),0);if(game&&!game.ended){game.paused=true;savedRun=game.snapshot();}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p data-action="version-tap">버전 ${APP_VERSION}</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
 function openDialog(title,body,buttons,kind='dialog'){if(kind!=='result')sound(kind.startsWith('msg')?'question':'open');dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2><span>${title}</span>${button('dialog-x','<i>×</i>','xp-x','aria-label="닫기"')}</h2><div class="dialog-body">${body}</div><div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('.dialog').classList.toggle('msgbox',kind.startsWith('msg'));(modal.querySelector('.xp-yes')??modal.querySelector('.dialog-actions button')??modal.querySelector('button'))?.focus();backNavigation?.sync?.();}
 // Yes/no question in a Windows message box: icon, text, then [예] [아니요] on the right.
@@ -880,7 +880,11 @@ function effectLines(raw){const pct=v=>`${Math.ceil(Math.round(v*1e6)/1e2)/100}%
 // ---- piece art: drawn small and stretched like the rest of the game ----------------------
 // Layers: dark grade colour, faint seams between the piece's cells, a big picture in the
 // middle tone that runs past the piece and is cut by it, then a bright inner edge and a black rim.
-const MOD_PAL={common:{base:'#3d3d3d',mid:'#6e6e6e',hi:'#b4b4b4'},rare:{base:'#1c3a66',mid:'#3b6fbd',hi:'#8cbcff'},legend:{base:'#5c430e',mid:'#a8801f',hi:'#ffd54f'},myth:{base:'#5e1b17',mid:'#ad3a30',hi:'#ff8474'},genesis:{base:'#1b4b55',mid:'#3c94a3',hi:'#b2edf8'}};
+// A piece's colours: its grade's, unless it names its own `pal`. Common steps down in three greys by how much it
+// gives (the top piece of a family keeps the grade's grey). Rare pieces take their kind's colour: quiet, a little dark.
+const MOD_PAL={common:{base:'#3d3d3d',mid:'#6e6e6e',hi:'#b4b4b4'},c2:{base:'#333333',mid:'#5b5b5b',hi:'#959595'},c1:{base:'#292929',mid:'#494949',hi:'#777777'},
+ money:{base:'#2a4531',mid:'#4d7556',hi:'#8fb898'},blast:{base:'#52301f',mid:'#8a5637',hi:'#c99677'},fire:{base:'#482636',mid:'#7a4a60',hi:'#ba8ba2'},
+ mania:{base:'#25354d',mid:'#486183',hi:'#8fa6c6'},unit:{base:'#372f4d',mid:'#62567f',hi:'#a397c4'},base:{base:'#47402a',mid:'#786d49',hi:'#b7ab86'},rare:{base:'#1c3a66',mid:'#3b6fbd',hi:'#8cbcff'},legend:{base:'#5c430e',mid:'#a8801f',hi:'#ffd54f'},myth:{base:'#5e1b17',mid:'#ad3a30',hi:'#ff8474'},genesis:{base:'#1b4b55',mid:'#3c94a3',hi:'#b2edf8'}};
 const MCELL=20;
 const star=(g,n,ro,ri,rot=-Math.PI/2)=>{g.beginPath();for(let i=0;i<n*2;i++){const r=i%2?ri:ro,a=rot+i*Math.PI/n;g.lineTo(Math.cos(a)*r,Math.sin(a)*r);}g.closePath();g.fill();};
 const heartPath=g=>{g.beginPath();g.moveTo(0,.38);g.bezierCurveTo(-.5,.02,-.4,-.42,0,-.18);g.bezierCurveTo(.4,-.42,.5,.02,0,.38);g.closePath();};
@@ -913,7 +917,7 @@ function towerFace(kind,color){const key=kind+color;if(FACE_TINT[key])return FAC
  if(!img){const src=(towerIcon(kind,'inv-hero-art').match(/src="([^"]+)"/)??[])[1];if(!src)return null;img=FACE_IMG[kind]=new Image();img.onload=()=>{pieceArt.clear();FACE_TINT_CLEAR();refreshModules();};img.src=src;}
  if(!img.complete||!img.naturalWidth)return null;const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');g.drawImage(img,0,0,64,64);g.globalCompositeOperation='source-in';g.fillStyle=color;g.fillRect(0,0,64,64);return FACE_TINT[key]=c;}
 // Draw one piece (cells in board units) into g at `px` pixels per cell.
-function drawPiece(g,id,cs,px,o={}){const m=MODS.MODULE[id],P=MOD_PAL[m.grade],set=new Set(cs.map(([x,y])=>x+','+y)),n=cs.length;
+function drawPiece(g,id,cs,px,o={}){const m=MODS.MODULE[id],P=MOD_PAL[m.pal]??MOD_PAL[m.grade],set=new Set(cs.map(([x,y])=>x+','+y)),n=cs.length;
  const xs=cs.map(c=>c[0]),ys=cs.map(c=>c[1]),minx=Math.min(...xs),miny=Math.min(...ys),w=Math.max(...xs)-minx+1,h=Math.max(...ys)-miny+1;
  g.save();g.globalAlpha=o.alpha??1;g.beginPath();for(const [x,y] of cs)g.rect(x*px,y*px,px,px);g.save();g.clip();
  g.fillStyle=P.base;g.fillRect(minx*px,miny*px,w*px,h*px);
