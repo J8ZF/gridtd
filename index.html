@@ -590,9 +590,7 @@ const RETIRED=[
  M('resonance','myth','공명 증폭','gauss',['###'],'[가우스] 피해 수입 2배 · 2개째부터 +30%, 이후 ×0.7',{'income@gauss':1},{dup:[{'income@gauss':.3}]}),
  M('overload','myth','과부하','laser',['##'],'[레이저] 최대 피해 배율 +1배 · 2개째부터 +0.5배, 이후 ×0.7',{'cap@laser':1},{dup:[{'cap@laser':.5}]}),
  // genesis: hidden, no strings attached (4–40 cells). 그리고, 최종장 turns the robot into ICU 전선.
- M('skeleton','genesis','해골 공장','skull',['###','###'],'매 웨이브 기지에서 체력 10 스켈레톤이 길을 따라 걸어 나감 · 2웨이브마다 1마리 추가 · 5마리가 되면 1마리씩 거대 해골(체력 120)로, 그다음 적을 베며 걷는 해골 기사로 바뀜',{skeleton:1}),
  M('expansion','genesis','확장 장비함','slots',['#.','##','#.'],'타워 장착 칸 +1 · 최대 5개',{slots:1},{limit:5}),
- M('arsenal','genesis','그리고, 최종장','crate',['########','########','########','########','########'],'로봇을 장착하고 시작하면 그 판에서 로봇이 숨겨진 타워 ICU 전선으로 바뀜 · 최대 1개',{},{limit:1}),
  M('secondlife','genesis','두 번째 기회','heart',['.##.','####'],'기지가 무너지면 한 번, 그 웨이브를 처음부터 다시 시작 (타워·캐시 그대로, 기지 체력 50) · 2개째부터 기지 체력 +30, 이후 ×0.7',{revive:50},{dup:[{revive:30}]}),
  M('timewarp','genesis','시간 왜곡','clock',['####','.##.','###.'],'모든 적 이동 속도 -25% · 2개째부터 -8%, 이후 ×0.7',{speedMul:.75},{dup:[{speedMul:.92}]})];
 // 4.10.0 new set. Common: plain stats for every tower in three sizes; the harder a shape is to fit,
@@ -657,7 +655,10 @@ const MODULES=[
  M('battery','legend','축전지','bolt',['#'],'붙어 있는 일반·희귀 모듈 효과 +33%',{},{amp:.33}),
  // more towers on the map; and the bosses (every enemy marked boss: the mid-wave ones and the last)
  M('maximizer','legend','맥시마이저','house',['..#','##.'],'최대 배치 +5',{placement:5}),
- M('finalcounter','legend','막판 카운터','skull',['#','#'],'보스에게 주는 피해 +10.5%',{boss:.105})];
+ M('finalcounter','legend','막판 카운터','skull',['#','#'],'보스에게 주는 피해 +10.5%',{boss:.105}),
+ // genesis (4.11.10, back from the old set): 해골 공장 as it was; 그리고, 최종장 is now 8×4 (was 8×5)
+ M('skeleton','genesis','해골 공장','skull',['###','###'],'매 웨이브 기지에서 체력 10 스켈레톤이 길을 따라 걸어 나감 · 2웨이브마다 1마리 추가 · 5마리가 되면 1마리씩 거대 해골(체력 120)로, 그다음 적을 베며 걷는 해골 기사로 바뀜',{skeleton:1}),
+ M('arsenal','genesis','그리고, 최종장','crate',['########','########','########','########'],'로봇을 장착하고 시작하면 그 판에서 로봇이 숨겨진 타워 ICU 전선으로 바뀜 · 최대 1개',{},{limit:1})];
 // 해골 공장's skeletons walk the road backwards from the base and ram enemies with what is left of
 // their health, like the garage's cars. Knights also cut the nearest enemy within reach as they walk.
 // `gap` seconds between skeletons when several come out.
@@ -806,7 +807,7 @@ document.addEventListener('click',e=>{if(performance.now()-swipeAt<400&&e.target
 function warnTap(e,msg){const id=e.pointerId,x=e.clientX,up=ev=>{if(ev.pointerId!==id)return;window.removeEventListener('pointerup',up);if(Math.abs(ev.clientX-x)<30)warn(msg);};window.addEventListener('pointerup',up);}
 
 // the game's version, shown on the title screen and in the 정보 window
-const APP_VERSION='4.11.9';
+const APP_VERSION='4.11.10';
 function home(){fitLoadout(profile);if(cloudWaiting)setTimeout(()=>cloudSync(),0);if(game&&!game.ended){if(game.config.tutorial){game=null;coachStop();}else{game.paused=true;savedRun=game.snapshot();}}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p data-action="version-tap">버전 ${APP_VERSION}</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
 function openDialog(title,body,buttons,kind='dialog'){if(kind!=='result')sound(kind.startsWith('msg')?'question':'open');dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2><span>${title}</span>${button('dialog-x','<i>×</i>','xp-x','aria-label="닫기"')}</h2><div class="dialog-body">${body}</div><div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('.dialog').classList.toggle('msgbox',kind.startsWith('msg'));(modal.querySelector('.xp-yes')??modal.querySelector('.dialog-actions button')??modal.querySelector('button'))?.focus();backNavigation?.sync?.();}
 // Yes/no question in a Windows message box: icon, text, then [예] [아니요] on the right.
