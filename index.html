@@ -499,6 +499,9 @@ const DECAY=.7;
 // Critical hits (4.10.16): no chance unless something gives it ('crit', a fraction; 'critDmg' adds to the multiplier).
 // A critical hit deals CRIT_MUL times the damage.
 const CRIT_MUL=2;
+// Chance from pieces adds up as is to 50%; past that the chance of a normal hit halves each time the sum doubles
+// (1 - 0.25 ÷ sum): 100% is never reached, and every extra bit gives less (sum 1 → 75%, 2 → 87.5%, 4 → 93.75%).
+const critChance=sum=>sum<=.5?Math.max(0,sum):1-.25/sum;
 // Stats that would break the game if piled up have no lock; past a point [from] each extra bit
 // counts for less and less, closing in on [toward] without reaching it (like stacking ×0.7s):
 // value = from + (toward-from)·(1 - e^(-(sum-from)/(toward-from))). Below [from] it adds up as is.
@@ -594,8 +597,8 @@ const MODULES=[
  M('spd2','common','속도 II','chev',['#.','##'],'공격 속도 +8.2%',{fire:.082},{pal:'c2'}),
  M('spd3','common','속도 III','chev',['#','#','#','#','#'],'공격 속도 +15.3%',{fire:.153}),
  // critical chance: worth a little more per cell than attack (chance stops at 100% and comes in streaks)
- M('crit1','common','치명타 I','eye',['#'],'치명타 확률 +3.5%',{crit:.035},{pal:'c1'}),
- M('crit2','common','치명타 II','eye',['#.','.#'],'치명타 확률 +8%',{crit:.08}),
+ M('crit1','common','치명타 I','eye',['#'],'치명타 확률 +3.5% (50%부터 체감)',{crit:.035},{pal:'c1'}),
+ M('crit2','common','치명타 II','eye',['#.','.#'],'치명타 확률 +8% (50%부터 체감)',{crit:.08}),
  // 4% and 10% off on their own: buying power 1/0.96 - 1 and 1/0.9 - 1
  M('disc1','common','할인 I','up',['#','#'],'업그레이드 구매력 +4.17%',{upgrade:1/24},{pal:'c1'}),
  M('disc2','common','할인 II','up',['##','##'],'업그레이드 구매력 +11.12%',{upgrade:1/9}),
@@ -671,13 +674,13 @@ function effects(placed,opt={}){const out={},count={},amp=boosts(placed);placed.
 // Multipliers for one tower kind under a set of effects.
 // A one-tower cut to the launch gap (전차 설계도) shortens what the board's cut leaves, so the gap never reaches 0.
 function towerMods(fx,kind){const tags=TOWER_TAGS[kind]??[],base=key=>soft(key,(fx[key]??0)+tags.reduce((a,t)=>a+(fx[key+'.'+t]??0),0)),own=key=>fx[key+'@'+kind]??0,sum=key=>base(key)+own(key);
- return {dmg:1+sum('dmg'),range:1+sum('range'),fire:1+sum('fire'),splash:1+sum('splash'),vhp:1+sum('vhp'),spawn:(1-base('spawn'))*(1-own('spawn'))/(1+sum('spawnRate')),srange:sum('srange'),sboost:sum('sboost'),income:1+sum('income'),cost:1-sum('cost'),ammo:1+sum('ammo'),firstHit:sum('firstHit'),crit:Math.min(1,sum('crit')),critMul:CRIT_MUL+sum('critDmg')};}
+ return {dmg:1+sum('dmg'),range:1+sum('range'),fire:1+sum('fire'),splash:1+sum('splash'),vhp:1+sum('vhp'),spawn:(1-base('spawn'))*(1-own('spawn'))/(1+sum('spawnRate')),srange:sum('srange'),sboost:sum('sboost'),income:1+sum('income'),cost:1-sum('cost'),ammo:1+sum('ammo'),firstHit:sum('firstHit'),crit:critChance(sum('crit')),critMul:CRIT_MUL+sum('critDmg')};}
 // Draw rates of the grades that have pieces (the others are left out and the rest share their rates).
 function rates(){const live=GRADES.filter(g=>BY_GRADE[g.id].length),t=live.reduce((a,g)=>a+g.rate,0);return live.map(g=>({...g,rate:g.rate/t}));}
 // One draw: grade by rate, then any piece of that grade.
 function draw(random=Math.random){const live=rates();let r=random(),grade=live[0].id;for(const g of live){if(r<g.rate){grade=g.id;break;}r-=g.rate;}const list=BY_GRADE[grade];return list[Math.floor(random()*list.length)].id;}
 
-for(const [k,v] of Object.entries({SKELETON,skeletonRoster,BOARD,START_CELLS,PULL_COST,SOFT,soft,TOWER_KEYS,DECAY,GRADES,GRADE,TAGS,TOWER_TAGS,MODULES,MODULE,BY_GRADE,RETIRED,REPAIR_PERIOD,CRIT_MUL,boosts,cells,size,cellCost,neighbours,buyable,layout,fits,effects,towerMods,rates,draw}))Object.defineProperty(exports,k,{enumerable:true,get:()=>v});
+for(const [k,v] of Object.entries({SKELETON,skeletonRoster,BOARD,START_CELLS,PULL_COST,SOFT,soft,TOWER_KEYS,DECAY,GRADES,GRADE,TAGS,TOWER_TAGS,MODULES,MODULE,BY_GRADE,RETIRED,REPAIR_PERIOD,CRIT_MUL,critChance,boosts,cells,size,cellCost,neighbours,buyable,layout,fits,effects,towerMods,rates,draw}))Object.defineProperty(exports,k,{enumerable:true,get:()=>v});
 },
 "app.js":function(require,exports){
 const {enemyMoveSpeed,CODEX_GROUPS,SCALE}=require("data.js");
@@ -787,7 +790,7 @@ document.addEventListener('click',e=>{if(performance.now()-swipeAt<400&&e.target
 function warnTap(e,msg){const id=e.pointerId,x=e.clientX,up=ev=>{if(ev.pointerId!==id)return;window.removeEventListener('pointerup',up);if(Math.abs(ev.clientX-x)<30)warn(msg);};window.addEventListener('pointerup',up);}
 
 // the game's version, shown on the title screen and in the 정보 window
-const APP_VERSION='4.10.18';
+const APP_VERSION='4.10.19';
 function home(){fitLoadout(profile);if(cloudWaiting)setTimeout(()=>cloudSync(),0);if(game&&!game.ended){game.paused=true;savedRun=game.snapshot();}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p data-action="version-tap">버전 ${APP_VERSION}</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
 function openDialog(title,body,buttons,kind='dialog'){if(kind!=='result')sound(kind.startsWith('msg')?'question':'open');dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2><span>${title}</span>${button('dialog-x','<i>×</i>','xp-x','aria-label="닫기"')}</h2><div class="dialog-body">${body}</div><div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('.dialog').classList.toggle('msgbox',kind.startsWith('msg'));(modal.querySelector('.xp-yes')??modal.querySelector('.dialog-actions button')??modal.querySelector('button'))?.focus();backNavigation?.sync?.();}
 // Yes/no question in a Windows message box: icon, text, then [예] [아니요] on the right.
@@ -872,7 +875,7 @@ function effectLines(raw){const pct=v=>`${Math.ceil(Math.round(v*1e6)/1e2)/100}%
   const [key]=k.split('.'),t=k.includes('.')?tag(k)+' 타워 ':'모든 타워 ',sp=MODS.SOFT[key],unit=['srange','placement','health','startCash','regen','repair','farmLimit','intermission'].includes(key);let v=MODS.soft(key,r);if(unit)v=Math.ceil(Math.round(v*1e4)/1e2)/100;let tapered=sp&&r>sp[0]+1e-9,plain=key==='sell'?`${Math.round(70+r*100)}%`:unit?`${Math.round(r*10)/10}`:pct(r);
   // a label piece adds on top of the all-tower pieces of its kind and they taper together: show what it adds
   if(sp&&k.includes('.')&&MODS.TOWER_KEYS.has(key)&&raw[key]){const g=raw[key];v=MODS.soft(key,g+r)-MODS.soft(key,g);tapered=g+r>sp[0]+1e-9;}
-  const line={dmg:`${t}공격력 +${pct(v)}`,range:`${t}사거리 +${pct(v)}`,fire:`${t}공격 속도 +${pct(v)}`,ammo:`${t}장탄수 +${pct(v)}`,firstHit:`${t}첫 피해 +${pct(v)}`,crit:`${t}치명타 확률 +${pct(Math.min(1,v))}`,critDmg:`${t}치명타 배율 ${Math.ceil(Math.round((MODS.CRIT_MUL+v)*1e4)/1e2)/100}배`,splash:`${k.includes('.')?t:''}폭발 범위 +${pct(v)}`,vhp:`유닛 체력 +${pct(v)}`,uregen:`유닛 체력 초당 ${pct(v)} 회복`,spawn:`스포너 출격 주기 -${pct(v)}`,spawnRate:`${t}출격 주기 -${pct(1-1/(1+v))}`,srange:`지원 범위 +${v}칸`,sboost:`지원 효과 +${pct(v)}p`,income:`경제 수입 +${pct(v)}`,cost:`${k.includes('.')?t:''}설치 비용 -${pct(v)}`,upgrade:`업그레이드 비용 -${pct(1-1/(1+v))}`,sell:`판매 환급 ${Math.round(70+v*100)}%`,boss:`보스에게 주는 피해 +${pct(v)}`,shield:`보호막 적에게 주는 피해 +${pct(v)}`,cash:`피해 캐시 +${pct(v)}`,camoDmg:`히든에게 주는 피해 +${pct(v)}`,bossStunMul:`보스 마비 -${pct(1-v)}`,stunMul:`모든 마비 -${pct(1-v)}`,placement:`최대 배치 +${v}`,health:`기지 체력 +${v}`,startCash:`시작 캐시 +${v}`,regen:`웨이브마다 기지 체력 +${v}`,repair:`${MODS.REPAIR_PERIOD}초마다 기지 체력 +${v}`,waveBonus:`웨이브 보상 +${pct(v)}`,reward:`보상 +${pct(v)}`,bossCash:`보스 캐시 +${pct(v)}`,camoShift:`히든 감지 레벨 -${v}`,farmLimit:`농장 한도 +${v}`,intermission:`인터미션 +${v}초`,skeleton:`매 웨이브 스켈레톤 ${v}~${v*5}마리`,slots:`타워 장착 칸 +${Math.min(5,v)}`,revive:`한 번 웨이브 다시 시작 · 기지 체력 ${Math.min(Math.round(v),Math.round(100+MODS.soft('health',raw.health??0)))}`,speedMul:`모든 적 이동 속도 -${pct(1-v)}`}[key];
+  const line={dmg:`${t}공격력 +${pct(v)}`,range:`${t}사거리 +${pct(v)}`,fire:`${t}공격 속도 +${pct(v)}`,ammo:`${t}장탄수 +${pct(v)}`,firstHit:`${t}첫 피해 +${pct(v)}`,crit:`${t}치명타 확률 ${pct(MODS.critChance(v))}`,critDmg:`${t}치명타 배율 ${Math.ceil(Math.round((MODS.CRIT_MUL+v)*1e4)/1e2)/100}배`,splash:`${k.includes('.')?t:''}폭발 범위 +${pct(v)}`,vhp:`유닛 체력 +${pct(v)}`,uregen:`유닛 체력 초당 ${pct(v)} 회복`,spawn:`스포너 출격 주기 -${pct(v)}`,spawnRate:`${t}출격 주기 -${pct(1-1/(1+v))}`,srange:`지원 범위 +${v}칸`,sboost:`지원 효과 +${pct(v)}p`,income:`경제 수입 +${pct(v)}`,cost:`${k.includes('.')?t:''}설치 비용 -${pct(v)}`,upgrade:`업그레이드 비용 -${pct(1-1/(1+v))}`,sell:`판매 환급 ${Math.round(70+v*100)}%`,boss:`보스에게 주는 피해 +${pct(v)}`,shield:`보호막 적에게 주는 피해 +${pct(v)}`,cash:`피해 캐시 +${pct(v)}`,camoDmg:`히든에게 주는 피해 +${pct(v)}`,bossStunMul:`보스 마비 -${pct(1-v)}`,stunMul:`모든 마비 -${pct(1-v)}`,placement:`최대 배치 +${v}`,health:`기지 체력 +${v}`,startCash:`시작 캐시 +${v}`,regen:`웨이브마다 기지 체력 +${v}`,repair:`${MODS.REPAIR_PERIOD}초마다 기지 체력 +${v}`,waveBonus:`웨이브 보상 +${pct(v)}`,reward:`보상 +${pct(v)}`,bossCash:`보스 캐시 +${pct(v)}`,camoShift:`히든 감지 레벨 -${v}`,farmLimit:`농장 한도 +${v}`,intermission:`인터미션 +${v}초`,skeleton:`매 웨이브 스켈레톤 ${v}~${v*5}마리`,slots:`타워 장착 칸 +${Math.min(5,v)}`,revive:`한 번 웨이브 다시 시작 · 기지 체력 ${Math.min(Math.round(v),Math.round(100+MODS.soft('health',raw.health??0)))}`,speedMul:`모든 적 이동 속도 -${pct(1-v)}`}[key];
   const tail=key==='spawn'?` → 정비소 ${gap('spawner')}초 · 로봇 ${gap('robot')}초`:'';
   if(line)out.push((tapered?`${line} (체감 · 합 ${plain})`:line)+tail);}
  return out;}
