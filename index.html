@@ -661,6 +661,7 @@ const MODULES=[
  M('extort','legend','극한의 이득','coins',['##'],'캐시를 주지 않는 적에게서도 캐시를 48% 뜯어냄',{extort:.48}),
  M('wakeup','legend','정신 차렷-!!','eye',['###'],'마비 저항 +34% · 100%를 넘은 만큼 마비를 건 적에게 되돌려 줌',{stunRes:.34}),
  M('pile','legend','파일 벙커','shield',['###','.#.'],'적 보호막에 주는 피해 +52%',{shield:.52}),
+ M('skip','legend','스킵 할까요?','skip',['##'],'웨이브 보상 +24%',{waveBonus:.24}),
  M('cool','legend','속이 다 시원하다','missile',['#','#','#'],'비행기의 폭탄이 미사일로 변경됩니다',{'airstrike@plane':1}),
  // myth (4.11.13): one tower each. 프로젝트 리콘 fires the soldier's whole magazine as one round, then reloads
  // (attack speed shortens the reload); 편대 비행 comes back unchanged
@@ -817,7 +818,7 @@ document.addEventListener('click',e=>{if(performance.now()-swipeAt<400&&e.target
 function warnTap(e,msg){const id=e.pointerId,x=e.clientX,up=ev=>{if(ev.pointerId!==id)return;window.removeEventListener('pointerup',up);if(Math.abs(ev.clientX-x)<30)warn(msg);};window.addEventListener('pointerup',up);}
 
 // the game's version, shown on the title screen and in the 정보 window
-const APP_VERSION='4.11.19';
+const APP_VERSION='4.11.20';
 function home(){fitLoadout(profile);if(cloudWaiting)setTimeout(()=>cloudSync(),0);if(game&&!game.ended){if(game.config.tutorial){game=null;coachStop();}else{game.paused=true;savedRun=game.snapshot();}}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p data-action="version-tap">버전 ${APP_VERSION}</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
 function openDialog(title,body,buttons,kind='dialog'){if(kind!=='result')sound(kind.startsWith('msg')?'question':'open');dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2><span>${title}</span>${button('dialog-x','<i>×</i>','xp-x','aria-label="닫기"')}</h2><div class="dialog-body">${body}</div><div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('.dialog').classList.toggle('msgbox',kind.startsWith('msg'));(modal.querySelector('.xp-yes')??modal.querySelector('.dialog-actions button')??modal.querySelector('button'))?.focus();backNavigation?.sync?.();}
 // Yes/no question in a Windows message box: icon, text, then [예] [아니요] on the right.
@@ -947,6 +948,7 @@ const PICTO={
  leaf(g,cut){g.beginPath();g.moveTo(-.38,.38);g.quadraticCurveTo(-.4,-.36,.42,-.4);g.quadraticCurveTo(.38,.36,-.38,.38);g.closePath();g.fill();g.strokeStyle=cut;g.lineWidth=.05;g.beginPath();g.moveTo(-.32,.32);g.lineTo(.3,-.3);g.stroke();},
  slots(g){for(const [x,y] of [[-.42,-.42],[.04,-.42],[-.42,.04],[.04,.04]])g.fillRect(x,y,.38,.38);},
  missile(g,cut){g.rotate(Math.PI/4);g.beginPath();g.moveTo(0,-.48);g.quadraticCurveTo(.12,-.4,.12,-.2);g.lineTo(.12,.12);g.lineTo(.27,.32);g.lineTo(.27,.42);g.lineTo(.12,.36);g.lineTo(-.12,.36);g.lineTo(-.27,.42);g.lineTo(-.27,.32);g.lineTo(-.12,.12);g.lineTo(-.12,-.2);g.quadraticCurveTo(-.12,-.4,0,-.48);g.closePath();g.fill();g.fillStyle=cut;g.fillRect(-.12,-.14,.24,.06);g.fillRect(-.03,.12,.06,.24);},
+ skip(g){for(const x of [-.42,-.08]){g.beginPath();g.moveTo(x,-.3);g.lineTo(x+.34,0);g.lineTo(x,.3);g.closePath();g.fill();}g.fillRect(.3,-.3,.11,.6);},
  crate(g,cut){g.fillRect(-.42,-.42,.84,.84);g.strokeStyle=cut;g.lineWidth=.07;g.strokeRect(-.32,-.32,.64,.64);g.beginPath();g.moveTo(-.32,-.32);g.lineTo(.32,.32);g.moveTo(.32,-.32);g.lineTo(-.32,.32);g.stroke();}};
 // Tower faces for tower pieces: the inventory art, tinted to one colour.
 const FACE_IMG={};let FACE_TINT={};const FACE_TINT_CLEAR=()=>{FACE_TINT={};};
