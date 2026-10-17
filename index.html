@@ -606,6 +606,8 @@ const MODULES=[
  M('blast1','rare','익스플로전','burst',['#'],'폭발 범위 +9.5%',{splash:.095}),
  M('dummy','rare','더미 방패','shield',['#'],'유닛 체력 +4.5%',{vhp:.045}),
  M('regen1','rare','재생','heart',['##'],'유닛 체력 초당 1.8% 회복',{uregen:.018}),
+ // rare: the 폭발 label (bomb, plane, robot)
+ M('creeper','rare','크리퍼 대소동','burst',['#.#','.#.'],'폭발 타워 공격력 +12.5%',{'dmg.blast':.125}),
  // rare: starting cash; base health that keeps climbing past 100 (every wave, or every REPAIR_PERIOD s)
  M('wallet','rare','든든한 지갑','coins',['#','#'],'시작 캐시 +100',{startCash:100}),
  M('build1','rare','건설 장비 I','gear',['#'],'웨이브마다 기지 체력 +10',{regen:10}),
@@ -761,7 +763,7 @@ document.addEventListener('click',e=>{if(performance.now()-swipeAt<400&&e.target
 function warnTap(e,msg){const id=e.pointerId,x=e.clientX,up=ev=>{if(ev.pointerId!==id)return;window.removeEventListener('pointerup',up);if(Math.abs(ev.clientX-x)<30)warn(msg);};window.addEventListener('pointerup',up);}
 
 // the game's version, shown on the title screen and in the 정보 window
-const APP_VERSION='4.10.7';
+const APP_VERSION='4.10.8';
 function home(){fitLoadout(profile);if(cloudWaiting)setTimeout(()=>cloudSync(),0);if(game&&!game.ended){game.paused=true;savedRun=game.snapshot();}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p data-action="version-tap">버전 ${APP_VERSION}</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
 function openDialog(title,body,buttons,kind='dialog'){if(kind!=='result')sound(kind.startsWith('msg')?'question':'open');dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2><span>${title}</span>${button('dialog-x','<i>×</i>','xp-x','aria-label="닫기"')}</h2><div class="dialog-body">${body}</div><div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('.dialog').classList.toggle('msgbox',kind.startsWith('msg'));(modal.querySelector('.xp-yes')??modal.querySelector('.dialog-actions button')??modal.querySelector('button'))?.focus();backNavigation?.sync?.();}
 // Yes/no question in a Windows message box: icon, text, then [예] [아니요] on the right.
@@ -843,7 +845,7 @@ function effectLines(raw){const pct=v=>`${Math.ceil(Math.round(v*1e6)/1e2)/100}%
  for(const [k,r] of Object.entries(raw)){if(k.includes('@')){const [st,kind]=k.split('@'),n=TOWER[kind]?.name??kind,pc=v=>`${Math.round(v*1000)/10}%`,sg=v=>v>=0?'+':'-';
   const one={dmg:`${n} 공격력 ${sg(r)}${pc(Math.abs(r))}`,range:`${n} 사거리 ${sg(r)}${pc(Math.abs(r))}`,fire:`${n} 공격 속도 ${sg(r)}${pc(Math.abs(r))}`,spawn:`${n} 출격 주기 -${pc(r)}${raw['spawn.summon']?'':` → ${n} ${gap(kind)}초`}`,income:`${n} 수입 +${pc(r)}`,upgrade:`${n} 업그레이드 비용 ${r>=0?'-':'+'}${pc(Math.abs(r))}`,price:`${n} 가격 +${pc(r)}`,free:`첫 ${n} 무료`,hidden:`${n} 숨겨진 Lv.${maxLevel(kind)+1}`,pierce:`${n} 관통 +${r}명`,cap:kind==='farm'?`농장 한도 ${r}개`:`${n} 최대 피해 배율 +${Math.round(r*100)/100}배`,chain:`${n} 전이 +${r}명`,spin:`${n} 예열 공속 최대 +${pc(r)}`,wing:`${n} 2대 출격`,duration:`콜 투 암즈 +${Math.round(r*10)/10}초`}[st];
   if(one)out.push(one);continue;}
-  const [key]=k.split('.'),t=k.includes('.')?tag(k)+' ':'모든 타워 ',sp=MODS.SOFT[key],unit=['srange','placement','health','startCash','regen','repair','farmLimit','intermission'].includes(key);let v=MODS.soft(key,r);if(unit)v=Math.ceil(Math.round(v*1e4)/1e2)/100;let tapered=sp&&r>sp[0]+1e-9,plain=key==='sell'?`${Math.round(70+r*100)}%`:unit?`${Math.round(r*10)/10}`:pct(r);
+  const [key]=k.split('.'),t=k.includes('.')?tag(k)+' 타워 ':'모든 타워 ',sp=MODS.SOFT[key],unit=['srange','placement','health','startCash','regen','repair','farmLimit','intermission'].includes(key);let v=MODS.soft(key,r);if(unit)v=Math.ceil(Math.round(v*1e4)/1e2)/100;let tapered=sp&&r>sp[0]+1e-9,plain=key==='sell'?`${Math.round(70+r*100)}%`:unit?`${Math.round(r*10)/10}`:pct(r);
   // a label piece adds on top of the all-tower pieces of its kind and they taper together: show what it adds
   if(sp&&k.includes('.')&&MODS.TOWER_KEYS.has(key)&&raw[key]){const g=raw[key];v=MODS.soft(key,g+r)-MODS.soft(key,g);tapered=g+r>sp[0]+1e-9;}
   const line={dmg:`${t}공격력 +${pct(v)}`,range:`${t}사거리 +${pct(v)}`,fire:`${t}공격 속도 +${pct(v)}`,splash:`${k.includes('.')?t:''}폭발 범위 +${pct(v)}`,vhp:`유닛 체력 +${pct(v)}`,uregen:`유닛 체력 초당 ${pct(v)} 회복`,spawn:`소환 출격 주기 -${pct(v)}`,srange:`지원 범위 +${v}칸`,sboost:`지원 효과 +${pct(v)}p`,income:`경제 수입 +${pct(v)}`,cost:`${k.includes('.')?t:''}설치 비용 -${pct(v)}`,upgrade:`업그레이드 비용 -${pct(1-1/(1+v))}`,sell:`판매 환급 ${Math.round(70+v*100)}%`,boss:`보스에게 주는 피해 +${pct(v)}`,shield:`보호막 적에게 주는 피해 +${pct(v)}`,cash:`피해 캐시 +${pct(v)}`,camoDmg:`히든에게 주는 피해 +${pct(v)}`,bossStunMul:`보스 마비 -${pct(1-v)}`,stunMul:`모든 마비 -${pct(1-v)}`,placement:`최대 배치 +${v}`,health:`기지 체력 +${v}`,startCash:`시작 캐시 +${v}`,regen:`웨이브마다 기지 체력 +${v}`,repair:`${MODS.REPAIR_PERIOD}초마다 기지 체력 +${v}`,waveBonus:`웨이브 보상 +${pct(v)}`,reward:`보상 +${pct(v)}`,bossCash:`보스 캐시 +${pct(v)}`,camoShift:`히든 감지 레벨 -${v}`,farmLimit:`농장 한도 +${v}`,intermission:`인터미션 +${v}초`,skeleton:`매 웨이브 스켈레톤 ${v}~${v*5}마리`,slots:`타워 장착 칸 +${Math.min(5,v)}`,revive:`한 번 웨이브 다시 시작 · 기지 체력 ${Math.min(Math.round(v),Math.round(100+MODS.soft('health',raw.health??0)))}`,speedMul:`모든 적 이동 속도 -${pct(1-v)}`}[key];
@@ -923,7 +925,10 @@ function renderModOff(){const N=MODS.BOARD,px=MCELL,st=modState();modOff??=docum
   if(open.has(i)){g.fillStyle='#161616';g.fillRect(X,Y,px,px);g.fillStyle='#000';g.fillRect(X,Y,px,1);g.fillRect(X,Y,1,px);g.fillStyle='#2b2b2b';g.fillRect(X,Y+px-1,px,1);g.fillRect(X+px-1,Y,1,px);}
   else if(MODS.buyable(st.cells,i)){g.fillStyle='#0d0d0d';g.fillRect(X+1,Y+1,px-2,px-2);g.fillStyle='#3c3c3c';g.fillRect(X+px/2-1,Y+px*.3,2,px*.4);g.fillRect(X+px*.3,Y+px/2-1,px*.4,2);}}
  const sel=modSel?.mode==='placed'?modSel.index:-1;
- st.placed.forEach((p,k)=>{const cs=MODS.cells(p.id,p.r).map(([dx,dy])=>[p.x+dx,p.y+dy]);drawPiece(g,p.id,cs,px,k===sel?{edge:'#ffffff'}:{});});
+ const amp=MODS.boosts(st.placed);
+ st.placed.forEach((p,k)=>{const cs=MODS.cells(p.id,p.r).map(([dx,dy])=>[p.x+dx,p.y+dy]);drawPiece(g,p.id,cs,px,k===sel?{edge:'#ffffff'}:{});
+  if(amp[k]>1){const top=Math.min(...cs.map(c=>c[1])),xs=cs.filter(c=>c[1]===top).map(c=>c[0]).sort((a,b)=>a-b);g.fillStyle='#ffd84a';
+   for(let i=0;i<xs.length;){let j=i;while(j+1<xs.length&&xs[j+1]===xs[j]+1)j++;g.fillRect(xs[i]*px+3,top*px+2,(xs[j]-xs[i]+1)*px-6,2);i=j+1;}}});
  if(modSel&&(modSel.mode==='pending'||(modSel.mode==='drag'&&modSel.shown))){const cs=MODS.cells(modSel.id,modSel.r).map(([dx,dy])=>[modSel.x+dx,modSel.y+dy]);drawPiece(g,modSel.id,cs,px,{alpha:.78,edge:modSel.ok?'#5fd35f':'#ff5a4a'});
   if(!modSel.ok){g.fillStyle='rgba(255,90,74,.28)';for(const [x,y] of cs)g.fillRect(x*px,y*px,px,px);}}}
 function drawModBoard(){const cv=$('#mod-board');if(!cv||!modView)return;const g=cv.getContext('2d'),v=modView,N=MODS.BOARD;g.setTransform(1,0,0,1,0,0);g.fillStyle='#000';g.fillRect(0,0,cv.width,cv.height);
