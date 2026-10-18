@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /BALANCE.md
+Disallow: /CLOUD.md
+
+Sitemap: https://gridtd.unbrik.ro/sitemap.xml
