@@ -518,7 +518,7 @@ const CRIT_FREE=.98,critBonus=sum=>sum<=CRIT_FREE?Math.max(0,sum):CRIT_FREE*(1+M
 // Stats that would break the game if piled up have no lock; past a point [from] each extra bit
 // counts for less and less, closing in on [toward] without reaching it (like stacking ×0.7s):
 // value = from + (toward-from)·(1 - e^(-(sum-from)/(toward-from))). Below [from] it adds up as is.
-const SOFT={spawn:[.5,.75],cost:[.3,.6],srange:[5,12],sell:[.05,.15],camoDmg:[.5,1],health:[100,300],farmLimit:[3,6],intermission:[15,40]};
+const SOFT={spawn:[.5,.75],cost:[.3,.6],srange:[5,12],sell:[.05,.15],camoDmg:[.5,1],health:[100,300]};
 const WHOLE=new Set(['placement','farmLimit']);
 function soft(key,sum){const s=SOFT[key];if(!s||sum<=s[0])return sum;const [a,b]=s;const v=a+(b-a)*(1-Math.exp(-(sum-a)/(b-a)));return WHOLE.has(key)?Math.floor(v+1e-9):v;}
 // stats a tower reads through towerMods (softened there, after all-tower and label pieces are added)
@@ -574,8 +574,6 @@ const RETIRED=[
  M('bonus','legend','성과급','star',['##','##','##'],'웨이브 보상 +15%',{waveBonus:.15}),
  M('absorber','legend','충격 흡수 장치','bolt',['.#','##'],'모든 마비 시간 절반',{stunMul:.5}),
  M('nightbook','legend','야간 작전 교본','eye',['##','#.'],'히든 감지 레벨 -1 · 2개째 -1 더 · 3개째부터 히든 피해 +15%, 이후 ×0.7',{camoShift:1},{dup:[{camoShift:1},{camoDmg:.15}]}),
- M('coop','legend','협동조합','leaf',['#..','#..','###'],'농장 한도 +1 (+3부터 체감) · 경제 타워 수입 +10%',{farmLimit:1,'income.econ':.1}),
- M('rest','legend','긴 휴식','clock',['#'],'인터미션 +5초 (+15초부터 체감)',{intermission:5}),
  // myth: one tower (3–6 cells); `x@kind` keys touch only that tower
  M('disguise','myth','위장 신분','agent',['##'],'[에이전트] 첫 에이전트 무료 · 2개째부터 업그레이드 비용 -15%, 이후 ×0.7',{'free@agent':1},{dup:[{'upgrade@agent':.15}]}),
  M('bigbore','myth','사냥용 대구경','shotgun',['###','.#.'],'[샷건] 사거리 +40%, 공격력 +50% · 대가: 업그레이드 비용 +35%, 공속 -15% · 2개째부터 공격력 +20%, 이후 ×0.7',{'range@shotgun':.4,'dmg@shotgun':.5,'fire@shotgun':-.15,'upgrade@shotgun':-.35},{dup:[{'dmg@shotgun':.2}]}),
@@ -630,6 +628,7 @@ const MODULES=[
  // critical multiplier: ×2 becomes ×2.14 with one. Chance never reaches 100% (it tapers past 50%), so at 76-88%
  // each one adds about 0.11-0.12 of the base damage to every hit, 5-6% per cell
  M('jackpot','rare','잭팟','star',['##'],'치명타 배율 +0.14배 (+0.98배부터 감소)',{critDmg:.14},{pal:'fire'}),
+ M('giveandtake','rare','기부 엔 테이크','tag',['##','##'],'공격력 +21% · 대가: 모든 설치·업그레이드 가격 +10%',{dmg:.21,priceUp:.1},{pal:'fire'}),
  M('rapidmania','rare','강화 탄창','chev',['#','#'],'장탄수 +22%',{ammo:.22},{pal:'fire'}),
  // the 연사 label (soldier, minigun, plane): a little range and attack speed; the 에너지 label (tesla, flame,
  // laser): attack, a little under 폭발 마니아 per cell since the laser carries another label too
@@ -662,6 +661,8 @@ const MODULES=[
  M('wakeup','legend','정신 차렷-!!','eye',['###'],'마비 저항 +34% · 100%를 넘은 만큼 마비를 건 적에게 되돌려 줌',{stunRes:.34}),
  M('pile','legend','파일 벙커','shield',['###','.#.'],'적 보호막에 주는 피해 +52%',{shield:.52}),
  M('grandrice','legend','그랜드 쌀먹','star',['#'],'모디파이어로 받는 추가 크레딧 ×1.09',{modBoost:.09}),
+ M('rest','legend','긴 휴식','clock',['#'],'인터미션 +5초',{intermission:5}),
+ M('coop','legend','협동조합','leaf',['##'],'농장 한도 +1 · 경제 타워 수입 +10%',{farmLimit:1,'income.econ':.1}),
  M('forcefield','legend','포스필드','field',['#','#'],'설치하는 타워마다 포스필드 1겹 · 마비나 파괴를 한 번 막아 줌',{field:1}),
  M('chaos','legend','대혼란','swirl',['#'],'모든 디버프 지속 시간 +3초',{chaos:1}),
  M('ghostbuster','legend','고스트버스터','ghost',['###'],'히든 감지 레벨 -1 (못 보던 타워는 만렙에 감지) · Lv.1보다 더 내려가면 1마다 히든 피해 +10%',{ghost:1}),
@@ -832,7 +833,7 @@ document.addEventListener('click',e=>{if(performance.now()-swipeAt<400&&e.target
 function warnTap(e,msg){const id=e.pointerId,x=e.clientX,up=ev=>{if(ev.pointerId!==id)return;window.removeEventListener('pointerup',up);if(Math.abs(ev.clientX-x)<30)warn(msg);};window.addEventListener('pointerup',up);}
 
 // the game's version, shown on the title screen and in the 정보 window
-const APP_VERSION='4.11.32';
+const APP_VERSION='4.11.33';
 function home(){fitLoadout(profile);if(cloudWaiting)setTimeout(()=>cloudSync(),0);if(game&&!game.ended){if(game.config.tutorial){game=null;coachStop();}else{game.paused=true;savedRun=game.snapshot();}}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p data-action="version-tap">버전 ${APP_VERSION}</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
 function openDialog(title,body,buttons,kind='dialog'){if(kind!=='result')sound(kind.startsWith('msg')?'question':'open');dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2><span>${title}</span>${button('dialog-x','<i>×</i>','xp-x','aria-label="닫기"')}</h2><div class="dialog-body">${body}</div><div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('.dialog').classList.toggle('msgbox',kind.startsWith('msg'));(modal.querySelector('.xp-yes')??modal.querySelector('.dialog-actions button')??modal.querySelector('button'))?.focus();backNavigation?.sync?.();}
 // Yes/no question in a Windows message box: icon, text, then [예] [아니요] on the right.
@@ -923,7 +924,7 @@ function effectLines(raw){const pct=v=>`${Math.ceil(Math.round(v*1e6)/1e2)/100}%
   const [key]=k.split('.'),t=k.includes('.')?tag(k)+' 타워 ':'모든 타워 ',sp=MODS.SOFT[key],unit=['srange','placement','health','startCash','regen','repair','farmLimit','intermission'].includes(key);let v=MODS.soft(key,r);if(unit)v=Math.ceil(Math.round(v*1e4)/1e2)/100;let tapered=sp&&r>sp[0]+1e-9,plain=key==='sell'?`${Math.round(70+r*100)}%`:unit?`${Math.round(r*10)/10}`:pct(r);
   // a label piece adds on top of the all-tower pieces of its kind and they taper together: show what it adds
   if(sp&&k.includes('.')&&MODS.TOWER_KEYS.has(key)&&raw[key]){const g=raw[key];v=MODS.soft(key,g+r)-MODS.soft(key,g);tapered=g+r>sp[0]+1e-9;}
-  const line={dmg:`${t}공격력 +${pct(v)}`,range:`${t}사거리 +${pct(v)}`,fire:`${t}공격 속도 +${pct(v)}`,ammo:`${t}장탄수 +${pct(v)}`,firstHit:`${t}첫 피해 +${pct(v)}`,crit:`${t}치명타 확률 ${pct(MODS.critChance(v))}`,critDmg:`${t}치명타 배율 ${Math.ceil(Math.round((MODS.CRIT_MUL+MODS.critBonus(v))*1e4)/1e2)/100}배`,splash:`${k.includes('.')?t:''}폭발 범위 +${pct(v)}`,vhp:`유닛 체력 +${pct(v)}`,uregen:`유닛 체력 초당 ${pct(v)} 회복`,spawn:`스포너 출격 주기 -${pct(v)}`,spawnRate:`${t}출격 주기 -${pct(1-1/(1+v))}`,srange:`지원 범위 +${v}칸`,sboost:`커맨더 공격 속도·사거리 지원 +${pct(v)}p`,extort:`캐시를 주지 않는 적에게서 캐시 ${pct(v)}`,stunRes:`마비 저항 +${pct(v)}${v>1?` · ${pct(v-1)} 반사`:''}`,income:`경제 수입 +${pct(v)}`,cost:`${k.includes('.')?t:''}설치 비용 -${pct(v)}`,upgrade:`업그레이드 비용 -${pct(1-1/(1+v))}`,sell:`판매 환급 ${Math.round(70+v*100)}%`,boss:`보스에게 주는 피해 +${pct(v)}`,shield:`적 보호막에 주는 피해 +${pct(v)}`,cash:`피해 캐시 +${pct(v)}`,camoDmg:`히든에게 주는 피해 +${pct(v)}`,bossStunMul:`보스 마비 -${pct(1-v)}`,stunMul:`모든 마비 -${pct(1-v)}`,placement:`최대 배치 +${v}`,health:`기지 체력 +${v}`,startCash:`시작 캐시 +${v}`,regen:`웨이브마다 기지 체력 +${v}`,repair:`${MODS.REPAIR_PERIOD}초마다 기지 체력 +${v}`,waveBonus:`웨이브 보상 +${pct(v)}`,waveShare:`웨이브마다 번 캐시의 ${pct(v)} 추가`,bucket:'근거리 타워가 피해를 줄수록 공격력 상승',reward:`보상 +${pct(v)}`,modBoost:`모디파이어 추가 크레딧 ×${Math.ceil(Math.round((1+v)*1e4)/1e2)/100}`,bossCash:`보스 캐시 +${pct(v)}`,camoShift:`히든 감지 레벨 -${v}`,ghost:`히든 감지 레벨 -${Math.round(v)}`,chaos:`모든 디버프 지속 +${Math.round(v*3)}초`,field:`설치하는 타워마다 포스필드 ${Math.round(v)}겹`,farmLimit:`농장 한도 +${v}`,intermission:`인터미션 +${v}초`,skeleton:`매 웨이브 스켈레톤 ${v}~${v*5}마리`,slots:`타워 장착 칸 +${Math.min(5,v)}`,rebirth:`부활 ${Math.round(v)}회`,addict:'스킵하면 스포너 쿨타임 리셋',revive:`한 번 웨이브 다시 시작 · 기지 체력 ${Math.min(Math.round(v),Math.round(100+MODS.soft('health',raw.health??0)))}`,speedMul:`모든 적 이동 속도 -${pct(1-v)}`}[key];
+  const line={dmg:`${t}공격력 +${pct(v)}`,range:`${t}사거리 +${pct(v)}`,fire:`${t}공격 속도 +${pct(v)}`,ammo:`${t}장탄수 +${pct(v)}`,firstHit:`${t}첫 피해 +${pct(v)}`,crit:`${t}치명타 확률 ${pct(MODS.critChance(v))}`,critDmg:`${t}치명타 배율 ${Math.ceil(Math.round((MODS.CRIT_MUL+MODS.critBonus(v))*1e4)/1e2)/100}배`,splash:`${k.includes('.')?t:''}폭발 범위 +${pct(v)}`,vhp:`유닛 체력 +${pct(v)}`,uregen:`유닛 체력 초당 ${pct(v)} 회복`,spawn:`스포너 출격 주기 -${pct(v)}`,spawnRate:`${t}출격 주기 -${pct(1-1/(1+v))}`,srange:`지원 범위 +${v}칸`,sboost:`커맨더 공격 속도·사거리 지원 +${pct(v)}p`,extort:`캐시를 주지 않는 적에게서 캐시 ${pct(v)}`,stunRes:`마비 저항 +${pct(v)}${v>1?` · ${pct(v-1)} 반사`:''}`,income:`경제 수입 +${pct(v)}`,cost:`${k.includes('.')?t:''}설치 비용 -${pct(v)}`,upgrade:`업그레이드 비용 -${pct(1-1/(1+v))}`,sell:`판매 환급 ${Math.round(70+v*100)}%`,boss:`보스에게 주는 피해 +${pct(v)}`,shield:`적 보호막에 주는 피해 +${pct(v)}`,cash:`피해 캐시 +${pct(v)}`,camoDmg:`히든에게 주는 피해 +${pct(v)}`,bossStunMul:`보스 마비 -${pct(1-v)}`,stunMul:`모든 마비 -${pct(1-v)}`,placement:`최대 배치 +${v}`,health:`기지 체력 +${v}`,startCash:`시작 캐시 +${v}`,regen:`웨이브마다 기지 체력 +${v}`,repair:`${MODS.REPAIR_PERIOD}초마다 기지 체력 +${v}`,waveBonus:`웨이브 보상 +${pct(v)}`,waveShare:`웨이브마다 번 캐시의 ${pct(v)} 추가`,bucket:'근거리 타워가 피해를 줄수록 공격력 상승',reward:`보상 +${pct(v)}`,modBoost:`모디파이어 추가 크레딧 ×${Math.ceil(Math.round((1+v)*1e4)/1e2)/100}`,bossCash:`보스 캐시 +${pct(v)}`,camoShift:`히든 감지 레벨 -${v}`,ghost:`히든 감지 레벨 -${Math.round(v)}`,chaos:`모든 디버프 지속 +${Math.round(v*3)}초`,field:`설치하는 타워마다 포스필드 ${Math.round(v)}겹`,farmLimit:`농장 한도 +${v}`,priceUp:`모든 설치·업그레이드 가격 +${pct(v)}`,intermission:`인터미션 +${v}초`,skeleton:`매 웨이브 스켈레톤 ${v}~${v*5}마리`,slots:`타워 장착 칸 +${Math.min(5,v)}`,rebirth:`부활 ${Math.round(v)}회`,addict:'스킵하면 스포너 쿨타임 리셋',revive:`한 번 웨이브 다시 시작 · 기지 체력 ${Math.min(Math.round(v),Math.round(100+MODS.soft('health',raw.health??0)))}`,speedMul:`모든 적 이동 속도 -${pct(1-v)}`}[key];
   const tail=key==='spawn'?` → 정비소 ${gap('spawner')}초 · 로봇 ${gap('robot')}초`:'';
   if(line)out.push((tapered?`${line} (감소 · 합 ${plain})`:line)+tail);}
  return out;}
@@ -3966,10 +3967,10 @@ class Game{
  setMods(mods){this.mods=mods&&typeof mods==='object'?{...mods}:{};this.kindMods={};}
  km(kind){return this.kindMods[kind]??=MODS.towerMods(kind==='icu'?{}:this.mods,kind);}
  stat(t){const s=stat(t),m=this.km(t.kind);s.range*=m.range;if(t.kind==='spawner'||t.kind==='robot')s.period*=m.spawn;else if(t.kind!=='farm'&&t.kind!=='commander')s.period/=m.fire;return s;}
- buildCost(kind){if(this.mods['free@'+kind]&&!this.towers.some(t=>t.kind===kind))return 0;return Math.round(TOWER[kind].cost*this.km(kind).cost*(1+(this.mods['price@'+kind]??0)))*100;}
+ buildCost(kind){if(this.mods['free@'+kind]&&!this.towers.some(t=>t.kind===kind))return 0;return Math.round(TOWER[kind].cost*this.km(kind).cost*(1+(this.mods['price@'+kind]??0))*(kind==='icu'?1:1+(this.mods.priceUp??0)))*100;}
  maxLevelOf(kind){return maxLevel(kind)+(this.mods['hidden@'+kind]?TOWER[kind]?.hidden??0:0);}
  magazine(t){const d=TOWER[t.kind];if(!d.burst)return 0;t.ammoCarry=(t.ammoCarry??0)+d.burst[t.level-1]*this.km(t.kind).ammo;const n=Math.max(1,Math.floor(t.ammoCarry+1e-9));t.ammoCarry-=n;return n;}
- upgradeCost(t){const c=TOWER[t.kind].upgrades[t.level-1];if(c==null||t.level>=this.maxLevelOf(t.kind))return 0;if(t.kind==='icu')return c*100;return Math.round(c/(1+(this.mods.upgrade??0))*(1-(this.mods['upgrade@'+t.kind]??0))*(1+(this.mods['price@'+t.kind]??0)))*100;}
+ upgradeCost(t){const c=TOWER[t.kind].upgrades[t.level-1];if(c==null||t.level>=this.maxLevelOf(t.kind))return 0;if(t.kind==='icu')return c*100;return Math.round(c/(1+(this.mods.upgrade??0))*(1-(this.mods['upgrade@'+t.kind]??0))*(1+(this.mods['price@'+t.kind]??0))*(1+(this.mods.priceUp??0)))*100;}
  sellValue(t){return Math.floor(t.spent*Math.min(100,70+Math.round((t.kind==='icu'?0:this.mods.sell??0)*100))/100);}
  placementLimit(){return PLACEMENT_LIMIT+(this.mods.placement??0);}
  towerCap(kind){const cap=TOWER[kind]?.placementLimit;return cap&&kind==='farm'?(this.mods['cap@farm']??cap)+(this.mods.farmLimit??0):cap;}
