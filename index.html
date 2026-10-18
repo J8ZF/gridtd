@@ -693,7 +693,7 @@ const MODULES=[
  M('skeleton','genesis','해골 공장','skull',['###','###'],'매 웨이브 기지에서 해골 출격 · 2웨이브마다 머릿수 및 등급 강화',{skeleton:1}),
  // 4.12.0 플래티넘 디스코: the minigun becomes 플래티넘 미니건 (a tower of its own: no buffs, list prices)
  M('disco','genesis','플래티넘 디스코','disco',['######','######','######'],'미니건을 플래티넘으로 바꿈',{},{limit:1}),
- M('arsenal','genesis','그리고, 최종장','crate',['########','########','########','########'],'로봇이 ICU 전선으로 변경',{},{limit:1})];
+ M('arsenal','genesis','그리고, 최종장','crate',['########','########','########','########'],'로봇을 ICU 전선으로 바꿈',{},{limit:1})];
 // 해골 공장's skeletons walk the road backwards from the base and ram enemies with what is left of
 // their health, like the garage's cars. Knights also cut the nearest enemy within reach as they walk.
 // `gap` seconds between skeletons when several come out.
@@ -847,7 +847,7 @@ document.addEventListener('click',e=>{if(performance.now()-swipeAt<400&&e.target
 function warnTap(e,msg){const id=e.pointerId,x=e.clientX,up=ev=>{if(ev.pointerId!==id)return;window.removeEventListener('pointerup',up);if(Math.abs(ev.clientX-x)<30)warn(msg);};window.addEventListener('pointerup',up);}
 
 // the game's version, shown on the title screen and in the 정보 window
-const APP_VERSION='4.12.16';
+const APP_VERSION='4.12.17';
 function home(){fitLoadout(profile);if(cloudWaiting)setTimeout(()=>cloudSync(),0);if(game&&!game.ended){if(game.config.tutorial){game=null;coachStop();}else{game.paused=true;savedRun=game.snapshot();}}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p data-action="version-tap">버전 ${APP_VERSION}</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
 function openDialog(title,body,buttons,kind='dialog'){if(kind!=='result')sound(kind.startsWith('msg')?'question':'open');dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2><span>${title}</span>${button('dialog-x','<i>×</i>','xp-x','aria-label="닫기"')}</h2><div class="dialog-body">${body}</div><div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('.dialog').classList.toggle('msgbox',kind.startsWith('msg'));(modal.querySelector('.xp-yes')??modal.querySelector('.dialog-actions button')??modal.querySelector('button'))?.focus();backNavigation?.sync?.();}
 // Yes/no question in a Windows message box: icon, text, then [예] [아니요] on the right.
