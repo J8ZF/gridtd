@@ -833,7 +833,7 @@ document.addEventListener('click',e=>{if(performance.now()-swipeAt<400&&e.target
 function warnTap(e,msg){const id=e.pointerId,x=e.clientX,up=ev=>{if(ev.pointerId!==id)return;window.removeEventListener('pointerup',up);if(Math.abs(ev.clientX-x)<30)warn(msg);};window.addEventListener('pointerup',up);}
 
 // the game's version, shown on the title screen and in the 정보 window
-const APP_VERSION='4.11.33';
+const APP_VERSION='4.11.34';
 function home(){fitLoadout(profile);if(cloudWaiting)setTimeout(()=>cloudSync(),0);if(game&&!game.ended){if(game.config.tutorial){game=null;coachStop();}else{game.paused=true;savedRun=game.snapshot();}}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p data-action="version-tap">버전 ${APP_VERSION}</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
 function openDialog(title,body,buttons,kind='dialog'){if(kind!=='result')sound(kind.startsWith('msg')?'question':'open');dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2><span>${title}</span>${button('dialog-x','<i>×</i>','xp-x','aria-label="닫기"')}</h2><div class="dialog-body">${body}</div><div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('.dialog').classList.toggle('msgbox',kind.startsWith('msg'));(modal.querySelector('.xp-yes')??modal.querySelector('.dialog-actions button')??modal.querySelector('button'))?.focus();backNavigation?.sync?.();}
 // Yes/no question in a Windows message box: icon, text, then [예] [아니요] on the right.
@@ -3939,7 +3939,7 @@ const {TOWER,ENEMIES,MAPS,WAVES,DIFFICULTIES,COLS,ROWS,makePath,stat,normalizeCh
 // Enemies walk on one of seven lanes across the 3-cell road. FX scales the
 // small effect rings drawn around units. A plane needs TAKEOFF seconds on its runway.
 const LANES=[-.6,-.4,-.2,0,.2,.4,.6],MID_LANE=3,FX=4,TAKEOFF=2.2;
-const MINE={period:30,trigger:1,radius:2,mul:3.7};
+const MINE={period:30,trigger:1,radius:2,mul:3.7},FX_GAP=.05;
 const {ECONOMY,waveCash}=require("economy.js");
 const {enemyMoveSpeed,enemyStats,burnSlowMultiplier}=require("data.js");
 const {LEGACY_ENEMIES}=require("legacy-enemies.js");
@@ -4022,7 +4022,7 @@ class Game{
   if(d.aura)this.auraStep(e,d,dt);if(d.haste){e.abilityClock=(e.abilityClock??0)+dt;if(e.abilityClock>=d.haste.period){e.abilityClock-=d.haste.period;for(const ally of this.enemies){if(ally.dead||ally===e||this.enemyData(ally).boss||this.enemyData(ally).haste||this.enemyData(ally).noBuff||distance(e,ally)>d.haste.radius)continue;ally.hasteRemaining=Math.max(ally.hasteRemaining??0,d.haste.duration);ally.hasteMultiplier=Math.max(ally.hasteMultiplier??1,d.haste.multiplier);}this.fx('pulse',e,{r:d.haste.radius,color:d.color,life:.5});}}
  }
 
- fx(type,a,extra={}){if(this.effects.length>=120)this.effects.shift();this.effects.push({id:this.nextId++,type,x:a.x,y:a.y,life:.15,...extra,maxLife:extra.life??.15});}
+ fx(type,a,extra={}){if(this.fxQuiet&&type!=='income')return;if(this.effects.length>=120)this.effects.shift();this.effects.push({id:this.nextId++,type,x:a.x,y:a.y,life:.15,...extra,maxLife:extra.life??.15});}
  mineStep(t,s,buff,dt){t.mineClock=(t.mineClock??0)+dt*this.jamMul(t)*buff.fire*this.km('bomb').fire;if(t.mineClock<MINE.period)return;t.mineClock-=MINE.period;
   const R=s.range*buff.range,spots=[];for(let p=0;p<=this.length;p+=.5){const q=this.position(p);if(distance(q,t)<=R)spots.push(q);}
   if(!spots.length)return;const q=spots[Math.floor(this.random()*spots.length)];(this.mines??=[]).push({id:this.nextId++,source:t.id,x:q.x,y:q.y});this.fx('pulse',q,{r:.5*FX,color:TOWER.bomb.color,life:.3});}
@@ -4100,7 +4100,7 @@ class Game{
  wingStep(t,s,buff,dt){const N=Math.max(1,Math.round(this.mods['wing@plane']??1)),ws=t.wings??=[];for(let k=0;k<N;k++)this.wingOne(t,s,buff,dt,ws[k]??={cooldown:0,bombCooldown:0,missileCooldown:0},Math.PI*2*(k+1)/(N+1));}
  wingOne(t,s,buff,dt,w,off){const keep={orbit:t.orbit,cooldown:t.cooldown,bombCooldown:t.bombCooldown,missileCooldown:t.missileCooldown,angle:t.angle};
   Object.assign(t,{orbit:keep.orbit+off,cooldown:w.cooldown,bombCooldown:Math.max(0,w.bombCooldown-dt),missileCooldown:Math.max(0,w.missileCooldown-dt)});this.planePayload(t,s,buff);
-  t.cooldown-=dt*buff.fire;if(t.cooldown<=0){for(let k=0;k<8&&t.cooldown<=0;k++)if(!this.attack(t,s,buff)){t.cooldown=0;break;}}
+  t.cooldown-=dt*buff.fire;if(t.cooldown<=0){for(let k=0;k<8&&t.cooldown<=0;k++){this.fxQuiet=this.time-(w.fxAt??-9)<FX_GAP;if(!this.fxQuiet)w.fxAt=this.time;if(!this.attack(t,s,buff)){t.cooldown=0;break;}}this.fxQuiet=false;}
   Object.assign(w,{cooldown:t.cooldown,bombCooldown:t.bombCooldown,missileCooldown:t.missileCooldown});Object.assign(t,keep);}
  planePayload(t,s,buff){
   const d=TOWER.plane,i=t.level-1,origin={x:t.x+Math.cos(t.orbit)*s.range,y:t.y+Math.sin(t.orbit)*s.range};
@@ -4167,7 +4167,7 @@ class Game{
    // 4.11.1 towers turn only when they fire: each shot snaps the tower onto its target (attack sets t.angle) and it holds
    // that aim until the next one. Fast shooters still look like they track; slow ones go clack, clack.
    if(t.kind==='minigun'&&this.mods['spin@minigun']){const aim=this.select(t,t,s.range*buff.range);t.spin=Math.max(0,Math.min(1,(t.spin??0)+(aim?dt/4:-dt/2)));}
-   if(t.cooldown<=0){for(let attempts=0;attempts<8&&t.cooldown<=0;attempts++)if(!this.attack(t,s,buff)){t.cooldown=0;break;}}
+   if(t.cooldown<=0){for(let attempts=0;attempts<8&&t.cooldown<=0;attempts++){this.fxQuiet=this.time-(t.fxAt??-9)<FX_GAP;if(!this.fxQuiet)t.fxAt=this.time;if(!this.attack(t,s,buff)){t.cooldown=0;break;}}this.fxQuiet=false;}
    if(t.kind==='plane'&&this.mods['wing@plane'])this.wingStep(t,s,buff,dt);
   }
   for(const v of this.vehicles){if(v.hp<=0)continue;if(v.kind==='icu'){this.icuUnit(v,dt);continue;}const d=this.unitData(v),i=v.level-1,source=this.towers.find(t=>t.id===v.source)??{kind:v.kind,damage:0};v.progress-=dt*d.vehicleSpeed[i];if(this.mods.uregen&&v.hp<v.maxHp)v.hp=Math.min(v.maxHp,v.hp+v.maxHp*this.mods.uregen*dt);Object.assign(v,this.position(v.progress));v.angle+=Math.PI;v.fireWindows=(v.fireWindows??[]).filter(w=>w.until>this.time);const fire=Math.max(v.fireBoost??1,...v.fireWindows.map(w=>w.fire));v.cooldown-=dt*fire;v.rocketCooldown-=dt*fire;
