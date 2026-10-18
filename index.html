@@ -577,8 +577,6 @@ const RETIRED=[
  // myth: one tower (3–6 cells); `x@kind` keys touch only that tower
  M('disguise','myth','위장 신분','agent',['##'],'[에이전트] 첫 에이전트 무료 · 2개째부터 업그레이드 비용 -15%, 이후 ×0.7',{'free@agent':1},{dup:[{'upgrade@agent':.15}]}),
  M('bigbore','myth','사냥용 대구경','shotgun',['###','.#.'],'[샷건] 사거리 +40%, 공격력 +50% · 대가: 업그레이드 비용 +35%, 공속 -15% · 2개째부터 공격력 +20%, 이후 ×0.7',{'range@shotgun':.4,'dmg@shotgun':.5,'fire@shotgun':-.15,'upgrade@shotgun':-.35},{dup:[{'dmg@shotgun':.2}]}),
- M('tankplan','myth','전차 설계도','spawner',['.#.','###','#.#'],'[정비소] Lv.5 탱크 해금 · 2개째부터 출격 주기 -15%, 이후 ×0.7',{'hidden@spawner':1},{dup:[{'spawn@spawner':.15}]}),
- M('specops','myth','특수부대','soldier',['.#.','###','.##'],'[군인] Lv.4 해금 · 2개째부터 공격력 +25%, 이후 ×0.7',{'hidden@soldier':1},{dup:[{'dmg@soldier':.25}]}),
  M('pierce','myth','관통탄','sniper',['#..','###','.##'],'[스나이퍼] 3명 관통 · 2개째부터 공격력 +25%, 이후 ×0.7',{'pierce@sniper':2},{dup:[{'dmg@sniper':.25}]}),
  M('agri','myth','기업농','farm',['#.','##'],'[농장] 생산 2배 · 대가: 한도 2개 · 2개째부터 생산 +30%, 이후 ×0.7',{'income@farm':1,'cap@farm':2},{dup:[{'income@farm':.3}]}),
  M('chain','myth','연쇄 반응','tesla',['#.','##','.#'],'[테슬라] 전이 +3명 · 2개째부터 공격력 +25%, 이후 ×0.7',{'chain@tesla':3},{dup:[{'dmg@tesla':.25}]}),
@@ -587,7 +585,6 @@ const RETIRED=[
  M('resonance','myth','공명 증폭','gauss',['###'],'[가우스] 피해 수입 2배 · 2개째부터 +30%, 이후 ×0.7',{'income@gauss':1},{dup:[{'income@gauss':.3}]}),
  M('overload','myth','과부하','laser',['##'],'[레이저] 최대 피해 배율 +1배 · 2개째부터 +0.5배, 이후 ×0.7',{'cap@laser':1},{dup:[{'cap@laser':.5}]}),
  // genesis: hidden, no strings attached (4–40 cells). 그리고, 최종장 turns the robot into ICU 전선.
- M('expansion','genesis','확장 장비함','slots',['#.','##','#.'],'타워 장착 칸 +1 · 최대 5개',{slots:1},{limit:5}),
  M('secondlife','genesis','두 번째 기회','heart',['.##.','####'],'기지가 무너지면 한 번, 그 웨이브를 처음부터 다시 시작 (타워·캐시 그대로, 기지 체력 50) · 2개째부터 기지 체력 +30, 이후 ×0.7',{revive:50},{dup:[{revive:30}]}),
  M('timewarp','genesis','시간 왜곡','clock',['####','.##.','###.'],'모든 적 이동 속도 -25% · 2개째부터 -8%, 이후 ×0.7',{speedMul:.75},{dup:[{speedMul:.92}]})];
 // 4.10.0 new set. Common: plain stats for every tower in three sizes; the harder a shape is to fit,
@@ -673,6 +670,9 @@ const MODULES=[
  // (attack speed shortens the reload); 편대 비행 comes back unchanged
  M('recon','myth','프로젝트 리콘','soldier',['##','##'],'[군인] 탄창을 한 발에 모아 쏘고 재장전 · 2개째부터 하나마다 공격력 +23.5%, 대가: 가격 +18%',{'recon@soldier':1},{dup:[{'dmg@soldier':.235,'price@soldier':.18}],stack:true}),
  M('formation','myth','편대 비행','plane',['#.#','###','.#.'],'[비행기] 하나마다 비행기 1대 더 출격 · 대가: 가격 +50%',{'wing@plane':1,'price@plane':.5}),
+ // 4.11.36 특수부대 and 전차 설계도 come back: the extra level; each further piece adds on, no fade
+ M('specops','myth','특수부대','soldier',['.#.','###','.##'],'[군인] Lv.4 해금',{'hidden@soldier':1},{dup:[{'dmg@soldier':.25}],stack:true}),
+ M('tankplan','myth','전차 설계도','spawner',['.#.','###','#.#'],'[정비소] Lv.5 탱크 해금',{'hidden@spawner':1},{dup:[{'spawnRate@spawner':.1765}],stack:true}),
  // 4.11.31 지뢰 감자: bombs plant a mine every 30 s (at their attack speed); each further piece +90% mine damage
  M('potato','myth','지뢰 감자','bomb',['#'],'[폭탄] 30초마다 길에 지뢰를 깔아 작은 범위 폭발',{'mine@bomb':1},{dup:[{'mineDmg@bomb':.9}],stack:true}),
  // 4.11.26 로드스터 X: every enemy in the tesla's chain takes its full damage; each further piece +100% tesla damage
@@ -682,6 +682,8 @@ const MODULES=[
  M('addict','myth','스포너 중독자','spawner',['.#','#.','.#'],'웨이브를 스킵하면 스포너의 쿨타임이 리셋됩니다',{addict:1}),
  // 4.11.22 부활: when the base falls, that wave starts over (towers and cash stay, base 50); one restart per piece
  M('rebirth','myth','부활','rebirth',['##','.#'],'기지가 무너지면 그 웨이브를 처음부터 다시 시작 (타워·캐시 그대로, 기지 체력 50)',{rebirth:1}),
+ // genesis 2페이지 (4.11.36, was 확장 장비함): one more tower slot per piece, up to 5
+ M('expansion','genesis','2페이지','slots',['#','#','#'],'타워 장착 칸 +1',{slots:1},{limit:5}),
  // genesis (4.11.10, back from the old set): 해골 공장 as it was; 그리고, 최종장 is now 8×4 (was 8×5)
  M('skeleton','genesis','해골 공장','skull',['###','###'],'매 웨이브 기지에서 체력 10 스켈레톤이 길을 따라 걸어 나감 · 2웨이브마다 1마리 추가 · 5마리가 되면 1마리씩 거대 해골(체력 120)로, 그다음 적을 베며 걷는 해골 기사로 바뀜',{skeleton:1}),
  M('arsenal','genesis','그리고, 최종장','crate',['########','########','########','########'],'로봇이 ICU 전선으로 변경됩니다',{},{limit:1})];
@@ -833,7 +835,7 @@ document.addEventListener('click',e=>{if(performance.now()-swipeAt<400&&e.target
 function warnTap(e,msg){const id=e.pointerId,x=e.clientX,up=ev=>{if(ev.pointerId!==id)return;window.removeEventListener('pointerup',up);if(Math.abs(ev.clientX-x)<30)warn(msg);};window.addEventListener('pointerup',up);}
 
 // the game's version, shown on the title screen and in the 정보 window
-const APP_VERSION='4.11.35';
+const APP_VERSION='4.11.36';
 function home(){fitLoadout(profile);if(cloudWaiting)setTimeout(()=>cloudSync(),0);if(game&&!game.ended){if(game.config.tutorial){game=null;coachStop();}else{game.paused=true;savedRun=game.snapshot();}}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p data-action="version-tap">버전 ${APP_VERSION}</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
 function openDialog(title,body,buttons,kind='dialog'){if(kind!=='result')sound(kind.startsWith('msg')?'question':'open');dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2><span>${title}</span>${button('dialog-x','<i>×</i>','xp-x','aria-label="닫기"')}</h2><div class="dialog-body">${body}</div><div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('.dialog').classList.toggle('msgbox',kind.startsWith('msg'));(modal.querySelector('.xp-yes')??modal.querySelector('.dialog-actions button')??modal.querySelector('button'))?.focus();backNavigation?.sync?.();}
 // Yes/no question in a Windows message box: icon, text, then [예] [아니요] on the right.
@@ -919,7 +921,7 @@ const pieceSize=(id,r)=>{const cs=MODS.cells(id,r);return [Math.max(...cs.map(c=
 // Board effects in short words.
 function effectLines(raw){const pct=v=>`${Math.ceil(Math.round(v*1e6)/1e2)/100}%`,out=[],tag=k=>MODS.TAGS[k.split('.')[1]]??'',gap=kind=>Math.round(TOWER[kind].period[0]*MODS.towerMods(raw,kind).spawn*10)/10;
  for(const [k,r] of Object.entries(raw)){if(k.includes('@')){const [st,kind]=k.split('@'),n=TOWER[kind]?.name??kind,pc=v=>`${Math.ceil(Math.round(v*1e6)/1e2)/100}%`,sg=v=>v>=0?'+':'-';
-  const one={dmg:`${n} 공격력 ${sg(r)}${pc(Math.abs(r))}`,range:`${n} 사거리 ${sg(r)}${pc(Math.abs(r))}`,fire:`${n} 공격 속도 ${sg(r)}${pc(Math.abs(r))}`,spawn:`${n} 출격 주기 -${pc(r)}${raw['spawn.summon']?'':` → ${n} ${gap(kind)}초`}`,income:`${n} 수입 +${pc(r)}`,upgrade:`${n} 업그레이드 비용 ${r>=0?'-':'+'}${pc(Math.abs(r))}`,price:`${n} 가격 +${pc(r)}`,free:`첫 ${n} 무료`,hidden:`${n} Lv.${maxLevel(kind)+1} 해금`,pierce:`${n} 관통 +${r}명`,cap:kind==='farm'?`농장 한도 ${r}개`:`${n} 최대 피해 배율 +${Math.round(r*100)/100}배`,chain:`${n} 전이 +${r}명`,spin:`${n} 예열 공속 최대 +${pc(r)}`,wing:`${n} ${Math.round(r)+1}대 출격`,recon:`${n} 탄창 한 발 사격`,full:`${n} 모든 적에게 최대 피해`,mine:`${n} 30초마다 지뢰`,mineDmg:`${n} 지뢰 공격력 +${pc(r)}`,airstrike:`${n} 폭탄 → 미사일`,duration:`콜 투 암즈 +${Math.round(r*10)/10}초`}[st];
+  const one={dmg:`${n} 공격력 ${sg(r)}${pc(Math.abs(r))}`,range:`${n} 사거리 ${sg(r)}${pc(Math.abs(r))}`,fire:`${n} 공격 속도 ${sg(r)}${pc(Math.abs(r))}`,spawn:`${n} 출격 주기 -${pc(r)}${raw['spawn.summon']?'':` → ${n} ${gap(kind)}초`}`,income:`${n} 수입 +${pc(r)}`,upgrade:`${n} 업그레이드 비용 ${r>=0?'-':'+'}${pc(Math.abs(r))}`,price:`${n} 가격 +${pc(r)}`,free:`첫 ${n} 무료`,hidden:`${n} Lv.${maxLevel(kind)+1} 해금`,spawnRate:`${n} 출격 주기 -${pc(1-1/(1+r))}`,pierce:`${n} 관통 +${r}명`,cap:kind==='farm'?`농장 한도 ${r}개`:`${n} 최대 피해 배율 +${Math.round(r*100)/100}배`,chain:`${n} 전이 +${r}명`,spin:`${n} 예열 공속 최대 +${pc(r)}`,wing:`${n} ${Math.round(r)+1}대 출격`,recon:`${n} 탄창 한 발 사격`,full:`${n} 모든 적에게 최대 피해`,mine:`${n} 30초마다 지뢰`,mineDmg:`${n} 지뢰 공격력 +${pc(r)}`,airstrike:`${n} 폭탄 → 미사일`,duration:`콜 투 암즈 +${Math.round(r*10)/10}초`}[st];
   if(one)out.push(one);continue;}
   const [key]=k.split('.'),t=k.includes('.')?tag(k)+' 타워 ':'모든 타워 ',sp=MODS.SOFT[key],unit=['srange','placement','health','startCash','regen','repair','farmLimit','intermission'].includes(key);let v=MODS.soft(key,r);if(unit)v=Math.ceil(Math.round(v*1e4)/1e2)/100;let tapered=sp&&r>sp[0]+1e-9,plain=key==='sell'?`${Math.round(70+r*100)}%`:unit?`${Math.round(r*10)/10}`:pct(r);
   // a label piece adds on top of the all-tower pieces of its kind and they taper together: show what it adds
