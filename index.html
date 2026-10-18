@@ -847,7 +847,7 @@ document.addEventListener('click',e=>{if(performance.now()-swipeAt<400&&e.target
 function warnTap(e,msg){const id=e.pointerId,x=e.clientX,up=ev=>{if(ev.pointerId!==id)return;window.removeEventListener('pointerup',up);if(Math.abs(ev.clientX-x)<30)warn(msg);};window.addEventListener('pointerup',up);}
 
 // the game's version, shown on the title screen and in the 정보 window
-const APP_VERSION='4.12.7';
+const APP_VERSION='4.12.8';
 function home(){fitLoadout(profile);if(cloudWaiting)setTimeout(()=>cloudSync(),0);if(game&&!game.ended){if(game.config.tutorial){game=null;coachStop();}else{game.paused=true;savedRun=game.snapshot();}}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p data-action="version-tap">버전 ${APP_VERSION}</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
 function openDialog(title,body,buttons,kind='dialog'){if(kind!=='result')sound(kind.startsWith('msg')?'question':'open');dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2><span>${title}</span>${button('dialog-x','<i>×</i>','xp-x','aria-label="닫기"')}</h2><div class="dialog-body">${body}</div><div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('.dialog').classList.toggle('msgbox',kind.startsWith('msg'));(modal.querySelector('.xp-yes')??modal.querySelector('.dialog-actions button')??modal.querySelector('button'))?.focus();backNavigation?.sync?.();}
 // Yes/no question in a Windows message box: icon, text, then [예] [아니요] on the right.
@@ -3923,7 +3923,7 @@ const ENEMIES={
   "boss": true, "bar": true, "stunImmune": true, "slowImmune": true, "armorPct": 0.2, "line": true, "dot": false,
   "jammer": {"shot": {"first": 3, "period": 8, "range": 3, "count": 2, "stun": 4, "grace": 3}, "jam": {"first": 10, "period": 24, "seconds": 7, "mul": 0.6}},
   "desc": "14웨이브의 중간 보스. 받는 피해 20% 감소. 8초마다 반경 3칸 안의 가장 가까운 지상 타워 2개를 쏴서 4초 기절시키고, 24초마다 맵 위 모든 타워의 공격 속도를 7초 동안 40% 떨어뜨립니다. 정지·화상 감속에 면역입니다."},
- "maxwell": {"id": "maxwell", "name": "맥스웰", "hp": 55000, "speed": 0.34, "color": "#ff4d6d", "codex": "doom", "native": true, "shape": "boss",
+ "maxwell": {"id": "maxwell", "name": "맥스웰", "hp": 42000, "speed": 0.34, "color": "#ff4d6d", "codex": "doom", "native": true, "shape": "boss",
   "boss": true, "bar": true, "stunImmune": true, "slowImmune": true, "armor": 10, "line": true, "dot": false,
   "revive": {"down": 3.5, "hp": 0.3, "speed": 4},
   "desc": "27웨이브의 중간 보스. 방어력 10. 쓰러뜨리면 3.5초 뒤 체력 30%로 다시 일어나 4배 빠르게 전선을 질주합니다. 정지·화상 감속에 면역입니다."},
