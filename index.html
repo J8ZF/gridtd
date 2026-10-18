@@ -662,7 +662,7 @@ const MODULES=[
  M('pile','legend','파일 벙커','shield',['###','.#.'],'적 보호막에 주는 피해 +52%',{shield:.52}),
  M('grandrice','legend','그랜드 쌀먹','star',['#'],'모디파이어로 받는 추가 크레딧 ×1.09',{modBoost:.09}),
  M('rest','legend','긴 휴식','clock',['#'],'인터미션 +5초',{intermission:5}),
- M('coop','legend','협동조합','leaf',['##'],'농장 한도 +1 · 경제 타워 수입 +10%',{farmLimit:1,'income.econ':.1}),
+ M('coop','legend','협동조합','sprout',['##'],'농장 한도 +1 · 경제 타워 수입 +10%',{farmLimit:1,'income.econ':.1}),
  M('forcefield','legend','포스필드','field',['#','#'],'설치하는 타워마다 포스필드 1겹 · 마비나 파괴를 한 번 막아 줌',{field:1}),
  M('chaos','legend','대혼란','swirl',['#'],'모든 디버프 지속 시간 +3초',{chaos:1}),
  M('ghostbuster','legend','고스트버스터','ghost',['###'],'히든 감지 레벨 -1 (못 보던 타워는 만렙에 감지) · Lv.1보다 더 내려가면 1마다 히든 피해 +10%',{ghost:1}),
@@ -833,7 +833,7 @@ document.addEventListener('click',e=>{if(performance.now()-swipeAt<400&&e.target
 function warnTap(e,msg){const id=e.pointerId,x=e.clientX,up=ev=>{if(ev.pointerId!==id)return;window.removeEventListener('pointerup',up);if(Math.abs(ev.clientX-x)<30)warn(msg);};window.addEventListener('pointerup',up);}
 
 // the game's version, shown on the title screen and in the 정보 window
-const APP_VERSION='4.11.34';
+const APP_VERSION='4.11.35';
 function home(){fitLoadout(profile);if(cloudWaiting)setTimeout(()=>cloudSync(),0);if(game&&!game.ended){if(game.config.tutorial){game=null;coachStop();}else{game.paused=true;savedRun=game.snapshot();}}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p data-action="version-tap">버전 ${APP_VERSION}</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
 function openDialog(title,body,buttons,kind='dialog'){if(kind!=='result')sound(kind.startsWith('msg')?'question':'open');dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2><span>${title}</span>${button('dialog-x','<i>×</i>','xp-x','aria-label="닫기"')}</h2><div class="dialog-body">${body}</div><div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('.dialog').classList.toggle('msgbox',kind.startsWith('msg'));(modal.querySelector('.xp-yes')??modal.querySelector('.dialog-actions button')??modal.querySelector('button'))?.focus();backNavigation?.sync?.();}
 // Yes/no question in a Windows message box: icon, text, then [예] [아니요] on the right.
@@ -968,6 +968,10 @@ const PICTO={
  bucket(g,cut){g.scale(1,-1);g.translate(0,-.03);g.beginPath();g.moveTo(-.2,-.06);g.lineTo(.2,-.06);g.lineTo(.15,.22);g.lineTo(-.15,.22);g.closePath();g.fill();g.fillRect(-.25,-.12,.5,.07);g.lineWidth=.045;g.beginPath();g.arc(0,-.1,.17,Math.PI*1.08,Math.PI*1.92);g.stroke();g.fillStyle=cut;g.fillRect(-.17,.05,.34,.035);},
  ghost(g,cut){g.beginPath();g.moveTo(-.32,.4);g.lineTo(-.32,-.06);g.arc(0,-.06,.32,Math.PI,0);g.lineTo(.32,.4);g.lineTo(.16,.27);g.lineTo(0,.4);g.lineTo(-.16,.27);g.closePath();g.fill();g.fillStyle=cut;g.beginPath();g.arc(-.12,-.07,.07,0,Math.PI*2);g.moveTo(.19,-.07);g.arc(.12,-.07,.07,0,Math.PI*2);g.fill();},
  field(g,cut){g.beginPath();g.arc(0,.14,.3,Math.PI,0);g.closePath();g.fill();g.fillRect(-.36,.13,.72,.07);g.strokeStyle=cut;g.lineWidth=.045;g.beginPath();g.arc(0,.14,.19,Math.PI*1.15,Math.PI*1.45);g.stroke();},
+ sprout(g){g.lineWidth=.07;g.lineCap='round';g.beginPath();g.moveTo(0,.3);g.quadraticCurveTo(-.02,.12,0,-.02);g.stroke();
+  g.beginPath();g.moveTo(0,.04);g.quadraticCurveTo(-.05,-.21,-.29,-.17);g.quadraticCurveTo(-.23,.05,0,.04);g.fill();
+  g.beginPath();g.moveTo(0,-.02);g.quadraticCurveTo(.04,-.3,.31,-.29);g.quadraticCurveTo(.26,-.03,0,-.02);g.fill();
+  g.beginPath();g.ellipse(0,.31,.24,.06,0,0,Math.PI*2);g.fill();},
  swirl(g){g.lineWidth=.09;g.lineCap='round';g.beginPath();for(let a=0;a<=Math.PI*4.2;a+=.15){const r=.04+.033*a;g.lineTo(Math.cos(a)*r,Math.sin(a)*r);}g.stroke();},
  crate(g,cut){g.fillRect(-.42,-.42,.84,.84);g.strokeStyle=cut;g.lineWidth=.07;g.strokeRect(-.32,-.32,.64,.64);g.beginPath();g.moveTo(-.32,-.32);g.lineTo(.32,.32);g.moveTo(.32,-.32);g.lineTo(-.32,.32);g.stroke();}};
 // Tower faces for tower pieces: the inventory art, tinted to one colour.
