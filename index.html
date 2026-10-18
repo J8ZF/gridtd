@@ -198,6 +198,7 @@ h1,h2,.wallet,.home-menu button,.home-menu button span,.inv-title strong,.dialog
 .inventory .inv-pick .inv-hero .inv-hero-art{width:72%;height:72%}
 .inventory .inv-title,.inventory .inv-desc,.inventory .inv-actions{grid-column:2;min-width:0}
 .inventory .inv-title{align-items:baseline}
+.inv-title span{white-space:nowrap;flex-shrink:0}
 .inventory .inv-desc{min-height:0}
 .inventory .inv-actions{align-self:end}
 .inventory .inv-cell{height:auto;aspect-ratio:1/1}
@@ -846,7 +847,7 @@ document.addEventListener('click',e=>{if(performance.now()-swipeAt<400&&e.target
 function warnTap(e,msg){const id=e.pointerId,x=e.clientX,up=ev=>{if(ev.pointerId!==id)return;window.removeEventListener('pointerup',up);if(Math.abs(ev.clientX-x)<30)warn(msg);};window.addEventListener('pointerup',up);}
 
 // the game's version, shown on the title screen and in the 정보 window
-const APP_VERSION='4.12.1';
+const APP_VERSION='4.12.2';
 function home(){fitLoadout(profile);if(cloudWaiting)setTimeout(()=>cloudSync(),0);if(game&&!game.ended){if(game.config.tutorial){game=null;coachStop();}else{game.paused=true;savedRun=game.snapshot();}}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p data-action="version-tap">버전 ${APP_VERSION}</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
 function openDialog(title,body,buttons,kind='dialog'){if(kind!=='result')sound(kind.startsWith('msg')?'question':'open');dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2><span>${title}</span>${button('dialog-x','<i>×</i>','xp-x','aria-label="닫기"')}</h2><div class="dialog-body">${body}</div><div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('.dialog').classList.toggle('msgbox',kind.startsWith('msg'));(modal.querySelector('.xp-yes')??modal.querySelector('.dialog-actions button')??modal.querySelector('button'))?.focus();backNavigation?.sync?.();}
 // Yes/no question in a Windows message box: icon, text, then [예] [아니요] on the right.
@@ -910,7 +911,8 @@ function invLoadoutHTML(){return `<div class="inv-loadout-wrap" data-key="${prof
 function invBadge(id){return profile.loadout.includes(id)?`<i class="inv-badge eq">${icon('check')}</i>`:invOwned(id)?'':`<i class="inv-badge">${icon('lock')}</i>`;}
 function invCellHTML(x){const o=invOwned(x.id),e=profile.loadout.includes(x.id),v=TOWER[invShow(x.id)];return button('inv-pick',`${towerIcon(v.id)}<span class="inv-name">${v.name}</span>${invBadge(x.id)}`,`inv-cell ${x.id===invSel?'on':''} ${o?'':'locked'}`,`style="--color:${v.color}" data-kind="${x.id}" aria-label="${v.name}${e?' 장착됨':o?'':' 잠김'}"`);}
 function inventory(){fitLoadout(profile);if(!TOWER[invSel])invSel=profile.loadout.find(Boolean)??TOWERS[0].id;
- setScreen('inventory',header('인벤토리')+`<section class="inv-top">${invLoadoutHTML()}${invPickHTML()}</section>${invMore?`<div class="inv-detail" data-kind="${invSel}">${invDetails(invSel)}</div>`:''}<div class="scroll inv-list">${[1,2,3,4].map(tier=>{const list=TOWERS.filter(x=>x.tier===tier);return `<div class="section-label"><span>티어 ${tier}</span></div><div class="inv-grid">${list.map(invCellHTML).join('')}</div>`;}).join('')}</div>`);}
+ setScreen('inventory',header('인벤토리')+`<section class="inv-top">${invLoadoutHTML()}${invPickHTML()}</section>${invMore?`<div class="inv-detail" data-kind="${invSel}">${invDetails(invSel)}</div>`:''}<div class="scroll inv-list">${[1,2,3,4].map(tier=>{const list=TOWERS.filter(x=>x.tier===tier);return `<div class="section-label"><span>티어 ${tier}</span></div><div class="inv-grid">${list.map(invCellHTML).join('')}</div>`;}).join('')}</div>`);fitInv();document.fonts?.ready?.then(fitInv);}
+function fitInv(){for(const el of document.querySelectorAll('.inv-title strong'))fitLine(el,18,13);for(const el of document.querySelectorAll('.inv-name'))fitLine(el,11,8);}
 // ---- Modules ----------------------------------------------------------------------------
 // The module window has two halves: 장착 (the board, worked like the battle map: drag a piece
 // up from the tray, turn it, set it down; pinch or wheel to zoom, drag to pan) and 뽑기
@@ -1206,8 +1208,8 @@ function refreshInventory(){save();const top=$('.inventory .inv-top');if(screen!
  top.querySelector('.inv-pick').outerHTML=invPickHTML();
  const key=profile.loadout.join(',');const lo=top.querySelector('.inv-loadout-wrap');if(lo.dataset.key!==key)lo.outerHTML=invLoadoutHTML();else for(const el of lo.querySelectorAll('.inv-slot[data-kind]'))el.classList.toggle('on',el.dataset.kind===invSel);
  const det=$('.inv-detail');if(invMore){const html=`<div class="inv-detail" data-kind="${invSel}">${invDetails(invSel)}</div>`;if(!det)top.insertAdjacentHTML('afterend',html);else if(det.dataset.kind!==invSel)det.outerHTML=html;}else det?.remove();
- for(const el of document.querySelectorAll('.inv-cell')){const id=el.dataset.kind,o=invOwned(id);el.classList.toggle('on',id===invSel);el.classList.toggle('locked',!o);const want=invBadge(id),badge=el.querySelector('.inv-badge');if((badge?.outerHTML??'')!==want){badge?.remove();if(want)el.insertAdjacentHTML('beforeend',want);}el.setAttribute('aria-label',`${TOWER[id].name}${profile.loadout.includes(id)?' 장착됨':o?'':' 잠김'}`);}
- const w=$('.inventory .wallet');if(w)w.innerHTML=`${icon('coin')}${wallet()}`;}
+ for(const el of document.querySelectorAll('.inv-cell')){const id=el.dataset.kind,o=invOwned(id);el.classList.toggle('on',id===invSel);el.classList.toggle('locked',!o);const want=invBadge(id),badge=el.querySelector('.inv-badge');if((badge?.outerHTML??'')!==want){badge?.remove();if(want)el.insertAdjacentHTML('beforeend',want);}el.setAttribute('aria-label',`${TOWER[invShow(id)].name}${profile.loadout.includes(id)?' 장착됨':o?'':' 잠김'}`);}
+ const w=$('.inventory .wallet');if(w)w.innerHTML=`${icon('coin')}${wallet()}`;fitInv();}
 function unequip(id){const index=profile.loadout.indexOf(id);if(index===-1)return;profile.loadout[index]=null;refreshInventory();}
 function equip(id){if(!profile.owned.includes(id)||profile.loadout.includes(id))return;const empty=profile.loadout.indexOf(null);if(empty===-1)return;profile.loadout[empty]=id;invSel=id;slotPage.inv=Math.floor(empty/5);refreshInventory();}
 
