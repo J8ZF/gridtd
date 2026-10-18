@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- tile: the game's tower slot, dark with the commander's cream rim -->
+  <rect x="1" y="1" width="62" height="62" rx="13" fill="#242424"/>
+  <rect x="3.5" y="3.5" width="57" height="57" rx="10.5" fill="none" stroke="#f4d69b" stroke-width="3"/>
+  <g transform="translate(32 35.5) scale(1.1) translate(-32 -35.5)">
+  <!-- side handles -->
+  <rect x="9" y="31" width="5" height="12" rx="2" fill="#f6dcaa"/>
+  <rect x="50" y="31" width="5" height="12" rx="2" fill="#f6dcaa"/>
+  <!-- body: dark base, mid band, light head (chamfered top corners) -->
+  <path d="M13 22 L18 16 H46 L51 22 V52 Q51 55 48 55 H16 Q13 55 13 52 Z" fill="#978560"/>
+  <path d="M13 22 L18 16 H46 L51 22 V46 H13 Z" fill="#e0c58f"/>
+  <path d="M13 22 L18 16 H46 L51 22 V31 H13 Z" fill="#f9e7c5"/>
+  <!-- face -->
+  <ellipse cx="24.5" cy="24.6" rx="3.3" ry="3.8" fill="#2a2420"/>
+  <ellipse cx="39.5" cy="24.6" rx="3.3" ry="3.8" fill="#2a2420"/>
+  <circle cx="25.6" cy="23.2" r="1.15" fill="#fff"/>
+  <circle cx="40.6" cy="23.2" r="1.15" fill="#fff"/>
+  <ellipse cx="19.8" cy="29" rx="2.6" ry="1.5" fill="#f2a08f" opacity=".8"/>
+  <ellipse cx="44.2" cy="29" rx="2.6" ry="1.5" fill="#f2a08f" opacity=".8"/>
+  <path d="M29.6 27.4 Q32 30 34.4 27.4" fill="none" stroke="#2a2420" stroke-width="1.7" stroke-linecap="round"/>
+  <!-- rank star -->
+  <path d="M32 33.2 L33.9 37.1 L38.2 37.6 L35 40.5 L35.9 44.7 L32 42.6 L28.1 44.7 L29 40.5 L25.8 37.6 L30.1 37.1 Z" fill="#fff6e2"/>
+  </g>
+</svg>
