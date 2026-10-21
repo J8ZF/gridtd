@@ -850,7 +850,7 @@ document.addEventListener('click',e=>{if(performance.now()-swipeAt<400&&e.target
 function warnTap(e,msg){const id=e.pointerId,x=e.clientX,up=ev=>{if(ev.pointerId!==id)return;window.removeEventListener('pointerup',up);if(Math.abs(ev.clientX-x)<30)warn(msg);};window.addEventListener('pointerup',up);}
 
 // the game's version, shown on the title screen and in the 정보 window
-const APP_VERSION='4.12.22';
+const APP_VERSION='4.12.23';
 function home(){fitLoadout(profile);if(cloudWaiting)setTimeout(()=>cloudSync(),0);if(game&&!game.ended){if(game.config.tutorial){game=null;coachStop();}else{game.paused=true;savedRun=game.snapshot();}}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p data-action="version-tap">버전 ${APP_VERSION}</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
 function openDialog(title,body,buttons,kind='dialog'){if(kind!=='result')sound(kind.startsWith('msg')?'question':'open');dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2><span>${title}</span>${button('dialog-x','<i>×</i>','xp-x','aria-label="닫기"')}</h2><div class="dialog-body">${body}</div><div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('.dialog').classList.toggle('msgbox',kind.startsWith('msg'));(modal.querySelector('.xp-yes')??modal.querySelector('.dialog-actions button')??modal.querySelector('button'))?.focus();backNavigation?.sync?.();}
 // Yes/no question in a Windows message box: icon, text, then [예] [아니요] on the right.
@@ -2847,10 +2847,10 @@ function planePosition(t){const R=(artGame?.stat?artGame.stat(t):stat(t)).range,
  return{x:t.x+Math.cos(t.orbit)*R,y:t.y+Math.sin(t.orbit)*R,ang:t.orbit+Math.PI/2*Math.min(1,(f-TAKEOFF)/.6)};}
 
 function createBoard(canvas,map){
- const ctx=canvas.getContext('2d'),cache=document.createElement('canvas'),cctx=cache.getContext('2d'),text=document.createElement('canvas'),tctx=text.getContext('2d');
- const MAP_RES=.5,TEXT_RES=.5;let W=1,H=1,DPR=1,scale=1,ox=0,oy=0,fitScale=1,sized=false,cacheKey='';
+ const ctx=canvas.getContext('2d'),cache=document.createElement('canvas'),cctx=cache.getContext('2d');
+ const MAP_RES=.5;let W=1,H=1,DPR=1,scale=1,ox=0,oy=0,fitScale=1,sized=false,cacheKey='';
  const V=map.view??[0,map.viewTop,COLS,ROWS],VW=V[2]-V[0],VH=V[3]-V[1],ZMIN=map.view?1:.4;
- function resize(){const r=canvas.getBoundingClientRect();if(!r.width||!r.height)return;const atFit=!sized||Math.abs(scale-fitScale)<1e-6;DPR=1;W=r.width;H=r.height;canvas.width=Math.round(W*DPR);canvas.height=Math.round(H*DPR);cache.width=Math.max(1,Math.round(canvas.width*MAP_RES));cache.height=Math.max(1,Math.round(canvas.height*MAP_RES));text.width=Math.max(1,Math.round(canvas.width*TEXT_RES));text.height=Math.max(1,Math.round(canvas.height*TEXT_RES));fitScale=Math.min(W/VW,H/VH);sized=true;if(atFit)fit();else clamp();cacheKey='';}
+ function resize(){const r=canvas.getBoundingClientRect();if(!r.width||!r.height)return;const atFit=!sized||Math.abs(scale-fitScale)<1e-6;DPR=1;W=r.width;H=r.height;canvas.width=Math.round(W*DPR);canvas.height=Math.round(H*DPR);cache.width=Math.max(1,Math.round(canvas.width*MAP_RES));cache.height=Math.max(1,Math.round(canvas.height*MAP_RES));fitScale=Math.min(W/VW,H/VH);sized=true;if(atFit)fit();else clamp();cacheKey='';}
  function fit(){scale=fitScale;ox=(W-VW*scale)/2-V[0]*scale;oy=(H-VH*scale)/2-V[1]*scale;cacheKey='';}
  function clamp(){scale=Math.max(fitScale*ZMIN,Math.min(fitScale*10,scale));const M=map.view?Math.round(.6*Math.max(VW,VH)):80,cx=(W/2-ox)/scale,cy=(H/2-oy)/scale,X=Math.max(V[0]-M,Math.min(V[2]+M,cx)),Y=Math.max(V[1]-M,Math.min(V[3]+M,cy));ox=W/2-X*scale;oy=H/2-Y*scale;}
  function zoomTo(next,sx=W/2,sy=H/2){const wx=(sx-ox)/scale,wy=(sy-oy)/scale;scale=Math.max(fitScale*ZMIN,Math.min(fitScale*10,next));ox=sx-wx*scale;oy=sy-wy*scale;clamp();}
@@ -2977,10 +2977,7 @@ function createBoard(canvas,map){
   else{const r=Math.max(.01,f.r*(f.type==='pulse'?1-a*.5:1-a*.65));ctx.beginPath();ctx.arc(f.x,f.y,r,0,Math.PI*2);if(f.type==='blast'){ctx.globalAlpha=a*.15;ctx.fillStyle=f.color;ctx.fill();}ctx.globalAlpha=a;ctx.strokeStyle=f.color;ctx.lineWidth=2*px;ctx.stroke();}
   ctx.restore();}
   if(!eo?.hidePlanes)for(const b of game.bombs){const q=1-b.remaining/b.duration,x=b.x+(b.x2-b.x)*q,y=b.y+(b.y2-b.y)*q;ctx.fillStyle='#88c5ef';ctx.beginPath();ctx.arc(x,y,(5-q*2)*px*1.4,0,Math.PI*2);ctx.fill();}}
- // Board text at half resolution: drawn on its own half-size canvas, then stretched over the board.
- function halfText(paint){tctx.setTransform(1,0,0,1,0,0);tctx.clearRect(0,0,text.width,text.height);tctx.save();tctx.setTransform(DPR*TEXT_RES,0,0,DPR*TEXT_RES,0,0);paint(tctx);tctx.restore();
-  ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.imageSmoothingEnabled=true;ctx.drawImage(text,0,0,canvas.width,canvas.height);ctx.restore();}
- function incomeTexts(game){if(!game.effects.some(f=>f.type==='income'))return;halfText(ctx=>{ctx.font='400 13px "Gulim Game",system-ui,sans-serif';ctx.textAlign='center';for(const f of game.effects){if(f.type!=='income')continue;const a=Math.max(0,f.life/f.maxLife);ctx.globalAlpha=a;ctx.fillStyle=f.color;ctx.fillText(f.text,ox+f.x*scale,oy+f.y*scale-(1-a)*24-14);}});}
+ function incomeTexts(game){ctx.save();ctx.setTransform(DPR,0,0,DPR,0,0);ctx.font='400 13px "Gulim Game",system-ui,sans-serif';ctx.textAlign='center';for(const f of game.effects){if(f.type!=='income')continue;const a=Math.max(0,f.life/f.maxLife);ctx.globalAlpha=a;ctx.fillStyle=f.color;ctx.fillText(f.text,ox+f.x*scale,oy+f.y*scale-(1-a)*24-14);}ctx.restore();}
  function bossWarnings(game){for(const e of game.enemies){if(e.dead||!e.boss?.cast)continue;ctx.save();ctx.strokeStyle='#ff9b9f';ctx.lineWidth=2/scale;ctx.setLineDash([5/scale,4/scale]);ctx.beginPath();ctx.arc(e.x,e.y,3.7,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
   for(const id of e.boss.cast.targets){const t=game.towers.find(t=>t.id===id);if(!t)continue;ctx.strokeRect(t.col-.35,t.row-.35,t.w+.7,t.h+.7);ctx.lineWidth=3/scale;ctx.beginPath();ctx.moveTo(t.x,t.y-t.h*.32);ctx.lineTo(t.x,t.y+t.h*.05);ctx.moveTo(t.x,t.y+t.h*.15);ctx.lineTo(t.x,t.y+t.h*.22);ctx.stroke();ctx.lineWidth=2/scale;}ctx.restore();}}
  function crane(){const f=map.features.find(f=>f.kind==='crane');if(!f?.boom)return;const[[x1,y1],[x2,y2]]=f.boom,len=Math.hypot(x2-x1,y2-y1);ctx.save();ctx.translate(x1,y1);ctx.rotate(Math.atan2(y2-y1,x2-x1));ctx.globalAlpha=.7;ctx.strokeStyle=C.crane;ctx.lineWidth=.16;ctx.strokeRect(0,-.55,len,1.1);ctx.beginPath();for(let x=0;x<len-1;x+=1.4){ctx.moveTo(x,-.55);ctx.lineTo(x+.7,.55);ctx.lineTo(x+1.4,-.55);}ctx.stroke();ctx.restore();}
@@ -2992,11 +2989,11 @@ function createBoard(canvas,map){
   ctx.strokeStyle=col;ctx.lineWidth=.18;ctx.setLineDash([.6,.35]);ctx.strokeRect(g.x-.12,g.y-.12,w+.24,h+.24);ctx.setLineDash([]);
   if(T.turns){const dir=g.r*Math.PI/2-Math.PI/2,reach=(g.r%2?w:h)/2+1;ctx.save();ctx.translate(gx+Math.cos(dir)*reach,gy+Math.sin(dir)*reach);ctx.rotate(dir);ctx.fillStyle=col;ctx.beginPath();ctx.moveTo(.6,0);ctx.lineTo(-.4,-.6);ctx.lineTo(-.4,.6);ctx.closePath();ctx.fill();ctx.restore();}}
  // Level mode labels, in screen pixels: name over level number; small towers get the number only.
-  function levelLabels(game){halfText(ctx=>{ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineJoin='round';ctx.strokeStyle='rgba(0,0,0,.92)';
+  function levelLabels(game){ctx.save();ctx.setTransform(DPR,0,0,DPR,0,0);ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineJoin='round';ctx.strokeStyle='rgba(0,0,0,.92)';
    for(const t of game.towers){const T=TOWER[t.kind],sx=ox+t.x*scale,sy=oy+t.y*scale,big=Math.min(t.w,t.h)*scale>=30;
     if(big){ctx.font='400 11px "Gulim Game",system-ui,sans-serif';ctx.lineWidth=3;ctx.strokeText(T.name,sx,sy-8);ctx.fillStyle='#f2f2f2';ctx.fillText(T.name,sx,sy-8);}
     ctx.font=`400 ${big?16:12}px "Gulim Game",system-ui,sans-serif`;ctx.lineWidth=3.5;const ly=big?sy+7:sy;ctx.strokeText(t.level,sx,ly);ctx.fillStyle=T.color;ctx.fillText(t.level,sx,ly);}
-   });}
+   ctx.restore();}
  // Tutorial marks in world cells, blinking on the wall clock (they blink while paused too):
  // a build spot is a lit footprint, a tower to press gets a gold ring outside the white selection box.
  function coachMarks(list){const k=.5+.5*Math.sin(performance.now()/1000*Math.PI*2*1.1),lw=Math.max(.12,2/scale);ctx.save();ctx.lineJoin='miter';ctx.strokeStyle=ctx.fillStyle='#ffd84a';
