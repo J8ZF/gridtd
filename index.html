@@ -850,7 +850,7 @@ document.addEventListener('click',e=>{if(performance.now()-swipeAt<400&&e.target
 function warnTap(e,msg){const id=e.pointerId,x=e.clientX,up=ev=>{if(ev.pointerId!==id)return;window.removeEventListener('pointerup',up);if(Math.abs(ev.clientX-x)<30)warn(msg);};window.addEventListener('pointerup',up);}
 
 // the game's version, shown on the title screen and in the 정보 window
-const APP_VERSION='4.12.30';
+const APP_VERSION='4.12.31';
 function home(){fitLoadout(profile);if(cloudWaiting)setTimeout(()=>cloudSync(),0);if(game&&!game.ended){if(game.config.tutorial){game=null;coachStop();}else{game.paused=true;savedRun=game.snapshot();}}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p data-action="version-tap">버전 ${APP_VERSION}</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
 function openDialog(title,body,buttons,kind='dialog'){if(kind!=='result')sound(kind.startsWith('msg')?'question':'open');dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2><span>${title}</span>${button('dialog-x','<i>×</i>','xp-x','aria-label="닫기"')}</h2><div class="dialog-body">${body}</div><div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('.dialog').classList.toggle('msgbox',kind.startsWith('msg'));(modal.querySelector('.xp-yes')??modal.querySelector('.dialog-actions button')??modal.querySelector('button'))?.focus();backNavigation?.sync?.();}
 // Yes/no question in a Windows message box: icon, text, then [예] [아니요] on the right.
@@ -2850,7 +2850,7 @@ Object.assign(exports, { drawTower, drawUnit, drawPlane, drawShip, towerSVG, ico
 
 },
 "board.js":function(require,exports){
-const {COLS,ROWS,TOWER,ENEMIES,stat,dims}=require("data.js");
+const {COLS,ROWS,TOWER,ENEMIES,stat,dims,cubic}=require("data.js");
 const {GLYPHS,enemyShape,enemyFront,BOSS_SIZE,enemyTone}=require("icons.js");
 const ART=require("art.js");const MODS=require("modules.js");let artGame=null,artTime=0;
 // Canvas battlefield. World units are cells (1 cell = 1 stud). Flat top-down art:
@@ -2983,8 +2983,16 @@ function createBoard(canvas,map){
   ctx.save();ctx.translate(v.x,v.y);ctx.save();ctx.rotate(body);ctx.scale(k,k);ART.drawUnit(ctx,art,v.level,{color:c,gunAngle:ga-body,travel:v.progress,step:v.unit==='tank'?1.5:6});ctx.restore();
   ctx.fillStyle='#2e2e2e';ctx.fillRect(-bw/2,by,bw,.26);ctx.fillStyle=c;ctx.fillRect(-bw/2,by,Math.max(0,v.hp/v.maxHp*bw),.26);ctx.restore();}
  // a missile: a short silver body with a lit tail and a fading trail
- function icuMissiles(game){const px=1/scale;for(const m of game.missiles??[]){const cx=Math.cos(m.a),sy=Math.sin(m.a);ctx.save();ctx.globalAlpha=.35;ctx.strokeStyle='#cfdcea';ctx.lineWidth=2*px;ctx.beginPath();ctx.moveTo(m.x-cx*2.2,m.y-sy*2.2);ctx.lineTo(m.x,m.y);ctx.stroke();ctx.globalAlpha=1;
-  ctx.translate(m.x,m.y);ctx.rotate(m.a);ctx.fillStyle='#e4ecf4';ctx.fillRect(-.55,-.16,1.1,.32);ctx.fillStyle='#5aa2ea';ctx.fillRect(-.8,-.12,.3,.24);ctx.restore();}}
+ // rocket-truck missiles: a round nose rising where they left the truck, then the curve to the spot they picked
+ // (a cross), with a smoke trail. One saved before 4.12.31 that has not aimed yet is drawn as it was.
+ function icuMissiles(game){const px=1/scale;for(const m of game.missiles??[]){ctx.save();
+  if(m.x2==null&&m.rise==null){ctx.translate(m.x,m.y);ctx.rotate(m.a??0);ctx.fillStyle='#e4ecf4';ctx.fillRect(-.55,-.16,1.1,.32);ctx.restore();continue;}
+  if(m.x2==null){const q=1-Math.max(0,m.rise)/Math.max(1e-6,m.riseTime??.5);ctx.globalAlpha=.5*(1-q);ctx.strokeStyle='#d0d0d0';ctx.lineWidth=2*px;ctx.beginPath();ctx.arc(m.x,m.y,.5+q*1.1,0,Math.PI*2);ctx.stroke();
+   ctx.globalAlpha=1;ctx.fillStyle='#5aa2ea';ctx.beginPath();ctx.arc(m.x,m.y,.18+q*.14,0,Math.PI*2);ctx.fill();ctx.fillStyle='#e4ecf4';ctx.beginPath();ctx.arc(m.x,m.y,.08+q*.06,0,Math.PI*2);ctx.fill();ctx.restore();continue;}
+  const a={x:m.x,y:m.y},d={x:m.x2,y:m.y2},P=u=>cubic(a,{x:m.c1x,y:m.c1y},{x:m.c2x,y:m.c2y},d,u),q=Math.min(1,m.fly/Math.max(1e-6,m.dur)),pos=P(q),p0=P(Math.max(0,q-.01)),p1=P(Math.min(1,q+.01)),ang=Math.atan2(p1.y-p0.y,p1.x-p0.x),c=.45;
+  ctx.globalAlpha=.6;ctx.strokeStyle='#9fd3ff';ctx.lineWidth=1.5*px;ctx.beginPath();ctx.moveTo(d.x-c,d.y);ctx.lineTo(d.x+c,d.y);ctx.moveTo(d.x,d.y-c);ctx.lineTo(d.x,d.y+c);ctx.stroke();
+  ctx.globalAlpha=.35;ctx.strokeStyle='#cfdcea';ctx.lineWidth=2*px;ctx.beginPath();for(let j=0;j<=8;j++){const s=P(Math.max(0,q-.3+.3*j/8));if(j)ctx.lineTo(s.x,s.y);else ctx.moveTo(s.x,s.y);}ctx.stroke();
+  ctx.globalAlpha=1;ctx.translate(pos.x,pos.y);ctx.rotate(ang);ctx.fillStyle='#e4ecf4';ctx.fillRect(-.55,-.16,1.1,.32);ctx.fillStyle='#5aa2ea';ctx.fillRect(-.8,-.12,.3,.24);ctx.restore();}}
  function icuShips(game){for(const t of game.towers)if(t.kind==='icu'&&t.level>=5&&game.icuShipPos){const p=game.icuShipPos(t);ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.angle);ctx.scale(6.8,6.8);ART.drawShip(ctx,t.ship?.aim);ctx.restore();}}
  // the laser: beams from the ship flicker over every enemy while the whole field slowly turns white
  function icuStorm(game){const st=game.storm;if(!st)return;const p=1-st.left/st.total,ship=game.towers.find(t=>t.id===st.source),c0=ship&&game.icuShipPos?game.icuShipPos(ship):{x:45,y:-20,angle:0},o={x:c0.x+Math.cos(c0.angle)*20.4,y:c0.y+Math.sin(c0.angle)*20.4};
@@ -3266,6 +3274,8 @@ function enemyStats(kind,variant='base',legacy=false){
 }
 function enemyMoveSpeed(kind,variant='base',legacy=false){const d=(legacy?LEGACY_ENEMIES[kind]:null)??ENEMIES[kind];return enemyStats(kind,variant,legacy).speed*(d.finalBoss||d.bar||kind==='guardian'||kind==='sentinel'?.65:ENEMY_MOVE_SCALE)*SCALE;}
 for(const e of Object.values(ENEMIES)){if(e.haste)e.haste.radius=+(e.haste.radius*SCALE).toFixed(3);if(e.aura)e.aura.radius=+(e.aura.radius*SCALE).toFixed(3);if(e.deathStun)e.deathStun.radius=+(e.deathStun.radius*SCALE).toFixed(3);e.desc=scaleText(e.desc);}
+// a point on the cubic curve a→d (controls b, c) at u in 0..1: the ICU rocket truck missile's path
+const cubic=(a,b,c,d,u)=>{const v=1-u,p=v*v*v,q=3*v*v*u,r=3*v*u*u,w=u*u*u;return {x:p*a.x+q*b.x+r*c.x+w*d.x,y:p*a.y+q*b.y+r*c.y+w*d.y};};
 function burnSlowMultiplier(kind){const d=ENEMIES[kind];return d.finalBoss||d.stunImmune||d.slowImmune||kind==='lava'?1:1-TOWER.flame.burnSlow;}
 
 Object.defineProperty(exports,"CELL",{enumerable:true,get:()=>CELL});
@@ -3291,6 +3301,7 @@ Object.defineProperty(exports,"terrainGrid",{enumerable:true,get:()=>terrainGrid
 Object.defineProperty(exports,"dims",{enumerable:true,get:()=>dims});
 Object.defineProperty(exports,"maxLevel",{enumerable:true,get:()=>maxLevel});
 Object.defineProperty(exports,"burnSlowMultiplier",{enumerable:true,get:()=>burnSlowMultiplier});
+Object.defineProperty(exports,"cubic",{enumerable:true,get:()=>cubic});
 // Modifiers (4.9): picked before a battle on the difficulty screen. Each makes the battle harder and adds
 // its bonus to the credits of that battle; the bonuses add up (+15% +15% +20% = +50%).
 const MODIFIERS=[
@@ -4106,7 +4117,7 @@ const {TOWER,ENEMIES,MAPS,WAVES,DIFFICULTIES,COLS,ROWS,makePath,stat,normalizeCh
 const LANES=[-.6,-.4,-.2,0,.2,.4,.6],MID_LANE=3,FX=4,TAKEOFF=2.2;
 const ISO=new Set(['icu','platinum']),MINE={period:30,trigger:1,radius:2,mul:3.7},FX_GAP=.05,CRUSH={hold:1.5},CHAOS={pct:.3,burn:3};
 const {ECONOMY,waveCash}=require("economy.js");
-const {enemyMoveSpeed,enemyStats,burnSlowMultiplier}=require("data.js");
+const {enemyMoveSpeed,enemyStats,burnSlowMultiplier,cubic}=require("data.js");
 const {LEGACY_ENEMIES}=require("legacy-enemies.js");
 const {PACING_VERSION,waveQueue,waveTimeout,wavePar,BOSS_ATTACKS}=require("pacing.js");
 const TESLA_JUMP=6;
@@ -4388,7 +4399,8 @@ class Game{
 // 리콘 정비선 circles the edge of the map and fires on its own; its laser is a manual skill.
 // the ship circles outside the map; it is drawn 6.8× (about 44 cells long), so its parts sit 0.34 cells per art unit apart
 // after the last enemy in range is gone, a trooper stands 3 s and a rocket truck 7 s before moving on
-const ICU_SHIP = { x: 45, y: 52.5, rx: 70, ry: 76, k: .34 }, ICU_HOLD = { trooper: 3, truck: 7 };
+// a rocket-truck missile pops up for `rise` seconds, then flies at `speed` cells a second
+const ICU_SHIP = { x: 45, y: 52.5, rx: 70, ry: 76, k: .34 }, ICU_HOLD = { trooper: 3, truck: 7 }, ICU_MISSILE = { rise: .5, speed: 50 };
 // turn a toward b by at most step (radians)
 const turnTo = (a, b, step) => a + Math.max(-step, Math.min(step, angleDiff(b, a)));
 // a point on a unit: fx forward, fy to its right, in cells, turned by angle a
@@ -4493,26 +4505,32 @@ Object.assign(Game.prototype, {
     }
     this.fx('rail', o, { x2: o.x + ux * len, y2: o.y + uy * len, color: '#9fd3ff', life: .4 });
   },
-  // homing missiles leave sideways and curve in; one that loses its target flies to the entrance
+  // 4.12.31 (the flight the 신호기 had in 4.12.29): each missile pops up where it left the truck; once up it picks a
+  // target at random among those the truck could see from there and flies fast to the spot that target stands on
+  // then, on a smooth curve that leaves on a random heading and comes in up to 70° off the straight line. It does
+  // not follow the target. With nobody in sight it goes for its launch target, or where that one stood.
   icuMissile(v, target, damage, radius, n, of) {
-    const side = n % 2 ? 1 : -1, a = (v.gunAngle || v.angle) + side * (1.1 + .25 * Math.floor(n / 2)) + (this.random() - .5) * .3, o = icuAt(v, v.angle, -.5, 0);
-    (this.missiles ??= []).push({ id: this.nextId++, source: v.source, x: o.x, y: o.y, a, target: target?.id ?? null, damage, radius, age: 0 });
+    const o = icuAt(v, v.angle, -.5, 0);
+    (this.missiles ??= []).push({ id: this.nextId++, source: v.source, x: o.x, y: o.y, rise: ICU_MISSILE.rise, riseTime: ICU_MISSILE.rise, range: TOWER.icu.units.truck.range[v.level - 1] || null, target: target?.id ?? null, tx: target?.x ?? o.x, ty: target?.y ?? o.y, damage, radius });
   },
-  // a missile curves in on its target and hits it; it never circles: the turn gets sharper as it flies
-  // and after 1.2 s it heads straight in. If its target is gone it blows up where it is.
+  icuMissileAim(m) {
+    const pool = this.enemies.filter(e => !e.dead && e.hp > 0 && (!(this.enemyData(e).camo || e.camo) || e.revealed) && (!m.range || distance(m, e) <= m.range));
+    const e = (pool.length ? pool[Math.floor(this.random() * pool.length)] : null) ?? this.enemies.find(x => x.id === m.target && !x.dead) ?? { x: m.tx ?? m.x, y: m.ty ?? m.y };
+    const end = { x: e.x, y: e.y }, L = Math.hypot(end.x - m.x, end.y - m.y), a = this.random() * Math.PI * 2, k = Math.min(12, Math.max(4, L * .45)), back = Math.atan2(m.y - end.y, m.x - end.x) + (this.random() < .5 ? -1 : 1) * (.5 + this.random() * .7);
+    const c1 = { x: m.x + Math.cos(a) * k, y: m.y + Math.sin(a) * k }, c2 = { x: end.x + Math.cos(back) * L * .4, y: end.y + Math.sin(back) * L * .4 };
+    let len = 0, p = m;
+    for (let j = 1; j <= 16; j++) { const q = cubic(m, c1, c2, end, j / 16); len += Math.hypot(q.x - p.x, q.y - p.y); p = q; }
+    Object.assign(m, { x2: end.x, y2: end.y, c1x: c1.x, c1y: c1.y, c2x: c2.x, c2y: c2.y, fly: 0, dur: Math.max(.05, len / ICU_MISSILE.speed) });
+  },
   icuMissiles(dt) {
     if (!this.missiles?.length) return;
     const out = [];
     for (const m of this.missiles) {
-      m.age += dt;
-      const e = m.target != null ? this.enemies.find(x => x.id === m.target && !x.dead) : null, src = this.towers.find(t => t.id === m.source) ?? { kind: 'icu', damage: 0 };
-      if (!e) { this.splash({ x: m.x, y: m.y }, m.damage, m.radius, src); continue; }
-      const want = Math.atan2(e.y - m.y, e.x - m.x);
-      m.a = m.age > 1.2 ? want : turnTo(m.a, want, (3 + m.age * 12) * dt);
-      const sp = 20 + m.age * 22;
-      m.x += Math.cos(m.a) * sp * dt;
-      m.y += Math.sin(m.a) * sp * dt;
-      if (Math.hypot(e.x - m.x, e.y - m.y) <= 1.4 || m.age > 4) { this.splash({ x: m.x, y: m.y }, m.damage, m.radius, src); continue; }
+      const src = this.towers.find(t => t.id === m.source) ?? { kind: 'icu', damage: 0 };
+      // still rising (a missile saved before 4.12.31 has no rise and aims from where it is)
+      if (m.x2 == null) { m.rise = (m.rise ?? 0) - dt; if (m.rise > 1e-8) { out.push(m); continue; } this.icuMissileAim(m); }
+      m.fly += dt;
+      if (m.fly >= m.dur) { this.splash({ x: m.x2, y: m.y2 }, m.damage, m.radius, src); continue; }
       out.push(m);
     }
     this.missiles = out;
