@@ -780,14 +780,13 @@ const noticeTimers={};
 function notice(html,line='main',ms=6000){const box=$('#board-notice'),el=$(`#notice-${line}`);if(!box||!el)return false;el.innerHTML=html;el.hidden=false;box.hidden=false;
  box.parentElement.style.setProperty('--nh',`${box.offsetHeight}px`);clearTimeout(noticeTimers[line]);
  noticeTimers[line]=setTimeout(()=>{el.hidden=true;if(box.isConnected){box.hidden=[...box.children].every(c=>c.hidden);box.parentElement.style.setProperty('--nh',`${box.offsetHeight}px`);}},ms);return true;}
-// Announcements, shown when the wave before begins; the last wave opens with the boss's line.
+// Announcements, shown when the wave before begins; 쉬움's last wave opens with the boss's line (쉽지 않음's 군주 speaks when it spawns).
 const WAVE_NOTICES={
  normal:{6:'다음 웨이브에서는 보스 1이 등장합니다.',7:'다음 웨이브에서는 히든이 처음으로 등장합니다.',13:'다음 웨이브에서는 보스 2가 등장합니다.',15:'다음 웨이브에서는 용암병이 처음으로 등장합니다.',17:'다음 웨이브에서는 히든 보스가 등장합니다.',24:'다음 웨이브가 마지막입니다.',
   25:'<b>공성 보스</b>: 방어를 철거합니다.'},
- hard:{6:'다음 웨이브에서는 보스 1이 등장합니다.',7:'다음 웨이브에서는 히든이 처음으로 등장합니다.',12:'다음 웨이브에서는 보스 2가 등장합니다.',14:'다음 웨이브에서는 용암병이 처음으로 등장합니다.',16:'다음 웨이브에서는 히든 보스가 등장합니다.',22:'다음 웨이브에서는 보스 3이 등장합니다.',25:'다음 웨이브에서는 보스 4가 등장합니다.',27:'다음 웨이브에서는 네크로맨서 보스가 등장합니다.',29:'다음 웨이브가 마지막입니다.',
-  30:['<b>군주</b>: 반갑습니다. 최종보스입니다.','<b>군주</b>: 절망을 선사하겠습니다.']},
+ hard:{6:'다음 웨이브에서는 보스 1이 등장합니다.',7:'다음 웨이브에서는 히든이 처음으로 등장합니다.',12:'다음 웨이브에서는 보스 2가 등장합니다.',14:'다음 웨이브에서는 용암병이 처음으로 등장합니다.',16:'다음 웨이브에서는 히든 보스가 등장합니다.',22:'다음 웨이브에서는 보스 3이 등장합니다.',25:'다음 웨이브에서는 보스 4가 등장합니다.',27:'다음 웨이브에서는 네크로맨서 보스가 등장합니다.',29:'다음 웨이브가 마지막입니다.'},
  doom:{4:'다음 웨이브에서는 은폐병과 보스 M1이 등장합니다.',13:'가디언 프라임이 다가옵니다.',15:'다음 웨이브에서는 보스 M3이 등장합니다.',18:'다음 웨이브에서는 보스 M4가 등장합니다.',26:'다음 웨이브에서 맥스웰이 나타납니다.',29:'다음 웨이브에서는 군주가 등장합니다.',31:'다음 웨이브가 마지막입니다.'}};
-const BOSS_LINES={siege:{death:'철.. 철거가 안 돼!'},overlord:{death:'역시 저는 샌드백인가요...'},guardianPrime:{spawn:'지옥에서 구하다.'},maxwell:{spawn:'날 막아 봐.',down:'…9회 말 2아웃부터.',revive:'폭주!!!'},doombringer:{spawn:'타워 디펜스 시대의 종말..',phase1:'감당할 수 있겠나?',phase2:'끝이 보이는가? 네놈들의 끝이다.',death:'저 너머에서 기다리마.'}};
+const BOSS_LINES={siege:{death:'철.. 철거가 안 돼!'},overlord:{spawn:['반갑습니다. 최종보스입니다.','절망을 선사하겠습니다.'],death:'역시 저는 샌드백인가요...'},guardianPrime:{spawn:'지옥에서 구하다.'},maxwell:{spawn:'날 막아 봐.',down:'…9회 말 2아웃부터.',revive:'폭주!!!'},doombringer:{spawn:'타워 디펜스 시대의 종말..',phase1:'감당할 수 있겠나?',phase2:'끝이 보이는가? 네놈들의 끝이다.',death:'저 너머에서 기다리마.'}};
 // lines that belong to one difficulty only (군주 is silent as a 파멸적 cameo)
 const LINE_MODES={overlord:['hard'],siege:['normal']};
 let lastBossLineAt=0;
@@ -847,7 +846,7 @@ document.addEventListener('click',e=>{if(performance.now()-swipeAt<400&&e.target
 function warnTap(e,msg){const id=e.pointerId,x=e.clientX,up=ev=>{if(ev.pointerId!==id)return;window.removeEventListener('pointerup',up);if(Math.abs(ev.clientX-x)<30)warn(msg);};window.addEventListener('pointerup',up);}
 
 // the game's version, shown on the title screen and in the 정보 window
-const APP_VERSION='4.12.19';
+const APP_VERSION='4.12.20';
 function home(){fitLoadout(profile);if(cloudWaiting)setTimeout(()=>cloudSync(),0);if(game&&!game.ended){if(game.config.tutorial){game=null;coachStop();}else{game.paused=true;savedRun=game.snapshot();}}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p data-action="version-tap">버전 ${APP_VERSION}</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
 function openDialog(title,body,buttons,kind='dialog'){if(kind!=='result')sound(kind.startsWith('msg')?'question':'open');dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2><span>${title}</span>${button('dialog-x','<i>×</i>','xp-x','aria-label="닫기"')}</h2><div class="dialog-body">${body}</div><div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('.dialog').classList.toggle('msgbox',kind.startsWith('msg'));(modal.querySelector('.xp-yes')??modal.querySelector('.dialog-actions button')??modal.querySelector('button'))?.focus();backNavigation?.sync?.();}
 // Yes/no question in a Windows message box: icon, text, then [예] [아니요] on the right.
@@ -1234,7 +1233,10 @@ let guideTab='control';
 function guideHTML(){return `<nav class="guide-tabs">${Object.entries(GUIDE).map(([id,[name]])=>button('guide-tab',name,id===guideTab?'active':'',`data-kind="${id}" aria-pressed="${id===guideTab}"`)).join('')}</nav><p>${GUIDE[guideTab][1]()}</p>`;}
 function guide(){openDialog('조작 안내',`<div id="guide-body">${guideHTML()}</div>`,button('close-dialog','확인','primary'));}
 function guideTabTo(id){if(!GUIDE[id])return;guideTab=id;const b=$('#guide-body');if(b){b.innerHTML=guideHTML();b.closest('.dialog-body').scrollTop=0;}}
-function hooks(){return{discover:id=>{profile.seen[id]=true;},wave:n=>{sound('wave');waveNotice(n);},intermission:()=>{},reward:delta=>{profile.coins+=delta;save();},leak:kind=>{sound('leak');vibrate(25);if(coach){coach.leaks++;if(ENEMIES[kind]?.boss)coach.bossLeaked=true;}},bossLine:(kind,key)=>{const t=BOSS_LINES[kind]?.[key];if(t&&LINE_MODES[kind]&&!LINE_MODES[kind].includes(game?.difficulty))return;if(t&&key==='death')lastBossLineAt=performance.now();if(t&&screen==='battle')notice(`<b>${ENEMIES[kind].name}</b>: ${t}`,'main',key==='spawn'?8000:5000);},// the notice only names it; the numbers are in the codex
+function hooks(){return{discover:id=>{profile.seen[id]=true;},wave:n=>{sound('wave');waveNotice(n);},intermission:()=>{},reward:delta=>{profile.coins+=delta;save();},leak:kind=>{sound('leak');vibrate(25);if(coach){coach.leaks++;if(ENEMIES[kind]?.boss)coach.bossLeaked=true;}},bossLine:(kind,key)=>{const t=BOSS_LINES[kind]?.[key];if(t&&LINE_MODES[kind]&&!LINE_MODES[kind].includes(game?.difficulty))return;if(t&&key==='death')lastBossLineAt=performance.now();if(!t||screen!=='battle')return;
+ const ms=key==='spawn'?8000:5000,g=game,say=(line,d)=>notice(`<b>${ENEMIES[kind].name}</b>: ${line}`,'main',d);if(!Array.isArray(t)){say(t,ms);return;}
+ // several lines: one after another, 3.5 s apart in real time
+ t.forEach((line,i)=>setTimeout(()=>{if(screen==='battle'&&game===g)say(line,i===t.length-1?ms:3800);},i*3500));},// the notice only names it; the numbers are in the codex
  jam:(kind,sec,mul,stat)=>{if(screen==='battle')notice(`<b>${ENEMIES[kind].name}</b> 교란 · 모든 타워 ${stat==='dmg'?'공격력':'공격 속도'} 하락`,'temp',3500);},revive:w=>{sound('unlock');if(screen==='battle')notice('부활 · 웨이브 다시 시작','main',4000);},finish:won=>won?victoryOutro():finishBattle(won)};}
 function newGame(difficultyId){if(!profile.loadout.some(Boolean)){warn('타워를 하나 이상 장착해 주세요.');return;}savedRun=null;fitLoadout(profile);const finale=profile.modules.placed.some(p=>p.id==='arsenal'),disco=profile.modules.placed.some(p=>p.id==='disco');game=new Game(chosenMap.id,difficultyId,profile.loadout.map(k=>finale&&k==='robot'?'icu':disco&&k==='minigun'?'platinum':k),hooks(),profile.cheats,MODS.effects(profile.modules.placed),profile.modifiers??[]);battleSettled=false;profile.stats.played++;selected=null;placing=null;save();showBattle();}
 const TUTORIAL_REWARD=120000,TUTORIAL_LOADOUT=['soldier'];
@@ -3546,6 +3548,7 @@ const ENEMIES={
   "boss": true,
   "finalBoss": true,
   "stunImmune": true,
+  "line": true,
   "desc": "타워를 멈추고 잡몹을 계속 소환하는 최종 보스.",
   "codex": "hard",
   "shape": "final",
