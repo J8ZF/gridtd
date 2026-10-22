@@ -868,7 +868,7 @@ document.addEventListener('click',e=>{if(performance.now()-swipeAt<400&&e.target
 function warnTap(e,msg){const id=e.pointerId,x=e.clientX,up=ev=>{if(ev.pointerId!==id)return;window.removeEventListener('pointerup',up);if(Math.abs(ev.clientX-x)<30)warn(msg);};window.addEventListener('pointerup',up);}
 
 // the game's version, shown on the title screen and in the 정보 window
-const APP_VERSION='4.12.55';
+const APP_VERSION='4.12.56';
 function home(){fitLoadout(profile);if(cloudWaiting)setTimeout(()=>cloudSync(),0);if(game&&!game.ended){if(game.config.tutorial){game=null;coachStop();}else{game.paused=true;savedRun=game.snapshot();}}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p data-action="version-tap">버전 ${APP_VERSION}</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
 function openDialog(title,body,buttons,kind='dialog'){if(kind!=='result')sound(kind.startsWith('msg')?'question':'open');dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2><span>${title}</span>${button('dialog-x','<i>×</i>','xp-x','aria-label="닫기"')}</h2><div class="dialog-body">${body}</div><div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('.dialog').classList.toggle('msgbox',kind.startsWith('msg'));(modal.querySelector('.xp-yes')??modal.querySelector('.dialog-actions button')??modal.querySelector('button'))?.focus();backNavigation?.sync?.();}
 // Yes/no question in a Windows message box: icon, text, then [예] [아니요] on the right.
@@ -4302,6 +4302,8 @@ const MODS=require("modules.js");
 const SKIP_DELAY=5,SKIP_MIN_LEFT=8;
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 const angleDiff=(a,b)=>Math.atan2(Math.sin(a-b),Math.cos(a-b));
+// seconds an enemy has to stay in a flamer's jet before it catches fire
+const FLAME_CATCH=.4;
 class Game{
  constructor(mapId='borderland',difficulty='normal',loadout=['soldier','bomb','sniper','farm'],hooks={},cheats={},mods={},modifiers=[]){
   this.map=MAPS.find(m=>m.id===mapId)||MAPS[0];this.difficulty=difficulty;this.config=DIFFICULTIES[difficulty];this.loadout=[...loadout];this.hooks=hooks;
@@ -4417,13 +4419,25 @@ class Game{
  // 4.6.2: a boss with a boss bar holds its wave open until it falls (or the player skips)
  bossHold(){return this.phase==='wave'&&this.enemies.some(e=>{if(e.dead)return false;const d=this.enemyData(e);return d.bar||d.finalBoss;});}
  buffs(t){let fire=1,range=1,passiveFire=1;const fireWindows=[];if(t.kind==='commander'||ISO.has(t.kind))return{fire,range,passiveFire,fireWindows};const cm=this.km('commander');for(const c of this.towers){if(c.kind!=='commander'||c.disabled>0)continue;const d=TOWER.commander,i=c.level-1,boost=d.boost[i]>1?d.boost[i]+cm.sboost:d.boost[i],rb=d.rangeBoost[i]+cm.sboost;if(distance(c,t)<=this.stat(c).range+cm.srange){passiveFire=Math.max(passiveFire,boost);const active=c.active>0;fire=Math.max(fire,boost+(active?d.activeFire[i]-1:0));range=Math.max(range,rb+(active?d.activeRange[i]-1:0));if(active)fireWindows.push({until:this.time+c.active,fire:boost+d.activeFire[i]-1});}}return{fire,range,passiveFire,fireWindows};}
- ignite(e,t){
+ // fire: the flamer's attack-speed buff, which makes its burn tick that much more often (it does not fire faster)
+ ignite(e,t,fire=1){
   const d=TOWER.flame,i=t.level-1,tick=d.burn[i]*(this.enemyData(e).burnResist??1);
   // A weaker flame cannot prolong a stronger flame. Reapplication is not a hit.
   if(e.dead||(e.burn>0&&tick<e.burnDamage))return false;
   if(e.burn<=0)e.burnTick=0;
-  e.burn=d.burnDuration[i]+this.chaosBurn();e.burnDamage=tick;e.burnSource=t.id;return true;
+  e.burn=d.burnDuration[i]+this.chaosBurn();e.burnDamage=tick;e.burnSource=t.id;e.burnEvery=d.burnInterval/Math.max(1,fire);return true;
  }
+ // Fire takes hold only after FLAME_CATCH seconds inside a spraying flamer's cone (the jet has to reach and wrap the
+ // enemy); time out of the fire cools it again. A burning enemy is topped up, as before, only once its burn is nearly
+ // out, but its tick keeps pace with the flamer's attack-speed buff while it stays in the jet.
+ scorch(dt){const jets=this.towers.filter(t=>t.kind==='flame'&&t.spray?.left>0);if(!jets.length){for(const e of this.enemies)if(e.scorch)e.scorch=Math.max(0,e.scorch-dt);return;}
+  for(const t of jets)t.spray.left-=dt;const d=TOWER.flame;
+  for(const e of this.enemies){if(e.dead)continue;let by=null;
+   for(const t of jets){const j=t.spray;if(distance(t,e)<=j.range&&Math.abs(angleDiff(Math.atan2(e.y-t.y,e.x-t.x),j.angle))<j.cone&&(!by||t.level>by.level))by=t;}
+   if(!by){if(e.scorch)e.scorch=Math.max(0,e.scorch-dt);continue;}
+   e.scorch=Math.min(FLAME_CATCH,(e.scorch??0)+dt);if(e.scorch<FLAME_CATCH)continue;
+   const tick=d.burn[by.level-1]*(this.enemyData(e).burnResist??1);
+   if(e.burn<=d.burnInterval||e.burnDamage<tick)this.ignite(e,by,by.spray.fire);else if(e.burnSource===by.id)e.burnEvery=d.burnInterval/Math.max(1,by.spray.fire);}}
  select(t,origin,range,cone=null,visible=true,eligible=()=>true){const candidates=this.enemies.filter(e=>!e.dead&&e.hp>0&&eligible(e)&&distance(origin,e)<=range&&(!visible||this.visible(e,t))&&(cone===null||Math.abs(angleDiff(Math.atan2(e.y-origin.y,e.x-origin.x),origin.angle))<=cone));if(!candidates.length)return null;
   candidates.sort((a,b)=>t.target==='last'?a.progress-b.progress:t.target==='strong'?this.durability(b)-this.durability(a):t.target==='weak'?this.durability(a)-this.durability(b):t.target==='near'?distance(origin,a)-distance(origin,b):b.progress-a.progress);return candidates[0];}
  hit(e,amount,source=null,options={}){if(!e||e.dead||e.hp<=0||amount<=0)return 0;amount*=this.damageMul(source,e);amount=this.armorHit(e,amount,options);const cashRate=e.paid===false?0:(ENEMIES[e.kind]?.cashRate??1),d=this.enemyData(e),sm=source?.kind&&TOWER[source.kind]&&!ISO.has(source.kind)?1+(this.mods.shield??0):1,shieldDamage=options.pierce?0:Math.min(e.shield??0,amount*sm),hpDamage=Math.max(0,Math.min(Math.max(0,e.hp),options.pierce?amount:amount-shieldDamage/sm)),dealt=shieldDamage+hpDamage;e.shield=Math.max(0,(e.shield??0)-shieldDamage);e.hp=Math.max(0,e.hp-hpDamage);if(shieldDamage>0&&e.shield===0)this.fx('pulse',e,{r:.5*FX,color:'#e8cf78',life:.3});this.damage+=dealt;if(source){source.damage=(source.damage||0)+dealt;if(this.mods.bucket>0&&MODS.TOWER_TAGS[source.kind]?.includes('close')){const base=this.stat(source).damage*(TOWER[source.kind].pellets?.[source.level-1]??1);if(base>0)source.bucket=(source.bucket||0)+dealt/(base*(1+this.bucketBonus(source)));}if(source.kind==='gauss'){const gi=Math.max(0,(source.level??1)-1),gd=TOWER.gauss.milestoneDamage[gi],gm=TOWER.gauss.milestoneIncome[gi];source.charge+=dealt*cashRate;while(source.charge>=gd){source.charge-=gd;const gc=Math.round(gm*100*this.km('gauss').income);this.earn(gc);this.fx('income',source,{text:'+'+Math.round(gc)/100,color:'#8ede7c',life:.8});}}}
@@ -4441,9 +4455,9 @@ class Game{
   if(t.kind==='plane'){origin={x:t.x+Math.cos(t.orbit)*s.range,y:t.y+Math.sin(t.orbit)*s.range,angle:t.orbit+Math.PI/2};range=d.gunRange[i]*buff.range*this.km('plane').range;cone=d.cone;}
   if(t.kind==='gauss'){const victims=this.enemies.filter(e=>!e.dead&&distance(t,e)<=range&&this.visible(e,t)).sort((a,b)=>b.progress-a.progress).slice(0,d.targets?.[i]??99);if(!victims.length)return false;if(this.mods['crush@gauss']>0){t.crushN=(t.crushN??0)+1;if(t.crushN>=10&&this.crushPull(t,range))t.crushN=0;}for(const e of victims){this.hit(e,s.damage,t);this.stunEnemy(e,d.stun[i]);}this.fx('pulse',t,{r:range,color:d.color,life:.35});t.cooldown+=s.period;return true;}
   if(t.kind==='signal')return this.signalLaunch(t,s,range);
-  const e=this.select(t,origin,range,cone,true,t.kind==='flame'?e=>e.burn<=d.burnInterval||e.burnDamage<d.burn[i]*(this.enemyData(e).burnResist??1):()=>true);if(!e)return false;t.angle=Math.atan2(e.y-origin.y,e.x-origin.x);
+  const e=t.kind==='flame'?this.select(t,origin,range,cone,true,e=>e.burn<=d.burnInterval||e.burnDamage<d.burn[i]*(this.enemyData(e).burnResist??1))??this.select(t,origin,range,cone,true):this.select(t,origin,range,cone,true);if(!e)return false;t.angle=Math.atan2(e.y-origin.y,e.x-origin.x);
   if(t.kind==='bomb'){this.fx('shot',this.muzzle(t),{x2:e.x,y2:e.y,color:d.color,life:.2,heavy:true});this.splash(e,s.damage,d.splash[i],t,t.level>=d.centerLevel);}
-  else if(t.kind==='flame'){for(const victim of [...this.enemies])if(!victim.dead&&distance(t,victim)<=range&&Math.abs(angleDiff(Math.atan2(victim.y-t.y,victim.x-t.x),t.angle))<d.cone[i])this.ignite(victim,t);this.fx('flame',this.muzzle(t),{angle:t.angle,cone:d.cone[i],r:range,color:d.color,life:s.period});}
+  else if(t.kind==='flame'){t.spray={angle:t.angle,cone:d.cone[i],range,left:s.period,fire:buff.fire};this.fx('flame',this.muzzle(t),{angle:t.angle,cone:d.cone[i],r:range,color:d.color,life:s.period});}
   else if(t.kind==='tesla'){const chain=[e],links=d.chain[i]+(this.mods['chain@tesla']??0);while(chain.length<links){const last=chain.at(-1);const next=this.enemies.filter(a=>!a.dead&&!chain.includes(a)&&this.visible(a,t)&&distance(a,last)<=TESLA_JUMP).sort((a,b)=>distance(a,last)-distance(b,last))[0];if(!next)break;chain.push(next);}const weights=chain.map(()=>.1+this.random()),sum=weights.reduce((a,b)=>a+b,0);chain.forEach((victim,j)=>{const share=this.mods['full@tesla']>0?s.damage:s.damage*Math.max(1,chain.length/d.chain[i])*weights[j]/sum;this.hit(victim,share,t);if(share/(victim.maxHp+(victim.maxShield??0))>=.04)this.stunEnemy(victim,.1+t.level*.025);const p=j?chain[j-1]:t;this.fx('arc',p,{x2:victim.x,y2:victim.y,color:d.color,life:.2});});}
   else if(t.kind==='shotgun'){ // 4.11.39 buckshot: each pellet hits the first enemy along its line, or nothing
    const R=range,mz=this.muzzle(t),pool=this.enemies.filter(v=>!v.dead&&v.hp>0&&this.visible(v,t)&&distance(t,v)<=R+1.5);
@@ -4524,7 +4538,7 @@ class Game{
   const planes=this.towers.filter(t=>t.kind==='plane'&&t.level>=TOWER.plane.revealLevel&&t.disabled<=0&&(t.flight??TAKEOFF)>=TAKEOFF);
   for(const e of [...this.enemies]){if(e.dead)continue;e.revealed=planes.some(t=>distance(t,e)<=this.stat(t).range);e.stun=this.enemyData(e).stunImmune||e.shield>0?0:Math.max(0,e.stun-dt);if(e.held>0)e.held=Math.max(0,e.held-dt);
    const burningSeconds=Math.min(dt,Math.max(0,e.burn)),movementSeconds=dt-burningSeconds*(1-(e.shield>0?1:burnSlowMultiplier(e.kind)));e.hasteRemaining=Math.max(0,(e.hasteRemaining??0)-dt);if(e.hasteRemaining===0)e.hasteMultiplier=1;
-   if(burningSeconds>0){e.burn=Math.max(0,e.burn-dt);e.burnTick+=burningSeconds;while(e.burnTick+1e-8>=TOWER.flame.burnInterval&&!e.dead){e.burnTick=Math.max(0,e.burnTick-TOWER.flame.burnInterval);this.hit(e,e.burnDamage,this.towers.find(t=>t.id===e.burnSource));}if(e.burn<=1e-8){e.burn=0;e.burnDamage=0;e.burnTick=0;}}
+   if(burningSeconds>0){e.burn=Math.max(0,e.burn-dt);e.burnTick+=burningSeconds;const every=e.burnEvery||TOWER.flame.burnInterval;while(e.burnTick+1e-8>=every&&!e.dead){e.burnTick=Math.max(0,e.burnTick-every);this.hit(e,e.burnDamage,this.towers.find(t=>t.id===e.burnSource));}if(e.burn<=1e-8){e.burn=0;e.burnDamage=0;e.burnTick=0;e.burnEvery=0;}}
    if(e.dead)continue;const life=this.enemyData(e).lifetime;if(life){e.age=(e.age??0)+dt;if(e.age>=life){e.dead=true;this.fx('pulse',e,{r:.5*FX,color:this.enemyData(e).color,life:.3});continue;}}if(this.doomTick(e,dt)){Object.assign(e,this.position(e.progress,e.lane));continue;}if(!(e.held>0))this.updateBoss(e,dt);if(e.stun<=0&&!(e.held>0)&&!e.boss?.cast)e.progress+=e.moveSpeed*movementSeconds*(e.hasteMultiplier??1)*(e.rush??1)*(this.mods.speedMul??1)*(this.modifier('mash')?1.2:1);Object.assign(e,this.position(e.progress,e.lane));if(e.pull>0){e.pull=Math.max(0,e.pull-dt);if(e.pull>0){e.x=e.pullX;e.y=e.pullY;}}
    this.updateEnemyAbility(e,dt);
    if(e.progress>=this.length+1){if(!this.cheats.lives)this.health=Math.max(this.config.tutorial?1:0,this.health-Math.ceil(this.durability(e)/(this.config.leakScale??1)));e.dead=true;this.fx('pulse',e,{r:.7*FX,color:'#ff7a83',life:.35});this.notify('leak',e.kind);if(this.health<=0&&this.reviveLeft()>0){const first=!this.revived;this.revives=(this.revives??(this.revived?1:0))+1;this.revived=true;this.health=Math.max(1,Math.min(this.maxHealth,Math.round(first&&this.mods.revive>0?this.mods.revive:50)));if(this.mods.regen)this.health+=this.mods.regen;this.restartWave();return;}if(this.health<=0){this.finish(false);return;}}
@@ -4532,6 +4546,7 @@ class Game{
   if(this.mines?.length)this.mineTrigger();
   for(const bomb of this.bombs){bomb.remaining-=dt;if(bomb.remaining>1e-8)continue;if(bomb.x2==null)this.signalAim(bomb);else this.splash({x:bomb.x2,y:bomb.y2},bomb.damage,bomb.radius,this.towers.find(t=>t.id===bomb.source)??{kind:bomb.kind??'plane',damage:0});}
   this.bombs=this.bombs.filter(b=>b.remaining>1e-8);
+  this.scorch(dt);
   for(const t of this.towers){const s=this.stat(t),d=TOWER[t.kind],i=t.level-1;t.disabled=Math.max(0,t.disabled-dt);t.stunGrace=Math.max(0,(t.stunGrace??0)-dt);t.active=Math.max(0,t.active-dt);t.abilityCooldown=Math.max(0,t.abilityCooldown-dt);if(t.kind==='icu'&&t.level>=5)this.icuShip(t,dt);if(t.disabled>0)continue;const buff=this.buffs(t);
    if(t.kind==='plane'){const before=t.flight??TAKEOFF;t.flight=before+dt;if(t.flight<TAKEOFF)continue;if(before<TAKEOFF)t.orbit=(t.r??0)*Math.PI/2-Math.PI/2;t.orbit+=dt*d.orbitSpeed[i];t.bombCooldown=Math.max(0,(t.bombCooldown??0)-dt);t.missileCooldown=Math.max(0,(t.missileCooldown??0)-dt);this.planePayload(t,s,buff);}
    if(t.kind==='bomb'&&this.mods['mine@bomb']>0)this.mineStep(t,s,buff,dt);
