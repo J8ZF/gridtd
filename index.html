@@ -868,7 +868,7 @@ document.addEventListener('click',e=>{if(performance.now()-swipeAt<400&&e.target
 function warnTap(e,msg){const id=e.pointerId,x=e.clientX,up=ev=>{if(ev.pointerId!==id)return;window.removeEventListener('pointerup',up);if(Math.abs(ev.clientX-x)<30)warn(msg);};window.addEventListener('pointerup',up);}
 
 // the game's version, shown on the title screen and in the 정보 window
-const APP_VERSION='4.12.60';
+const APP_VERSION='4.12.61';
 function home(){fitLoadout(profile);if(cloudWaiting)setTimeout(()=>cloudSync(),0);if(game&&!game.ended){if(game.config.tutorial){game=null;coachStop();}else{game.paused=true;savedRun=game.snapshot();}}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p data-action="version-tap">버전 ${APP_VERSION}</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
 function openDialog(title,body,buttons,kind='dialog'){if(kind!=='result')sound(kind.startsWith('msg')?'question':'open');dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2><span>${title}</span>${button('dialog-x','<i>×</i>','xp-x','aria-label="닫기"')}</h2><div class="dialog-body">${body}</div><div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('.dialog').classList.toggle('msgbox',kind.startsWith('msg'));(modal.querySelector('.xp-yes')??modal.querySelector('.dialog-actions button')??modal.querySelector('button'))?.focus();backNavigation?.sync?.();}
 // Yes/no question in a Windows message box: icon, text, then [예] [아니요] on the right.
@@ -1932,23 +1932,48 @@ TOWERS.flame = (lv) => {
   return { base: pad(2, 2), turret: outline() + under + body(dark ? { torso: "hull", legs: "rubber" } : {}) + over };
 };
 
+// 미니건 (remake #4): a gunner in the tower color with a belt and pouches like the soldier, a squared ammo can on the
+// back and a dark rotary gun: spade grip, motor housing with a carry handle, three barrels held by two clamps. Being
+// dark, the gun gets a faint light edge round it and light top edges so it reads on the dark ground. Lv2 손놀림:
+// gloves and the brass belt from the can into the gun. Lv3 야간 고글: our visor. Lv4 쌍열 기관포: dark and heavy:
+// dark clothes, shoulder plates, a backpack of two big ammo cans feeding two heavier guns.
 TOWERS.minigun = (lv) => {
-  const twin = lv >= 4;
+  const twin = lv >= 4, heavy = twin;
   const gun = (s) => {
-    const y = s * GY;
-    let m = R(-3, y - 2.8, 10, 5.6, "steelHi", 1.4);
-    for (const d of [-1.4, 0, 1.4]) m += L(7, y + d, 20.5, y + d, "gunHi", 1);
-    return m + R(14, y - 2.4, 1.6, 4.8, "gun");
+    const y = s * GY, w = heavy ? 1.2 : 1, hb = heavy ? 3.2 : 2.8, inner = -s;
+    let m = G("", R(-4.9, y - hb - 0.7, 12.6, hb * 2 + 1.4, "#ffffff") + R(6.6, y - 2.9, 15.6, 5.8, "#ffffff"), ' opacity="0.3"'); // light edge
+    m += R(-4.2, y - 1.5, 1.4, 3, "rubber") + P(cut(-2.8, y - hb, 7.2, y + hb, 1), "hull") + R(1, y - 0.6, 4.2, 1.2, "rubber"); // spade grip, housing, carry handle
+    for (const d of [-1.4, 0, 1.4]) m += L(7, y + d, 21.4, y + d, "steel", w);
+    for (const x of [9.6, 15]) m += R(x, y - 2.5, 1.3, 5, "rubber");
+    m += R(20.6, y - 2.1, 0.8, 4.2, "rubber");
+    // light top edges
+    m += R(-2.8, y - hb, 10, 0.7, "steelHi") + R(1, y - 0.6, 4.2, 0.4, "steelHi");
+    for (const d of [-1.4, 0, 1.4]) m += L(7, y + d - 0.3, 21.4, y + d - 0.3, "steelHi", 0.35);
+    if (lv >= 2) m += R(1.6, y + inner * (hb + 0.6) - 0.5, 3.4, 1, "steel"); // feed chute on the body side
+    return m;
   };
-  // ammo box on the back, brass belt out to the gun from Lv2
-  const by = twin ? -4 : -10;
-  let over = R(-6.6, by, 6.6, 8, "c-55", 1.4) + R(-5.6, by + 1.6, 1.4, 4.8, "c-30", 0.5);
-  if (lv >= 2) {
-    over += L(0, by + 6, 1.6, 13, "c+28", 1.8, ' stroke-dasharray="1.2 0.8"');
-    if (twin) over += L(0, by + 2, 1.6, -13, "c+28", 1.8, ' stroke-dasharray="1.2 0.8"');
+  const under = gun(1) + (twin ? gun(-1) : "");
+  let over = "";
+  // belt at the waist with two pouches
+  over += R(-8, -13, 1.6, 26, heavy ? "hole" : "c-62");
+  for (const s of [-1, 1]) over += P(cut(-10.8, s * 7.4 - 1.9, -7.4, s * 7.4 + 1.9, 0.8, 0), heavy ? "c-82" : "c-56") + R(-8.6, s * 7.4 - 1.9, 0.6, 3.8, heavy ? "hole" : "c-66");
+  const brass = (x0, y0, x1, y1) => L(x0, y0, x1, y1, "#6e5a2a", 2) + L(x0, y0, x1, y1, "#c9a24e", 2, ' stroke-dasharray="1.2 0.7"');
+  if (!heavy) {
+    // ammo can on the left of the back: lid line and latch
+    over += P(cut(-6.8, -11.8, 0.2, -4.2, 1), "c-55") + L(-4.6, -11.8, -4.6, -4.2, "c-66", 0.6) + R(-1.4, -9, 1.2, 2.2, "steel");
+    if (lv >= 2) over += brass(0.2, -6, 2.6, GY - 3.4);
+  } else {
+    // backpack of two big ammo cans on a frame, a belt from each to its gun; shoulder plates
+    over += P(cut(-8, -10.4, 1.2, 10.4, 1.2), "hole");
+    for (const s of [-1, 1]) over += P(cut(-7.4, s > 0 ? 0.6 : -9.8, 0.6, s > 0 ? 9.8 : -0.6, 1), "c-72") + L(-4.8, s * 0.6, -4.8, s * 9.8, "c-80", 0.6) + R(-1.2, s * 5.2 - 1.1, 1.2, 2.2, "steel");
+    for (const s of [-1, 1]) over += brass(1.2, s * 7.6, 2.8, s * (GY - 3.8));
+    for (const s of [-1, 1]) over += P(cut(-4.6, s > 0 ? 10.2 : -14.6, 3.2, s > 0 ? 14.6 : -10.2, 1.2), "c-84") + R(-3.6, s > 0 ? 11 : -13.8, 5.8, 0.8, "c-70");
   }
-  over += nub(1.2) + (twin ? nub(1.2, -1) : "");
-  return tower(gun(1) + (twin ? gun(-1) : ""), over + (lv >= 3 ? goggles() : ""));
+  // hands: bare at Lv1, gloved from Lv2 (손놀림)
+  const glove = (s) => R(1.2, s > 0 ? 11.8 : -15.6, 3.8, 3.8, "rubber", 0, ' stroke="steel" stroke-width="0.8"') + R(4.2, s > 0 ? 12.3 : -15.1, 0.6, 2.8, "steel");
+  over += lv >= 2 ? glove(1) + (twin ? glove(-1) : "") : nub(1.2);
+  if (lv >= 3) over += goggles();
+  return { base: pad(2, 2), turret: outline() + under + body(heavy ? { torso: "c-64", legs: "c-76" } : {}) + over };
 };
 
 TOWERS.shotgun = (lv) => {
@@ -4813,7 +4838,7 @@ Object.assign(Game.prototype, {
 // a second row of points means two guns that take turns.
 const MUZZLE = {
   soldier: [[[21.6, 15.8]], [[21.6, 15.8]], [[24, 15.8]], [[24.4, 15.8]]],
-  minigun: [[[20.5, 15.8]], [[20.5, 15.8]], [[20.5, 15.8]], [[20.5, 15.8], [20.5, -15.8]]],
+  minigun: [[[21.4, 15.8]], [[21.4, 15.8]], [[21.4, 15.8]], [[21.4, 15.8], [21.4, -15.8]]],
   sniper: [[[25, 15.8]], [[25, 15.8]], [[26.2, 15.8]], [[33, 15.8]]],
   shotgun: [[[16.4, 15.8]], [[16.4, 15.8]], [[19.4, 15.8]], [[19.4, 15.8]]],
   agent: [[[18.9, 15.8]], [[18.9, 15.8]], [[23.4, 15.8], [23.4, -15.8]]],
