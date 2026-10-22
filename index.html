@@ -868,7 +868,7 @@ document.addEventListener('click',e=>{if(performance.now()-swipeAt<400&&e.target
 function warnTap(e,msg){const id=e.pointerId,x=e.clientX,up=ev=>{if(ev.pointerId!==id)return;window.removeEventListener('pointerup',up);if(Math.abs(ev.clientX-x)<30)warn(msg);};window.addEventListener('pointerup',up);}
 
 // the game's version, shown on the title screen and in the 정보 window
-const APP_VERSION='4.12.49';
+const APP_VERSION='4.12.50';
 function home(){fitLoadout(profile);if(cloudWaiting)setTimeout(()=>cloudSync(),0);if(game&&!game.ended){if(game.config.tutorial){game=null;coachStop();}else{game.paused=true;savedRun=game.snapshot();}}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p data-action="version-tap">버전 ${APP_VERSION}</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
 function openDialog(title,body,buttons,kind='dialog'){if(kind!=='result')sound(kind.startsWith('msg')?'question':'open');dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2><span>${title}</span>${button('dialog-x','<i>×</i>','xp-x','aria-label="닫기"')}</h2><div class="dialog-body">${body}</div><div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('.dialog').classList.toggle('msgbox',kind.startsWith('msg'));(modal.querySelector('.xp-yes')??modal.querySelector('.dialog-actions button')??modal.querySelector('button'))?.focus();backNavigation?.sync?.();}
 // Yes/no question in a Windows message box: icon, text, then [예] [아니요] on the right.
@@ -1729,7 +1729,7 @@ const ROUND = ' stroke-linecap="round"';
 function pad(w, h) {
   const hw = w * 10, hh = h * 10;
   return R(-hw + 1.2, -hh + 1.2, hw * 2 - 2.4, hh * 2 - 2.4, "pad", 3.2) +
-    R(-hw + 2.8, -hh + 2.8, hw * 2 - 5.6, hh * 2 - 5.6, "none", 2, ' stroke="c" stroke-width="2.4"');
+    R(-hw + 2.2, -hh + 2.2, hw * 2 - 4.4, hh * 2 - 4.4, "none", 2, ' stroke="c" stroke-width="1.2"');
 }
 // People are "erasers": a square token with its two front corners cut at 45°,
 // split front to back into head, torso (the widest band) and legs. Forward is
@@ -2027,7 +2027,7 @@ TOWERS.robot = (lv) => {
   b += R(-42, -41.6, 84, 2.4, "slot") + G("sortie", R(-42, -41.6, 84, 2.4, "c+25"), ' data-pivot="-42,0"');
   b += G("parked", robotUnit(lv), ' transform="translate(0 9) rotate(-90)"');
   b += G("empty", R(-26, -19, 52, 56, "none", 0, ' stroke="c-30" stroke-width="2" stroke-dasharray="7 5"'), ' data-off="1"');
-  b += R(-68.6, -68.6, 137.2, 137.2, "none", 2.4, ' stroke="c" stroke-width="2.8"');
+  b += R(-69.3, -69.3, 138.6, 138.6, "none", 2.4, ' stroke="c" stroke-width="1.4"');
   return { base: b };
 };
 // 신호기 8×5: a missile launcher on a base shaped []▪O. Left, a tall plate carrying the spare-missile magazine (top)
@@ -2107,7 +2107,7 @@ TOWERS.plane = (lv) => {
   let m = L(0, -40, 0, 40, "paint", 2, ' stroke-dasharray="10 8"');
   for (const s of [-1, 1]) for (const x of [-18, -11, 11, 18]) m += L(x, s * 55, x, s * 45, "paint", 2.8);
   b += G("", m, ' opacity="0.55"');
-  b += R(-28.8, -58.8, 57.6, 117.6, "none", 0, ' stroke="c" stroke-width="2.4"');
+  b += R(-29.4, -59.4, 58.8, 118.8, "none", 0, ' stroke="c" stroke-width="1.2"');
   b += G("parked", planeUnit(lv), ' transform="translate(0 26) rotate(-90) scale(0.82)"');
   return { base: b };
 };
@@ -2135,7 +2135,7 @@ TOWERS.farm = (lv) => {
   // barn: gable roof seen from above, the ridge is the highest line
   b += R(13, -21, 22, 42, "c-38", 1.4) + R(15, -19, 8.4, 38, "c-14") + R(25.6, -19, 8.4, 38, "c-22") + R(23, -21, 2.6, 42, "c+32");
   if (lv >= 2) for (const [x, y] of [[13.4, 23.6], [19.4, 23.6]]) b += R(x, y - 1.6, 5, 3.6, "paint", 1.2) + R(x + 1, y - 0.4, 3, 1, "c-30"); // sacks
-  b += R(-37.2, -27.2, 74.4, 54.4, "none", 2, ' stroke="c" stroke-width="2.4"');
+  b += R(-37.8, -27.8, 75.6, 55.6, "none", 2, ' stroke="c" stroke-width="1.2"');
   return { base: b };
 };
 
@@ -2302,7 +2302,7 @@ TOWERS.platinum = (lv) => {
     for (let k = 0; k < 4; k++) base += R(x0 + 3.6 + k * 4.4, -8.4, 2.2, 10.8, "rubber", 0.6);
     for (let k = 0; k < 3; k++) base += R(x0 + 4 + k * 5.8, 5.4, 3.4, 2.4, "c!", 0.6);
   }
-  base += C(0, 0, 29.2, "pad") + C(0, 0, 26.8, "none", ' stroke="c" stroke-width="2.4"') + C(0, 0, 24.4, "floor");
+  base += C(0, 0, 29.2, "pad") + C(0, 0, 27.4, "none", ' stroke="c" stroke-width="1.2"') + C(0, 0, 24.4, "floor");
   for (let k = 0; k < 12; k++) {
     const a = (k / 12) * Math.PI * 2;
     base += C(Math.cos(a) * 21.6, Math.sin(a) * 21.6, 1, "steel");
@@ -2432,7 +2432,7 @@ TOWERS.spawner = (lv) => {
   b += R(-22, -29.6, 44, 2, "slot") + G("sortie", R(-22, -29.6, 44, 2, "c+25"), ' data-pivot="-22,0"');
   b += G("parked", carUnit(lv), ' transform="translate(0 9) rotate(-90)"');
   b += G("empty", R(-13, -14, 26, 46, "none", 0, ' stroke="c-30" stroke-width="1.8" stroke-dasharray="6 4"'), ' data-off="1"');
-  b += R(-28.8, -48.8, 57.6, 97.6, "none", 2.4, ' stroke="c" stroke-width="2.4"');
+  b += R(-29.4, -49.4, 58.8, 98.8, "none", 2.4, ' stroke="c" stroke-width="1.2"');
   return { base: b };
 };
 
@@ -2647,7 +2647,7 @@ TOWERS.icu = (lv) => {
   for (const x of [-40, 0, 40]) b += park(x, 76, -90, .8, icuTrooper(lv));
   if (lv >= 2) b += park(-77, 0, -90, .82, icuTruck(lv));
   if (lv >= 4) b += park(77, 0, -90, .7, icuTank());
-  b += R(-97.6, -97.6, 195.2, 195.2, "none", 0, NEON(2.8));
+  b += R(-98.3, -98.3, 196.6, 196.6, "none", 0, NEON(1.4));
   return { base: b };
 };
 
@@ -2906,7 +2906,7 @@ function iconSVG(kind, hero = false, margin = 1) {
     body = G("", carUnit(1), ' transform="rotate(-90)"');
     vb = "-24 -29 48 54";
   } else if (kind === "platinum") {
-    body = C(0, 0, 29.2, "pad") + C(0, 0, 26.8, "none", ' stroke="c" stroke-width="2.4"') + G("", TOWERS.platinum(1).turret, ' transform="rotate(-90)"');
+    body = C(0, 0, 29.2, "pad") + C(0, 0, 27.4, "none", ' stroke="c" stroke-width="1.2"') + G("", TOWERS.platinum(1).turret, ' transform="rotate(-90)"');
     vb = "-46 -56 92 92";
   } else if (kind === "plane") {
     body = G("", planeUnit(1), ' transform="rotate(-90)"');
