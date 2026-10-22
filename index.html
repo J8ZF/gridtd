@@ -487,9 +487,12 @@ img.tower-icon,img.enemy-icon{flex-shrink:0}
 .screen>.scroll{flex:1 1 auto}
 .tower-heading>div:last-child{display:flex;align-items:center;gap:4px}
 /* one deck viewport for the battle bar, the home deck and the inventory deck: the battle slot's shape, the icon
-   84% of the slot's height, centered across it near the top, and the label (price or name) over its lower edge */
+   84% of the slot's height, centered across it near the top, and the label (price or name) over its lower edge.
+   The icon is drawn on an image 1.5× that box around it (deck-art), so the art runs to the button's edge. */
 .home-bottom .slot,.inventory .inv-slot{aspect-ratio:71/68;height:auto;min-height:0;padding:0;position:relative}
 .battle-footer .slot .tower-icon,.home-bottom .slot .tower-icon,.inventory .inv-slot .tower-icon{position:absolute;left:50%;top:4.5%;width:auto;height:84%;aspect-ratio:1/1;margin:0;transform:translateX(-50%)}
+.battle-footer .slot .deck-art,.home-bottom .slot .deck-art,.inventory .inv-slot .deck-art{top:-16.5%;height:126%;max-width:none}
+.inventory .inv-cell .deck-art{width:108%;height:108%;top:-15%;max-width:none}
 .battle-footer .slot.empty{justify-content:center}
 .home-bottom .slot:not(.empty)>span{position:absolute;left:0;right:0;bottom:0;padding:13px 2px 3px;font-size:11px;line-height:13px;text-align:center;background:linear-gradient(to top,#000000eb 35%,#0000);-webkit-text-stroke:3px #000;paint-order:stroke fill}
 </style>
@@ -837,7 +840,7 @@ function button(action,label,cls='',extra=''){return `<button class="${cls}" dat
 function header(title,back='home',extra=''){return `<header class="bar xp-title"><h2>${title}</h2>${extra&&extra!=='<span></span>'?`<span class="xp-extra">${extra}</span>`:''}${button(back,'<i>×</i>','xp-x','aria-label="닫기"')}</header>`;}
 function statusBar(){return `<footer class="xp-status"><span class="xp-cell grow">준비</span><span class="xp-cell wallet">${icon('coin')}${wallet()}</span></footer>`;}
 function setScreen(name,html){if(name!=='battle'){placing=null;dragPointer=null;}screen=name;app.innerHTML=`<main class="screen ${name}">${html}${name==='battle'?'':statusBar()}</main>`;controlSignature='';backNavigation?.sync?.();}
-function slots(loadout=profile.loadout,battle=false,removable=false){return paged(battle?'battle':'home',loadout.map((id,i)=>{const t=TOWER[id];return t?button(battle?'build':removable?'unequip':'inventory',`${towerIcon(id)}${battle?`<span class="price" data-price="${id}">${money(game.buildCost(id))}</span>`:`<span>${t.name}</span>`}`,`slot ${removable?'removable':''} ${battle&&placing?.kind===id?'active':''}`,`style="--color:${t.color}" data-kind="${id}" aria-label="${t.name}${battle?' 배치 '+t.cost+'원':removable?' 해제':''}" ${battle&&(!game.canBuild(id)||!game.canAfford(game.buildCost(id)))?'disabled':''}`):button(battle?'noop':'inventory',icon('plus'),'slot empty',`aria-label="빈 슬롯 ${i+1}" ${battle?'disabled':''}`);}),'loadout');}
+function slots(loadout=profile.loadout,battle=false,removable=false){return paged(battle?'battle':'home',loadout.map((id,i)=>{const t=TOWER[id];return t?button(battle?'build':removable?'unequip':'inventory',`${towerIcon(id,'tower-icon deck-art')}${battle?`<span class="price" data-price="${id}">${money(game.buildCost(id))}</span>`:`<span>${t.name}</span>`}`,`slot ${removable?'removable':''} ${battle&&placing?.kind===id?'active':''}`,`style="--color:${t.color}" data-kind="${id}" aria-label="${t.name}${battle?' 배치 '+t.cost+'원':removable?' 해제':''}" ${battle&&(!game.canBuild(id)||!game.canAfford(game.buildCost(id)))?'disabled':''}`):button(battle?'noop':'inventory',icon('plus'),'slot empty',`aria-label="빈 슬롯 ${i+1}" ${battle?'disabled':''}`);}),'loadout');}
 // Six to ten slots come as pages of five: swipe across them (or tap the pips) to turn.
 // (var and function declarations: the profile is read before this part of the file runs)
 var slotPage={},swipe=null,swipeAt=0;
@@ -856,7 +859,7 @@ document.addEventListener('click',e=>{if(performance.now()-swipeAt<400&&e.target
 function warnTap(e,msg){const id=e.pointerId,x=e.clientX,up=ev=>{if(ev.pointerId!==id)return;window.removeEventListener('pointerup',up);if(Math.abs(ev.clientX-x)<30)warn(msg);};window.addEventListener('pointerup',up);}
 
 // the game's version, shown on the title screen and in the 정보 window
-const APP_VERSION='4.12.45';
+const APP_VERSION='4.12.46';
 function home(){fitLoadout(profile);if(cloudWaiting)setTimeout(()=>cloudSync(),0);if(game&&!game.ended){if(game.config.tutorial){game=null;coachStop();}else{game.paused=true;savedRun=game.snapshot();}}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p data-action="version-tap">버전 ${APP_VERSION}</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
 function openDialog(title,body,buttons,kind='dialog'){if(kind!=='result')sound(kind.startsWith('msg')?'question':'open');dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2><span>${title}</span>${button('dialog-x','<i>×</i>','xp-x','aria-label="닫기"')}</h2><div class="dialog-body">${body}</div><div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('.dialog').classList.toggle('msgbox',kind.startsWith('msg'));(modal.querySelector('.xp-yes')??modal.querySelector('.dialog-actions button')??modal.querySelector('button'))?.focus();backNavigation?.sync?.();}
 // Yes/no question in a Windows message box: icon, text, then [예] [아니요] on the right.
@@ -917,9 +920,9 @@ const invShow=k=>{const p=profile.modules?.placed??[];return k==='robot'&&p.some
 function invPickHTML(){const t=TOWER[invSel],v=TOWER[invShow(invSel)],own=invOwned(invSel),eq=profile.loadout.includes(invSel),full=!profile.loadout.includes(null),buyable=canBuyTower(profile,invSel);
  const act=own?(eq?button('unequip','해제','inv-act unequip-button',`data-kind="${invSel}"`):button('equip','장착','inv-act equip-button',`data-kind="${invSel}" ${full?'disabled':''}`)):button('buy',`${icon('coin')}<span>${money(t.unlock*100)}</span>`,`inv-act ${buyable?'credit':'credit-off'}`,`data-kind="${invSel}" aria-label="${t.name} 구매" ${buyable?'':'disabled'}`);
  return `<div class="inv-pick"><div class="inv-hero" data-kind="${invSel}" style="--color:${v.color}">${towerIcon(v.id,'inv-hero-art')}<div class="inv-tags">${(MODS.TOWER_TAGS[v.id]??[]).map(k=>`<span>${MODS.TAGS[k]}</span>`).join('')}</div></div><div class="inv-title"><strong style="color:${v.color}">${v.name}</strong><span class="muted small">티어 ${v.tier}${own?'':' · 잠김'}</span></div><p class="inv-desc">${v.desc}</p><div class="inv-actions">${button('inv-more',invMore?'접기':'더보기','inv-more-btn',`aria-expanded="${invMore}"`)}${act}</div></div>`;}
-function invLoadoutHTML(){return `<div class="inv-loadout-wrap" data-key="${profile.loadout.join(',')}" aria-label="장착한 타워">${paged('inv',profile.loadout.map((k,i)=>k?button('inv-pick',towerIcon(invShow(k)),`inv-slot ${k===invSel?'on':''}`,`style="--color:${TOWER[invShow(k)].color}" data-kind="${k}" aria-label="${TOWER[invShow(k)].name}"`):`<div class="inv-slot empty" aria-label="빈 슬롯 ${i+1}">${icon('plus')}</div>`),'inv-loadout')}</div>`;}
+function invLoadoutHTML(){return `<div class="inv-loadout-wrap" data-key="${profile.loadout.join(',')}" aria-label="장착한 타워">${paged('inv',profile.loadout.map((k,i)=>k?button('inv-pick',towerIcon(invShow(k),'tower-icon deck-art'),`inv-slot ${k===invSel?'on':''}`,`style="--color:${TOWER[invShow(k)].color}" data-kind="${k}" aria-label="${TOWER[invShow(k)].name}"`):`<div class="inv-slot empty" aria-label="빈 슬롯 ${i+1}">${icon('plus')}</div>`),'inv-loadout')}</div>`;}
 function invBadge(id){return profile.loadout.includes(id)?`<i class="inv-badge eq">${icon('check')}</i>`:invOwned(id)?'':`<i class="inv-badge">${icon('lock')}</i>`;}
-function invCellHTML(x){const o=invOwned(x.id),e=profile.loadout.includes(x.id),v=TOWER[invShow(x.id)];return button('inv-pick',`${towerIcon(v.id)}<span class="inv-name">${v.name}</span>${invBadge(x.id)}`,`inv-cell ${x.id===invSel?'on':''} ${o?'':'locked'}`,`style="--color:${v.color}" data-kind="${x.id}" aria-label="${v.name}${e?' 장착됨':o?'':' 잠김'}"`);}
+function invCellHTML(x){const o=invOwned(x.id),e=profile.loadout.includes(x.id),v=TOWER[invShow(x.id)];return button('inv-pick',`${towerIcon(v.id,'tower-icon deck-art')}<span class="inv-name">${v.name}</span>${invBadge(x.id)}`,`inv-cell ${x.id===invSel?'on':''} ${o?'':'locked'}`,`style="--color:${v.color}" data-kind="${x.id}" aria-label="${v.name}${e?' 장착됨':o?'':' 잠김'}"`);}
 function inventory(){fitLoadout(profile);if(!TOWER[invSel])invSel=profile.loadout.find(Boolean)??TOWERS[0].id;
  setScreen('inventory',header('인벤토리')+`<section class="inv-top">${invLoadoutHTML()}${invPickHTML()}</section>${invMore?`<div class="inv-detail" data-kind="${invSel}">${invDetails(invSel)}</div>`:''}<div class="scroll inv-list">${[1,2,3,4].map(tier=>{const list=TOWERS.filter(x=>x.tier===tier);return `<div class="section-label"><span>티어 ${tier}</span></div><div class="inv-grid">${list.map(invCellHTML).join('')}</div>`;}).join('')}</div>`);fitInv();document.fonts?.ready?.then(fitInv);}
 function fitInv(){for(const el of document.querySelectorAll('.inv-title strong'))fitLine(el,18,13);for(const el of document.querySelectorAll('.inv-name'))fitLine(el,11,8);}
@@ -2870,8 +2873,9 @@ function towerSVG(kind, level, part = "tower") {
 // unit (robot, car, plane), the rest as the whole tower.
 // hero: the inventory's big preview, which shows every tower at the scale of a 3×3 tower (50 units across 72% of
 // the frame) on an image filling the whole frame; bigger towers are not shrunk to fit, the frame cuts them off.
+// margin: the same framing on a bigger image (margin times the side), so a button can cut the art at its own edge.
 const PEOPLE = new Set(["soldier", "bomb", "sniper", "flame", "minigun", "shotgun", "commander", "agent"]);
-function iconSVG(kind, hero = false) {
+function iconSVG(kind, hero = false, margin = 1) {
   if (!TOWERS[kind]) return "";
   const c = TOWER[kind].color;
   let body, vb;
@@ -2898,6 +2902,10 @@ function iconSVG(kind, hero = false) {
   }
   if (hero) {
     const [x, y, w, h] = vb.split(" ").map(Number), s = Math.min(Math.max(w, h), 50) / 0.72;
+    vb = `${f(x + w / 2 - s / 2)} ${f(y + h / 2 - s / 2)} ${f(s)} ${f(s)}`;
+  }
+  if (margin !== 1) {
+    const [x, y, w, h] = vb.split(" ").map(Number), s = Math.max(w, h) * margin;
     vb = `${f(x + w / 2 - s / 2)} ${f(y + h / 2 - s / 2)} ${f(s)} ${f(s)}`;
   }
   body = body.replace(/<g id="(treadB|empty)"[^>]*data-off="1"[^>]*>.*?<\/g>/g, "").replace(/href="face"/g, `href="${FACE}"`);
@@ -4766,10 +4774,11 @@ const GLYPHS={
 function glyph(kind){return `<g fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="square" stroke-linejoin="miter">${GLYPHS[kind]}</g>`;}
 const LOWRES=new Map();
 function rasterize(key,svg,px){return new Promise(done=>{const img=new Image();img.onload=()=>{try{const c=document.createElement('canvas');c.width=c.height=px;const g=c.getContext('2d');g.imageSmoothingEnabled=true;g.drawImage(img,0,0,px,px);LOWRES.set(key,c.toDataURL());}catch{}done();};img.onerror=()=>done();img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg.includes('xmlns=')?svg:svg.replace('<svg ','<svg xmlns="http://www.w3.org/2000/svg" '));});}
-function preloadIcons(){const art=require('art.js'),jobs=[];for(const k of Object.keys(TOWER)){const svg=art.iconSVG(k);if(svg){jobs.push(rasterize('t:'+k,svg,30));jobs.push(rasterize('T:'+k,svg,64));jobs.push(rasterize('H:'+k,art.iconSVG(k,true),89));}}for(const k of Object.keys(ENEMIES))jobs.push(rasterize('e:'+k,enemyIcon(k,'x',true),24));return Promise.all(jobs);}
+function preloadIcons(){const art=require('art.js'),jobs=[];for(const k of Object.keys(TOWER)){const svg=art.iconSVG(k);if(svg){jobs.push(rasterize('t:'+k,svg,30));jobs.push(rasterize('T:'+k,svg,64));jobs.push(rasterize('H:'+k,art.iconSVG(k,true),89));jobs.push(rasterize('w:'+k,art.iconSVG(k,false,1.5),45));}}for(const k of Object.keys(ENEMIES))jobs.push(rasterize('e:'+k,enemyIcon(k,'x',true),24));return Promise.all(jobs);}
 // the 64 px tower icon for module pieces (null until rasterized)
 const towerFaceSrc=(kind)=>LOWRES.get('T:'+kind)??null;
-function towerIcon(kind,cls='tower-icon'){const hero=cls==='inv-hero-art',low=kind&&LOWRES.get((hero?'H:':'t:')+kind);if(low)return `<img class="${cls} tower-art lowres" src="${low}" alt="" aria-hidden="true" draggable="false">`;const art=kind&&require('art.js').iconSVG(kind,hero);if(art)return art.replace('<svg ',`<svg class="${cls} tower-art" aria-hidden="true" `);if(!kind)return icon('plus',cls);return `<svg class="${cls}" viewBox="-24 -24 48 48" style="color:${TOWER[kind].color}" aria-hidden="true">${glyph(kind)}</svg>`;}
+// deck-art: the icon on an image 1.5× its box, for buttons that cut it at their own edge
+function towerIcon(kind,cls='tower-icon'){const hero=cls==='inv-hero-art',deck=cls.includes('deck-art'),low=kind&&LOWRES.get((hero?'H:':deck?'w:':'t:')+kind);if(low)return `<img class="${cls} tower-art lowres" src="${low}" alt="" aria-hidden="true" draggable="false">`;const art=kind&&require('art.js').iconSVG(kind,hero,deck?1.5:1);if(art)return art.replace('<svg ',`<svg class="${cls} tower-art" aria-hidden="true" `);if(!kind)return icon('plus',cls);return `<svg class="${cls}" viewBox="-24 -24 48 48" style="color:${TOWER[kind].color}" aria-hidden="true">${glyph(kind)}</svg>`;}
 // Local +X is travel direction; the long point at -X is the trailing end.
 const FINAL_BOSS_OUTLINE=[[-18,0],[-6,-9],[-9,-14],[11,-12],[14,-6],[14,6],[11,12],[-9,14],[-6,9]];
 // Which way each drawing faces when unrotated (radians). Upright drawings face up; the arrow and
