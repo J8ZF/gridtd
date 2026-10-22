@@ -868,7 +868,7 @@ document.addEventListener('click',e=>{if(performance.now()-swipeAt<400&&e.target
 function warnTap(e,msg){const id=e.pointerId,x=e.clientX,up=ev=>{if(ev.pointerId!==id)return;window.removeEventListener('pointerup',up);if(Math.abs(ev.clientX-x)<30)warn(msg);};window.addEventListener('pointerup',up);}
 
 // the game's version, shown on the title screen and in the 정보 window
-const APP_VERSION='4.12.62';
+const APP_VERSION='4.12.63';
 function home(){fitLoadout(profile);if(cloudWaiting)setTimeout(()=>cloudSync(),0);if(game&&!game.ended){if(game.config.tutorial){game=null;coachStop();}else{game.paused=true;savedRun=game.snapshot();}}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p data-action="version-tap">버전 ${APP_VERSION}</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
 function openDialog(title,body,buttons,kind='dialog'){if(kind!=='result')sound(kind.startsWith('msg')?'question':'open');dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2><span>${title}</span>${button('dialog-x','<i>×</i>','xp-x','aria-label="닫기"')}</h2><div class="dialog-body">${body}</div><div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('.dialog').classList.toggle('msgbox',kind.startsWith('msg'));(modal.querySelector('.xp-yes')??modal.querySelector('.dialog-actions button')??modal.querySelector('button'))?.focus();backNavigation?.sync?.();}
 // Yes/no question in a Windows message box: icon, text, then [예] [아니요] on the right.
@@ -1744,7 +1744,7 @@ const HX = 4, TX = -7, CUT = 3.4, GY = 15.8;
 const band = (x0, fill, more = "") => P([x0, -13, 13 - CUT, -13, 13, -13 + CUT, 13, 13 - CUT, 13 - CUT, 13, x0, 13], fill, more);
 // A half-transparent black edge around the token, drawn first, under the token and everything the person
 // carries, so only its outer half shows: it keeps people apart from floors and lines they stand on.
-const outline = () => G("", band(-13, "none", ' stroke="#000000" stroke-width="2.4"'), ' opacity="0.5"');
+const outline = (sw = 2.4) => G("", band(-13, "none", ` stroke="#000000" stroke-width="${sw}"`), ' opacity="0.5"');
 // eyes sit at (6.9, ±4.3) once the face is placed
 const EYE_X = 6.9, EYE_Y = 4.3;
 function body(o = {}) {
@@ -1937,6 +1937,8 @@ TOWERS.flame = (lv) => {
 // dark, the gun gets a faint light edge round it and light top edges so it reads on the dark ground. Lv2 손놀림:
 // gloves and the brass belt from the can into the gun. Lv3 야간 고글: our visor. Lv4 쌍열 기관포: dark and heavy:
 // dark clothes, shoulder plates, a backpack of two big ammo cans feeding two heavier guns.
+// 3×3 since 4.12.63: the gunner is drawn MINIGUN_K times the size of the 2×2 people (the edge stays as thick).
+const MINIGUN_K = 1.5;
 TOWERS.minigun = (lv) => {
   const twin = lv >= 4, heavy = twin;
   const gun = (s) => {
@@ -1973,7 +1975,7 @@ TOWERS.minigun = (lv) => {
   const glove = (s) => R(1.2, s > 0 ? 11.8 : -15.6, 3.8, 3.8, "rubber", 0, ' stroke="steel" stroke-width="0.8"') + R(4.2, s > 0 ? 12.3 : -15.1, 0.6, 2.8, "steel");
   over += lv >= 2 ? glove(1) + (twin ? glove(-1) : "") : nub(1.2);
   if (lv >= 3) over += goggles();
-  return { base: pad(2, 2), turret: outline() + under + body(heavy ? { torso: "c-64", legs: "c-76" } : {}) + over };
+  return { base: pad(3, 3), turret: G("", outline(2.4 / MINIGUN_K) + under + body(heavy ? { torso: "c-64", legs: "c-76" } : {}) + over, ` transform="scale(${MINIGUN_K})"`) };
 };
 
 TOWERS.shotgun = (lv) => {
@@ -3099,8 +3101,10 @@ function iconSVG(kind, hero = false, margin = 1) {
   const c = TOWER[kind].color;
   let body, vb;
   if (PEOPLE.has(kind)) {
+    // framed on the token, so the bigger minigun gunner shows at the size of the others
+    const k = kind === "minigun" ? MINIGUN_K : 1;
     body = G("", TOWERS[kind](1).turret, ' transform="rotate(-90)"');
-    vb = "-19.5 -19.5 39 39";
+    vb = `${f(-19.5 * k)} ${f(-19.5 * k)} ${f(39 * k)} ${f(39 * k)}`;
   } else if (kind === "robot") {
     body = G("", robotUnit(1), ' transform="rotate(-90)"');
     vb = "-27 -28 54 54";
@@ -3529,7 +3533,7 @@ const TOWER=Object.fromEntries(TOWERS.map(t=>[t.id,t]));
  // It turns only as the shell is ready (last 0.3 s), fires once it faces the target, then holds still.
  Object.assign(TOWER.spawner,{rocket:[0,0,0,0,60],rocketRadius:5,rocketPeriod:3.5,rocketRange:[0,0,0,0,24]});}
 // Footprint in cells at rotation 0 ([width, height]); `turns` = rotating changes the shape or the front.
-const FOOTPRINT={soldier:[2,2],bomb:[2,2],sniper:[2,2],farm:[4,3],flame:[2,2],tesla:[3,3],minigun:[2,2],shotgun:[2,2],spawner:[3,5],plane:[3,6],commander:[2,2],gauss:[3,3],laser:[3,3],agent:[2,2],robot:[7,7],signal:[8,5],icu:[10,10],platinum:[6,3]};
+const FOOTPRINT={soldier:[2,2],bomb:[2,2],sniper:[2,2],farm:[4,3],flame:[2,2],tesla:[3,3],minigun:[3,3],shotgun:[2,2],spawner:[3,5],plane:[3,6],commander:[2,2],gauss:[3,3],laser:[3,3],agent:[2,2],robot:[7,7],signal:[8,5],icu:[10,10],platinum:[6,3]};
 for(const t of TOWERS){t.size=FOOTPRINT[t.id];t.turns=t.size[0]!==t.size[1]||['robot','spawner','plane'].includes(t.id);}
 const dims=(kind,r=0)=>{const[w,h]=TOWER[kind].size;return r%2?[h,w]:[w,h];};
 // Displayed numbers follow the carried-over distances ("사거리 +0.3" becomes "+2").
@@ -4913,7 +4917,7 @@ Object.assign(Game.prototype, {
 // a second row of points means two guns that take turns.
 const MUZZLE = {
   soldier: [[[21.6, 15.8]], [[21.6, 15.8]], [[24, 15.8]], [[24.4, 15.8]]],
-  minigun: [[[21.4, 15.8]], [[21.4, 15.8]], [[21.4, 15.8]], [[21.4, 15.8], [21.4, -15.8]]],
+  minigun: [[[32.1, 23.7]], [[32.1, 23.7]], [[32.1, 23.7]], [[32.1, 23.7], [32.1, -23.7]]], // the 1.5× gunner (MINIGUN_K)
   sniper: [[[25, 15.8]], [[25, 15.8]], [[26.2, 15.8]], [[33, 15.8]]],
   shotgun: [[[16.4, 15.8]], [[16.4, 15.8]], [[19.4, 15.8]], [[19.4, 15.8]]],
   agent: [[[18.9, 15.8]], [[18.9, 15.8]], [[23.4, 15.8], [23.4, -15.8]]],
