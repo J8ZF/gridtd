@@ -868,7 +868,7 @@ document.addEventListener('click',e=>{if(performance.now()-swipeAt<400&&e.target
 function warnTap(e,msg){const id=e.pointerId,x=e.clientX,up=ev=>{if(ev.pointerId!==id)return;window.removeEventListener('pointerup',up);if(Math.abs(ev.clientX-x)<30)warn(msg);};window.addEventListener('pointerup',up);}
 
 // the game's version, shown on the title screen and in the 정보 window
-const APP_VERSION='4.12.61';
+const APP_VERSION='4.12.62';
 function home(){fitLoadout(profile);if(cloudWaiting)setTimeout(()=>cloudSync(),0);if(game&&!game.ended){if(game.config.tutorial){game=null;coachStop();}else{game.paused=true;savedRun=game.snapshot();}}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p data-action="version-tap">버전 ${APP_VERSION}</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
 function openDialog(title,body,buttons,kind='dialog'){if(kind!=='result')sound(kind.startsWith('msg')?'question':'open');dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2><span>${title}</span>${button('dialog-x','<i>×</i>','xp-x','aria-label="닫기"')}</h2><div class="dialog-body">${body}</div><div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('.dialog').classList.toggle('msgbox',kind.startsWith('msg'));(modal.querySelector('.xp-yes')??modal.querySelector('.dialog-actions button')??modal.querySelector('button'))?.focus();backNavigation?.sync?.();}
 // Yes/no question in a Windows message box: icon, text, then [예] [아니요] on the right.
@@ -2490,57 +2490,132 @@ TOWERS.platinum = (lv) => {
 };
 
 // ---- the spawner's car ---------------------------------------------------------
-// Lv1 jeep, Lv2 spiked bumper, Lv3 explosive crates in the back, Lv4 an armored
-// car with six wheels and a machine-gun turret (turns to its target).
+// Lv1 an open jeep: square body with its front corners cut, a flat hood with a grille and two lit
+// headlights, a bumper wider than the body, the windshield frame and no roof; one seat in the middle
+// with one of our people at the wheel (helmet, our visor). Lv2 a spiked plate on the bumper, Lv3 an
+// explosive crate with warning stripes in the back and a bundle of plastic explosive strapped outside
+// each side, between the wheels. Lv4 an armored car with six wheels
+// and a machine-gun turret (turns to its target).
+// the jeep's driver: a person token holding the steering wheel in front of the face, drawn at 0.52
+function driver() {
+  let p = outline();
+  for (const s of [-1, 1]) p += R(1, s > 0 ? 12.4 : -15.6, 13.4, 3.2, "c-8"); // arms reaching forward past the head
+  p += R(15.2, -13.6, 1.8, 27.2, "rubber"); // steering wheel
+  p += body() + militaryMark(-1.2, 0, 1, "c-8", "c-36");
+  p += P([3, -13.8, 10, -13.8, 11.4, -12.4, 11.4, -10.4, 5.6, -10.4, 5.6, 10.4, 11.4, 10.4, 11.4, 12.4, 10, 13.8, 3, 13.8], "c-52") + R(3.8, -13.8, 0.8, 27.6, "c-64"); // helmet
+  p += goggles();
+  for (const s of [-1, 1]) p += R(13.4, s * 12 - 1.9, 3.8, 3.8, "c+42", 0, ' stroke="c+12" stroke-width="0.8"'); // hands on the wheel
+  return p;
+}
+// periscope and sight lenses on the armored car and the tank glow a soft yellow; the tank's main gun
+// is a little darker than gunHi
+const LENS = "#ffdf6b", BARREL = "#b2b2b2";
 function carUnit(lv) {
   let p = "";
   if (lv < 4) {
-    for (const x of [-13, 13]) for (const s of [-1, 1]) p += R(x - 5, s > 0 ? 9.4 : -15, 10, 5.6, "rubber", 1.6);
-    p += C(-23.6, 0, 4.4, "rubber") + C(-23.6, 0, 2, "steel"); // spare tire
-    p += R(-22, -11.4, 44, 22.8, "c-38", 4); // tub
-    p += R(6, -10.4, 15, 20.8, "c", 3) + L(9, -6, 18, -6, "c-20", 0.9) + L(9, 6, 18, 6, "c-20", 0.9); // hood
-    p += R(3, -10.6, 2.8, 21.2, "paint", 1); // windshield
-    if (lv < 3) p += R(-7, -8.6, 7.4, 7.4, "c-62", 1.6) + R(-7, 1.2, 7.4, 7.4, "c-62", 1.6) + R(-14, -9, 3, 18, "c-55", 1); // seats
-    p += R(-10.4, -11.4, 2, 22.8, "steel"); // roll bar
+    for (const x of [-13, 13]) for (const s of [-1, 1]) {
+      p += R(x - 5, s > 0 ? 9.4 : -15, 10, 5.6, "rubber");
+      for (const tx of [-3.6, -1.2, 1.2, 3.6]) p += R(x + tx - 0.5, s > 0 ? 12.2 : -14.4, 1, 2.2, "hull"); // tread
+    }
+    p += R(-26.6, -4.8, 4.6, 9.6, "rubber"); // spare tire on the tailgate, edge on
+    for (const y of [-3, -1, 1, 3]) p += R(-26.6, y - 0.4, 1.6, 0.8, "hull");
+    p += P(cut(-22, -11.4, 21, 11.4, 3, 1.6), "c-30"); // body
+    p += R(-20.2, -9.6, 22.2, 19.2, "c-56"); // open top: the floor shows
+    p += R(2, -9.6, 1.8, 19.2, "c-44"); // dashboard
+    p += R(3.8, -11.8, 1.8, 23.6, "c-62"); // windshield frame
+    p += P(cut(5.6, -11.4, 21, 11.4, 3, 0), "c"); // hood
+    p += L(8.4, -6.4, 17.4, -6.4, "c-16", 0.8) + L(8.4, 6.4, 17.4, 6.4, "c-16", 0.8);
+    p += R(19.2, -4.6, 1.8, 9.2, "c-20"); // grille, four slots
+    for (const y of [-3.3, -1.1, 1.1, 3.3]) p += R(19.2, y - 0.6, 1.8, 1.2, "c-70");
+    p += R(21, -13, 2.4, 26, "c-66"); // bumper
+    for (const s of [-1, 1]) p += R(18.4, s * 7.2 - 2.4, 4.4, 4.8, "#fff1b8", 0, ' opacity="0.28"') + R(19.2, s * 7.2 - 1.3, 1.8, 2.6, "#fff1b8"); // headlights
     if (lv >= 2) {
-      p += R(21.6, -12.4, 3, 24.8, "steel", 1);
+      p += R(22, -12.4, 2.6, 24.8, "steel");
       for (const y of [-9, -3, 3, 9]) p += P([24.6, y - 2.2, 29.4, y, 24.6, y + 2.2], "gunHi");
     }
     if (lv >= 3) {
-      // explosive crate with warning stripes, two drums
-      p += R(-21, -9.6, 14, 19.2, "c-55", 1.4);
-      for (let k = 0; k < 4; k++) p += R(-19.4 + k * 3.2, -8.2, 1.6, 16.4, "c+35");
-      p += C(-3, -5.4, 3.4, "c-30") + C(-3, -5.4, 1.4, "c+20") + C(-3, 5.4, 3.4, "c-30") + C(-3, 5.4, 1.4, "c+20");
+      p += R(-22, -9.6, 8.8, 19.2, "c-55"); // explosive crate with warning stripes
+      for (let k = 0; k < 3; k++) p += R(-21.2 + k * 3.2, -8.2, 1.6, 16.4, "c+35");
+      for (const s of [-1, 1]) { // two blocks of plastic explosive bound by a strap round the middle
+        const y0 = s > 0 ? 10.6 : -16.2;
+        p += P(cut(-7.6, y0, 7.6, y0 + 5.6, 1.4), "c+16") + L(-6.8, y0 + 2.8, 6.8, y0 + 2.8, "c-24", 0.6);
+        p += R(-1.3, y0 - 0.5, 2.6, 6.6, "c-66") + R(-0.6, y0 + 1.9, 1.2, 1.8, "steel");
+      }
     }
+    p += P(cut(-14, -6, -2, 6, 0, 1), "c-70"); // the one seat, in the middle
+    p += G("", driver(), ' transform="translate(-5.5 0) scale(0.52)"');
     return p;
   }
   if (lv >= 5) {
-    // Lv5 tank: tracks, sloped hull, engine deck, a wide turret with a long gun
+    // Lv5 tank: tracks, sloped hull with spare track links, lights and the driver's hatch on the nose,
+    // engine grille and exhausts at the back, a tow cable on the left; a wide turret with a stowage
+    // basket, smoke launchers, the commander's cupola, a hatch, an antenna and a long gun with a
+    // bore evacuator and a slotted brake
     let ta = "", tb = "";
     for (const s of [-1, 1]) {
       const y0 = s > 0 ? 10.6 : -17.8;
-      p += R(-27, y0, 54, 7.2, "rubber", 2.4);
+      p += P(cut(-27, y0, 27, y0 + 7.2, 2.4), "rubber");
       for (let x = -23; x <= 23.01; x += 4.6) ta += L(x, y0 + 1, x, y0 + 6.2, "steel", 1.2);
       for (let x = -20.7; x <= 20.71; x += 4.6) tb += L(x, y0 + 1, x, y0 + 6.2, "steel", 1.2);
     }
     p += G("treadA", ta) + G("treadB", tb, ' data-off="1"');
     p += P([-25, -11, 19, -11, 26, -5.4, 26, 5.4, 19, 11, -25, 11], "c-30");
     p += P([-21, -8, 15, -8, 20.4, -3.6, 20.4, 3.6, 15, 8, -21, 8], "c-12");
-    for (const x of [-21.4, -18.6, -15.8]) p += L(x, -6, x, 6, "c-40", 1); // engine deck grille
+    for (const y of [-2.6, 0, 2.6]) p += R(21.6, y - 1.1, 2.8, 2.2, "rubber") + L(21.6, y, 24.4, y, "steel", 0.5); // spare track links
+    for (const s of [-1, 1]) {
+      p += R(25.6, s * 4.6 - 0.8, 2, 1.6, "steel"); // tow hook
+      p += R(19.4, s * 7.6 - 1.4, 2.4, 2.8, "hull") + R(19.8, s * 7.6 - 1, 1.6, 2, "#fff1b8"); // headlight in its guard
+      p += R(-26, s * 7.6 - 1.4, 2.4, 2.8, "hull") + R(-26, s * 7.6 - 0.6, 1, 1.2, "hole"); // exhaust
+    }
+    p += P(cut(12, -7, 17, -2.6, 1), "c-24") + R(16.4, -6.2, 0.8, 1.2, LENS) + R(16.4, -4.4, 0.8, 1.2, LENS); // driver's hatch, periscopes
+    p += R(-22.4, -6.6, 7.4, 13.2, "c-30"); // engine grille
+    for (const x of [-21.6, -19.6, -17.6]) p += R(x, -5.8, 1, 11.6, "c-50");
+    p += L(-19, -9.6, 7, -9.6, "steel", 0.9) + R(-20.4, -10.4, 1.6, 1.6, "steel") + R(6.6, -10.4, 1.6, 1.6, "steel"); // tow cable
     // side machine gun: a round sponson on the right edge of the hull, its own small turret (mg)
     p += C(12, 9.6, 4.6, "c-40");
-    p += G("mg", C(12, 9.6, 3.4, "c-12") + R(12, 8.4, 12, 2.4, "hull", 0.5) + R(22.4, 7.9, 2.8, 3.4, "rubber", 0.6) + C(10.6, 9.6, 1.3, "c+40"), ' data-pivot="12,9.6"');
-    p += G("turret", C(-2, 0, 9.4, "c-40") + P([-11, -7.4, 4, -8.4, 9.6, -4.4, 9.6, 4.4, 4, 8.4, -11, 7.4], "c") +
-      R(9, -1.7, 26, 3.4, "gunHi", 0.6) + R(32, -2.5, 4, 5, "gun", 0.8) + C(-4.4, 0, 2.4, "c+40") + R(-9.6, -6.4, 3.2, 3.2, "plate", 0.6), ' data-pivot="-2,0"');
+    p += G("mg", C(12, 9.6, 3.4, "c-12") + R(12, 8.8, 10.4, 1.6, "hull") +
+      R(15.6, 8.3, 5.6, 2.6, "steel") + R(16.6, 9.2, 0.8, 0.8, "hole") + R(18.4, 9.2, 0.8, 0.8, "hole") + // barrel jacket
+      R(14.4, 6.6, 1.4, 6, "c-30") + R(22.4, 7.9, 2.8, 3.4, "rubber") + // shield, flash hider
+      R(9.8, 8.8, 1.6, 1.6, "hull") + R(10.8, 9.1, 0.6, 1, LENS), ' data-pivot="12,9.6"'); // sight
+    let t = C(-2, 0, 9.4, "c-40") + P(cut(-14.4, -6.4, -10.6, 6.4, 0, 1), "c-50"); // ring, stowage basket
+    for (const y of [-3.6, 0, 3.6]) t += R(-14, y - 0.4, 3.4, 0.8, "c-30");
+    t += P([-11, -7.4, 4, -8.4, 9.6, -4.4, 9.6, 4.4, 4, 8.4, -11, 7.4], "c") + P([-9, -5.6, 3, -6.4, 7.4, -3.4, 7.4, 3.4, 3, 6.4, -9, 5.6], "c+8");
+    for (const s of [-1, 1]) for (let k = 0; k < 3; k++) t += R(-0.8 + k * 1.8, s > 0 ? 7.8 : -9.4, 1.4, 1.6, "hull"); // smoke launchers
+    t += R(7.6, -3.4, 4, 6.8, "c-40"); // mantlet
+    t += R(11.6, -1.5, 20.4, 3, BARREL) + R(19, -2.2, 5, 4.4, "gun") + R(32, -2.5, 4, 5, "steel") + R(33, -2.5, 0.6, 5, "hole") + R(34.4, -2.5, 0.6, 5, "hole");
+    t += C(-5.4, -3.6, 3.4, "c-30") + C(-5.4, -3.6, 2.4, "c-8") + R(-2.8, -4.4, 0.8, 1.6, LENS); // commander's cupola
+    t += P(cut(-8.4, 1.4, -3.6, 5.6, 0.8), "c-20") + R(-8.4, 2.6, 0.6, 1.8, "steel"); // hatch
+    t += R(-10.8, 5.8, 1.6, 1.6, "steel") + L(-10, 6.6, -18, 10.4, "gun", 0.6) + C(-18, 10.4, 0.7, "steelHi"); // antenna
+    p += G("turret", t, ' data-pivot="-2,0"');
     return p;
   }
-  // Lv4 armored car
-  for (const x of [-16, 0, 16]) for (const s of [-1, 1]) p += R(x - 4.6, s > 0 ? 11 : -16.6, 9.2, 5.6, "rubber", 1.6);
+  // Lv4 armored car: six wheels, lights in guards on the nose, tow hooks, the driver's hatch, an
+  // engine grille, a spare wheel on the back and an antenna; the turret has a gun shield, a
+  // hatch with a periscope and a machine gun with a cooling jacket
+  for (const x of [-16, 0, 16]) for (const s of [-1, 1]) {
+    p += R(x - 4.6, s > 0 ? 11 : -16.6, 9.2, 5.6, "rubber");
+    for (const tx of [-3.3, -1.1, 1.1, 3.3]) p += R(x + tx - 0.5, s > 0 ? 13.6 : -15.8, 1, 2.2, "hull"); // tread
+  }
+  p += R(-27.6, -4.4, 4.2, 8.8, "rubber"); // spare wheel, edge on
+  for (const y of [-2.7, -0.9, 0.9, 2.7]) p += R(-27.6, y - 0.4, 1.4, 0.8, "hull");
   p += P([-24, -12, 18, -12, 26, -5, 26, 5, 18, 12, -24, 12], "c-30");
   p += P([-20, -9, 15, -9, 21, -4, 21, 4, 15, 9, -20, 9], "c-12");
   p += R(17, -6, 2, 4, "hole") + R(17, 2, 2, 4, "hole"); // vision slits
-  for (const [x, y] of [[-20, -9], [-20, 9], [12, -9], [12, 9]]) p += C(x, y, 0.9, "c+20");
-  p += G("turret", C(-3, 0, 7.6, "c-40") + C(-3, 0, 6, "c") + R(2, -1.3, 20, 2.6, "gunHi", 0.6) + R(14, -2, 2, 4, "gun") + C(-3, 0, 2.2, "c+40"));
+  for (const s of [-1, 1]) {
+    p += R(25.4, s * 3.4 - 0.8, 2, 1.6, "steel"); // tow hook
+    p += R(20.8, s * 7.4 - 1.4, 2.4, 2.8, "hull") + R(21.2, s * 7.4 - 1, 1.6, 2, "#fff1b8"); // headlight in its guard
+  }
+  for (const [x, y] of [[-20, -9], [-20, 9], [-4, -9], [-4, 9], [12, -9], [12, 9]]) p += C(x, y, 0.9, "c+20");
+  p += P(cut(7.6, -7.2, 13.4, -2.4, 1), "c-24") + R(8, -6.6, 0.6, 3.6, "steel"); // driver's hatch
+  for (const x of [-19, -17, -15]) p += L(x, -6.4, x, 6.4, "c-40", 1); // engine grille
+  p += R(-22, -10.8, 1.6, 1.6, "steel") + L(-21.2, -10, -29, -12.6, "gun", 0.6) + C(-29, -12.6, 0.7, "steelHi"); // antenna
+  let t = C(-3, 0, 7.6, "c-40") + C(-3, 0, 6, "c");
+  t += P(cut(-8, -4.6, -3.4, -0.4, 0.8), "c-20") + R(-8, -3.4, 0.6, 1.8, "steel") + R(-2.6, -4, 1.4, 2.4, "hull") + R(-1.6, -3.6, 0.6, 1.6, LENS); // hatch, periscope
+  t += P([2.4, -4.6, 4.6, -4.6, 5.8, -3.4, 5.8, 3.4, 4.6, 4.6, 2.4, 4.6], "c-30"); // gun shield
+  t += R(3.4, -1.9, 6, 3.8, "steel") + R(9.4, -1.5, 7, 3, "steelHi"); // receiver, cooling jacket
+  for (const x of [10.6, 12.6, 14.6]) t += R(x, -0.4, 0.8, 0.8, "hole");
+  t += R(16.4, -0.8, 4, 1.6, "gunHi") + R(20.2, -1.2, 1.8, 2.4, "gun"); // barrel, flash hider
+  p += G("turret", t, ' data-pivot="-3,0"');
   return p;
 }
 
