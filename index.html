@@ -868,7 +868,7 @@ document.addEventListener('click',e=>{if(performance.now()-swipeAt<400&&e.target
 function warnTap(e,msg){const id=e.pointerId,x=e.clientX,up=ev=>{if(ev.pointerId!==id)return;window.removeEventListener('pointerup',up);if(Math.abs(ev.clientX-x)<30)warn(msg);};window.addEventListener('pointerup',up);}
 
 // the game's version, shown on the title screen and in the 정보 window
-const APP_VERSION='4.12.63';
+const APP_VERSION='4.12.64';
 function home(){fitLoadout(profile);if(cloudWaiting)setTimeout(()=>cloudSync(),0);if(game&&!game.ended){if(game.config.tutorial){game=null;coachStop();}else{game.paused=true;savedRun=game.snapshot();}}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p data-action="version-tap">버전 ${APP_VERSION}</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
 function openDialog(title,body,buttons,kind='dialog'){if(kind!=='result')sound(kind.startsWith('msg')?'question':'open');dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2><span>${title}</span>${button('dialog-x','<i>×</i>','xp-x','aria-label="닫기"')}</h2><div class="dialog-body">${body}</div><div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('.dialog').classList.toggle('msgbox',kind.startsWith('msg'));(modal.querySelector('.xp-yes')??modal.querySelector('.dialog-actions button')??modal.querySelector('button'))?.focus();backNavigation?.sync?.();}
 // Yes/no question in a Windows message box: icon, text, then [예] [아니요] on the right.
@@ -2268,24 +2268,71 @@ TOWERS.farm = (lv) => {
   return { base: b };
 };
 
-// Tesla 3x3: coil seen from above (windings as rings) under a bright sphere.
-// Lv2 insulator posts, Lv3 a small radar dish (hidden detection), Lv4 three
-// satellite coils joined by a ring.
-TOWERS.tesla = (lv) => {
-  let b = pad(3, 3) + P([-10, -24, 10, -24, 24, -10, 24, 10, 10, 24, -10, 24, -24, 10, -24, -10], "floor");
-  if (lv >= 2) for (const [x, y] of [[-16, -16], [16, -16], [-16, 16], [16, 16]]) b += C(x, y, 3.4, "steel") + C(x, y, 1.5, "c+30");
-  if (lv >= 4) {
-    b += C(0, 0, 21, "none", ' stroke="c-20" stroke-width="1.4"');
-    for (const a of [-90, 30, 150]) {
-      const x = 21 * Math.cos((a * Math.PI) / 180), y = 21 * Math.sin((a * Math.PI) / 180);
-      b += C(x, y, 5.2, "c-45") + C(x, y, 2.6, "c+25");
-    }
+// 테슬라 (remake #5), 4×4. Lv1–2 a person in the tower color with a plasma wand held forward: a dark handle with
+// a blue end cap, two lit rings and a glass bulb with a glowing core and sparks; black straps over the shoulders
+// and a headset. Lv2 고전압 코일: a bigger bulb, a coil on the handle and a battery pack on the back wired to the
+// wand. From Lv3 a machine: a big round glass globe on a slightly octagonal base set on a cross, the slotted
+// pedestal under the glass, the core and its ring inside; the person stands on the back of
+// the globe with a controller. Lv3 전파 탐지: an antenna with a lit tip. Lv4 뇌전 폭풍: dark clamps gripping the
+// globe, a dark cap with a white insulator on top and a lit ring floating over it, a pipe up to the person,
+// lightning inside the glass and dark clothes.
+const WAND = "#262b3a", WAND_CAP = "#3d6fd0", GLASS = "#ffffff";
+// the person stands this far behind the globe's center (toward -y) on the machine
+const TESLA_RIDER = 15;
+function plasmaBulb(x, y, r) {
+  let m = C(x, y, r + 2.6, "c!", ' opacity="0.22"') + C(x, y, r, GLASS, ' opacity="0.3"');
+  m += C(x, y, r * 0.48, "c!") + C(x, y, r * 0.2, "#ffffff");
+  for (const [a, b] of [[-0.5, 0.7], [2.2, 0.95], [3.9, 0.8]]) {
+    const k = r * b;
+    m += L(x + Math.cos(a) * r * 0.45, y + Math.sin(a) * r * 0.45, x + Math.cos(a + 0.35) * k * 0.75, y + Math.sin(a + 0.35) * k * 0.75, "c!", 0.5) +
+      L(x + Math.cos(a + 0.35) * k * 0.75, y + Math.sin(a + 0.35) * k * 0.75, x + Math.cos(a) * k, y + Math.sin(a) * k, "c!", 0.5);
   }
-  b += C(0, 0, 16, "c-58");
-  for (const r of [14, 11, 8]) b += C(0, 0, r, "none", ' stroke="c-18" stroke-width="1.6"');
-  b += C(0, 0, 6.4, "c") + C(0, 0, 2.8, "c+45");
-  if (lv >= 3) b += C(-20, 20, 5.4, "plate") + C(-20, 20, 3.6, "steel") + L(-20, 20, -16.4, 16.4, "gunHi", 1.2) + C(-20, 20, 1.2, "c+40");
-  return { base: b };
+  return m + C(x, y, r, "none", ' stroke="#ffffff" stroke-width="0.6" opacity="0.75"');
+}
+TOWERS.tesla = (lv) => {
+  const headset = R(5.2, -14.2, 3.2, 2.4, "hull") + R(5.2, 11.8, 3.2, 2.4, "hull") + L(8, 13, 11.6, 9.6, "hull", 0.8) + R(11, 8.8, 1.4, 1.4, "hull");
+  const straps = L(-6.6, -5.6, 3.8, -5.6, "rubber", 1.3) + L(-6.6, 5.6, 3.8, 5.6, "rubber", 1.3);
+  if (lv < 3) {
+    const y = GY, r = lv >= 2 ? 6 : 5.2, bx = 13.4 + r;
+    let wand = R(-8.6, y - 1.5, 1.8, 3, WAND_CAP) + R(-6.8, y - 1.3, 17.2, 2.6, WAND); // end cap, handle
+    if (lv >= 2) for (const x of [-4.6, -3, -1.4]) wand += R(x, y - 1.5, 0.8, 3, "c+20"); // coil
+    for (const x of [10.4, 12.2]) wand += R(x, y - 2.8, 0.9, 5.6, "c!"); // lit rings
+    wand += plasmaBulb(bx, y, r);
+    let over = straps;
+    if (lv >= 2) over += P(cut(-12.4, -6.4, -6.8, 6.4, 1), "hull") + R(-10.6, -1.2, 1.6, 2.4, "c!") + L(-9.6, 6.4, -8, y - 1.5, "rubber", 1); // battery pack, cable
+    return { base: pad(4, 4), turret: outline() + wand + body() + over + nub(2) + headset };
+  }
+  const dark = lv >= 4;
+  let b = pad(4, 4);
+  b += R(-36, -7, 72, 14, "rubber") + R(-7, -36, 14, 72, "rubber"); // the cross
+  for (const [x, y] of [[-33.6, 0], [33.6, 0], [0, -33.6], [0, 33.6]]) b += R(x - 1.4, y - 1.4, 2.8, 2.8, "steel");
+  b += P(cut(-30, -30, 30, 30, 6), "hull"); // base, slightly octagonal
+  b += C(0, 0, 24.4, "rubber"); // slotted pedestal
+  for (let k = 0; k < 16; k++) {
+    const a = (k / 16) * Math.PI * 2;
+    b += G("", R(19.8, -0.8, 3.6, 1.6, "c-10"), ` transform="rotate(${f((a * 180) / Math.PI)})"`);
+  }
+  b += C(0, 0, 18, "hull") + C(0, 0, 12, "c!", ' opacity="0.3"') + C(0, 0, 14, "none", ' stroke="c!" stroke-width="1.4"'); // core's glow and ring
+  b += C(0, 0, 6.4, "c!") + C(0, 0, 3, "#ffffff");
+  if (dark) for (const pts of [[6, -2, 11, 3, 15, -1, 22, 4], [-4, 5, -2, 11, -7, 14, -6, 21], [-5, -3, -11, -1, -14, -6, -21, -5]]) {
+    for (let k = 0; k + 3 < pts.length; k += 2) b += L(pts[k], pts[k + 1], pts[k + 2], pts[k + 3], "c!", 0.7);
+  }
+  b += C(0, 0, 27, GLASS, ' opacity="0.16"') + C(0, 0, 27, "none", ' stroke="#ffffff" stroke-width="1" opacity="0.6"'); // glass
+  if (dark) {
+    for (let k = 0; k < 8; k++) { // clamps gripping the globe: long on the diagonals, short on the cross
+      const long = k % 2 === 1;
+      b += G("", R(long ? 21 : 23, -2.6, long ? 12 : 9, 5.2, "hull") + R(long ? 21 : 23, -1.4, 2.4, 2.8, "steel"), ` transform="rotate(${k * 45})"`);
+    }
+    b += L(0, -7, 0, -TESLA_RIDER + 6, "hull", 2.6); // pipe up to the person
+    b += C(0, 0, 8, "hull") + C(0, 0, 6, "rubber") + C(0, 0, 2.8, "#e9e4f0"); // cap, insulator
+    b += C(0, 0, 11.4, "none", ' stroke="c!" stroke-width="4" opacity="0.25"') + C(0, 0, 11.4, "none", ' stroke="c!" stroke-width="1.4"'); // floating ring
+  }
+  b += R(17.4, 17.4, 3.4, 3.4, "hull") + L(19.1, 19.1, 27, 27, "gun", 0.8) + C(27, 27, 1.3, "c!"); // antenna
+  // the person on the globe with a controller held in front, both hands on it
+  let t = outline() + body(dark ? { torso: "c-62", legs: "c-74" } : {}) + straps + headset;
+  t += P(cut(13.4, -4.2, 17.6, 4.2, 1), WAND) + R(15.8, -1, 1.2, 2, "c!") + L(15.4, 3.6, 19.6, 6.6, "gun", 0.6);
+  for (const s of [-1, 1]) t += R(13.2, s * 6.2 - 1.9, 3.8, 3.8, "c+42", 0, ' stroke="c+12" stroke-width="0.8"');
+  return { base: b, turret: t, pivot: [0, -TESLA_RIDER] };
 };
 
 // ---- 4.3.20: gauss as an industrial machine, laser as a railgun ---------------------------
@@ -3094,7 +3141,7 @@ function towerSVG(kind, level, part = "tower") {
 // hero: the inventory's big preview, which shows every tower at the scale of a 3×3 tower (50 units across 72% of
 // the frame) on an image filling the whole frame; bigger towers are not shrunk to fit, the frame cuts them off.
 // margin: the same framing on a bigger image (margin times the side), so a button can cut the art at its own edge.
-const PEOPLE = new Set(["soldier", "bomb", "sniper", "flame", "minigun", "shotgun", "commander", "agent"]);
+const PEOPLE = new Set(["soldier", "bomb", "sniper", "flame", "minigun", "shotgun", "commander", "agent", "tesla"]);
 const HERO_FIT = new Set(["icu", "platinum"]);
 function iconSVG(kind, hero = false, margin = 1) {
   if (!TOWERS[kind]) return "";
@@ -3533,7 +3580,7 @@ const TOWER=Object.fromEntries(TOWERS.map(t=>[t.id,t]));
  // It turns only as the shell is ready (last 0.3 s), fires once it faces the target, then holds still.
  Object.assign(TOWER.spawner,{rocket:[0,0,0,0,60],rocketRadius:5,rocketPeriod:3.5,rocketRange:[0,0,0,0,24]});}
 // Footprint in cells at rotation 0 ([width, height]); `turns` = rotating changes the shape or the front.
-const FOOTPRINT={soldier:[2,2],bomb:[2,2],sniper:[2,2],farm:[4,3],flame:[2,2],tesla:[3,3],minigun:[3,3],shotgun:[2,2],spawner:[3,5],plane:[3,6],commander:[2,2],gauss:[3,3],laser:[3,3],agent:[2,2],robot:[7,7],signal:[8,5],icu:[10,10],platinum:[6,3]};
+const FOOTPRINT={soldier:[2,2],bomb:[2,2],sniper:[2,2],farm:[4,3],flame:[2,2],tesla:[4,4],minigun:[3,3],shotgun:[2,2],spawner:[3,5],plane:[3,6],commander:[2,2],gauss:[3,3],laser:[3,3],agent:[2,2],robot:[7,7],signal:[8,5],icu:[10,10],platinum:[6,3]};
 for(const t of TOWERS){t.size=FOOTPRINT[t.id];t.turns=t.size[0]!==t.size[1]||['robot','spawner','plane'].includes(t.id);}
 const dims=(kind,r=0)=>{const[w,h]=TOWER[kind].size;return r%2?[h,w]:[w,h];};
 // Displayed numbers follow the carried-over distances ("사거리 +0.3" becomes "+2").
@@ -4586,7 +4633,7 @@ class Game{
   const e=t.kind==='flame'?this.select(t,origin,range,cone,true,e=>e.burn<=d.burnInterval||this.burnRate(e)<d.burn[i]*(this.enemyData(e).burnResist??1)*Math.max(1,buff.fire)/d.burnInterval)??this.select(t,origin,range,cone,true):this.select(t,origin,range,cone,true);if(!e)return false;t.angle=Math.atan2(e.y-origin.y,e.x-origin.x);
   if(t.kind==='bomb'){this.fx('shot',this.muzzle(t),{x2:e.x,y2:e.y,color:d.color,life:.2,heavy:true});this.splash(e,s.damage,d.splash[i],t,t.level>=d.centerLevel);}
   else if(t.kind==='flame'){t.spray={angle:t.angle,cone:d.cone[i],range,left:s.period,fire:buff.fire};this.fx('flame',this.muzzle(t),{angle:t.angle,cone:d.cone[i],r:range,color:d.color,life:s.period});}
-  else if(t.kind==='tesla'){const chain=[e],links=d.chain[i]+(this.mods['chain@tesla']??0);while(chain.length<links){const last=chain.at(-1);const next=this.enemies.filter(a=>!a.dead&&!chain.includes(a)&&this.visible(a,t)&&distance(a,last)<=TESLA_JUMP).sort((a,b)=>distance(a,last)-distance(b,last))[0];if(!next)break;chain.push(next);}const weights=chain.map(()=>.1+this.random()),sum=weights.reduce((a,b)=>a+b,0);chain.forEach((victim,j)=>{const share=this.mods['full@tesla']>0?s.damage:s.damage*Math.max(1,chain.length/d.chain[i])*weights[j]/sum;this.hit(victim,share,t);if(share/(victim.maxHp+(victim.maxShield??0))>=.04)this.stunEnemy(victim,.1+t.level*.025);const p=j?chain[j-1]:t;this.fx('arc',p,{x2:victim.x,y2:victim.y,color:d.color,life:.2});});}
+  else if(t.kind==='tesla'){const chain=[e],links=d.chain[i]+(this.mods['chain@tesla']??0);while(chain.length<links){const last=chain.at(-1);const next=this.enemies.filter(a=>!a.dead&&!chain.includes(a)&&this.visible(a,t)&&distance(a,last)<=TESLA_JUMP).sort((a,b)=>distance(a,last)-distance(b,last))[0];if(!next)break;chain.push(next);}const weights=chain.map(()=>.1+this.random()),sum=weights.reduce((a,b)=>a+b,0);chain.forEach((victim,j)=>{const share=this.mods['full@tesla']>0?s.damage:s.damage*Math.max(1,chain.length/d.chain[i])*weights[j]/sum;this.hit(victim,share,t);if(share/(victim.maxHp+(victim.maxShield??0))>=.04)this.stunEnemy(victim,.1+t.level*.025);const p=j?chain[j-1]:this.muzzle(t);this.fx('arc',p,{x2:victim.x,y2:victim.y,color:d.color,life:.2});});}
   else if(t.kind==='shotgun'){ // 4.11.39 buckshot: each pellet hits the first enemy along its line, or nothing
    const R=range,mz=this.muzzle(t),pool=this.enemies.filter(v=>!v.dead&&v.hp>0&&this.visible(v,t)&&distance(t,v)<=R+1.5);
    for(let k=0;k<d.pellets[i];k++){const a=t.angle+(this.random()-.5)*d.spread,ux=Math.cos(a),uy=Math.sin(a);let best=null,bd=R;
@@ -4917,6 +4964,7 @@ Object.assign(Game.prototype, {
 // a second row of points means two guns that take turns.
 const MUZZLE = {
   soldier: [[[21.6, 15.8]], [[21.6, 15.8]], [[24, 15.8]], [[24.4, 15.8]]],
+  tesla: [[[18.6, 15.8]], [[19.4, 15.8]], [[0, 0]], [[0, 0]]], // the wand's bulb; from Lv3 the globe's core, at the center
   minigun: [[[32.1, 23.7]], [[32.1, 23.7]], [[32.1, 23.7]], [[32.1, 23.7], [32.1, -23.7]]], // the 1.5× gunner (MINIGUN_K)
   sniper: [[[25, 15.8]], [[25, 15.8]], [[26.2, 15.8]], [[33, 15.8]]],
   shotgun: [[[16.4, 15.8]], [[16.4, 15.8]], [[19.4, 15.8]], [[19.4, 15.8]]],
