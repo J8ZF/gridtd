@@ -868,7 +868,7 @@ document.addEventListener('click',e=>{if(performance.now()-swipeAt<400&&e.target
 function warnTap(e,msg){const id=e.pointerId,x=e.clientX,up=ev=>{if(ev.pointerId!==id)return;window.removeEventListener('pointerup',up);if(Math.abs(ev.clientX-x)<30)warn(msg);};window.addEventListener('pointerup',up);}
 
 // the game's version, shown on the title screen and in the 정보 window
-const APP_VERSION='4.12.53';
+const APP_VERSION='4.12.54';
 function home(){fitLoadout(profile);if(cloudWaiting)setTimeout(()=>cloudSync(),0);if(game&&!game.ended){if(game.config.tutorial){game=null;coachStop();}else{game.paused=true;savedRun=game.snapshot();}}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p data-action="version-tap">버전 ${APP_VERSION}</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
 function openDialog(title,body,buttons,kind='dialog'){if(kind!=='result')sound(kind.startsWith('msg')?'question':'open');dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2><span>${title}</span>${button('dialog-x','<i>×</i>','xp-x','aria-label="닫기"')}</h2><div class="dialog-body">${body}</div><div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('.dialog').classList.toggle('msgbox',kind.startsWith('msg'));(modal.querySelector('.xp-yes')??modal.querySelector('.dialog-actions button')??modal.querySelector('button'))?.focus();backNavigation?.sync?.();}
 // Yes/no question in a Windows message box: icon, text, then [예] [아니요] on the right.
@@ -1767,21 +1767,69 @@ const tower = (under, over = "") => ({ base: pad(2, 2), turret: outline() + unde
 // ---- towers: { base, turret } per level -----------------------------------
 const TOWERS = {};
 
+// 군인 (remake #1): an infantryman in the tower color with the military mark on the chest (three stacked tiles),
+// a belt with two magazine pouches and the rifle on its sling. Lv2 야간 작전: our visor and a light on the rifle.
+// Lv3 돌격 분대: a light machine gun (drum, cooling shroud, folded bipod) and a field pack. Lv4 특수부대: dark kit and
+// more of it: plate carrier with three magazine pouches, radio, headset, a suppressed carbine with sight and laser.
+// The mark is a dark green on the light uniform and a light green on the dark kit of Lv4.
+function militaryMark(cx, cy, k, under, fill) {
+  const w = 3.6 * k, h = 2.6 * k, step = 1.7 * k, gap = 0.6 * k;
+  const tile = (oy, a, b, fill) => P([cx - oy + b, cy, cx - oy, cy + a, cx - oy - b, cy, cx - oy, cy - a], fill);
+  let m = "";
+  for (const n of [2, 1, 0]) {
+    const oy = (n - 1) * step;
+    if (n < 2) m += tile(oy, w + gap, h + gap, under);
+    m += tile(oy, w, h, fill);
+  }
+  return m;
+}
 TOWERS.soldier = (lv) => {
-  const y = GY;
-  let gun;
-  if (lv < 3) gun = R(-4, y - 1.7, 4, 3.4, "steel", 0.8) + R(0, y - 1.5, 11.4, 3, "steelHi", 0.8) + R(11.4, y - 0.9, 9, 1.8, "gunHi");
-  else
-    // light machine gun: thicker, drum magazine, longer barrel and a flash hider
-    gun = R(-4, y - 2, 15.4, 4, "steelHi", 1) + C(4, y + 2.6, 2.4, "steel") + C(4, y + 2.6, 0.9, "c-20") +
-      R(11.4, y - 1.1, 10, 2.2, "gunHi") + R(21, y - 1.6, 1.8, 3.2, "gun");
-  if (lv >= 4)
-    // special forces: carbine with a long suppressor and a red-dot sight on top
-    gun = R(-4, y - 2, 13, 4, "steel", 1) + R(9, y - 1.2, 6, 2.4, "gunHi") + R(15, y - 1.9, 9, 3.8, "gun", 1.4) +
-      R(1.6, y - 3.8, 6.4, 1.8, "plate", 0.8) + C(7.6, y - 2.9, 0.8, "c+60") + R(2, y + 2, 2.4, 3.6, "steel", 0.6);
-  let pack = lv >= 3 ? R(-6.6, -10, 7, 12, "c-55", 1.6) + R(-5.6, -8.6, 1.6, 9.2, "c-30", 0.6) : ""; // field pack
-  if (lv >= 4) pack += R(-3.4, -11.6, 6.4, 23.2, "c-62", 1.8) + R(-2.2, -6, 4, 4, "c-40", 0.8) + R(-2.2, 2, 4, 4, "c-40", 0.8); // plate carrier
-  return tower(gun, pack + nub(1) + (lv >= 2 ? goggles() : ""));
+  const y = GY, dark = lv >= 4, torso = dark ? "c-62" : "c-8", legs = dark ? "c-74" : "c-40";
+  // the weapon, under the token: stock at the shoulder, muzzle forward; its sling runs to the shoulder
+  let gun = L(-4.6, y - 1.6, -2.4, 12.6, "rubber", 0.9);
+  if (lv < 3) {
+    gun += R(-6.6, y - 1.8, 0.8, 3.6, "rubber") + R(-5.8, y - 1.6, 5.8, 3.2, "steel") + // butt pad, stock
+      R(0, y - 1.7, 9, 3.4, "steelHi") + R(2.4, y - 0.5, 3.2, 1, "hole") + R(6.4, y - 1.1, 1.6, 2.2, "gun") + // receiver, port, rear sight
+      R(9, y - 1.4, 6, 2.8, "steel"); // handguard
+    for (const x of [10.2, 12, 13.8]) gun += R(x, y - 0.4, 0.8, 0.8, "hole");
+    gun += R(15, y - 0.6, 5.4, 1.2, "gunHi") + R(17.4, y - 1.1, 1, 2.2, "steel") + R(20.4, y - 0.8, 1.2, 1.6, "gun"); // barrel, front sight, muzzle
+    if (lv >= 2) gun += R(9.6, y + 1.4, 4.6, 1.8, "steel") + R(14.2, y + 1.5, 0.7, 1.6, "#f4f0d8"); // weapon light
+  } else if (!dark) {
+    gun += R(-6.8, y - 2, 0.8, 4, "rubber") + R(-6, y - 1.8, 6, 3.6, "steel") +
+      R(0, y - 2.2, 10.4, 4.4, "steelHi") + L(2.6, y - 2.2, 2.6, y + 2.2, "steel", 0.6) + R(4, y - 0.8, 4.4, 1.6, "gun") + // receiver, feed cover, handle
+      R(10.4, y - 1.5, 8, 3, "steel");
+    for (let x = 11.4; x < 17.6; x += 1.6) gun += R(x, y - 0.5, 0.8, 1, "hole"); // cooling shroud
+    gun += L(12, y - 2, 20.4, y - 2, "gun", 0.6) + L(12, y + 2, 20.4, y + 2, "gun", 0.6) + // folded bipod
+      R(18.4, y - 0.7, 4, 1.4, "gunHi") + R(22.4, y - 1.2, 1.6, 2.4, "gun") + R(22.9, y - 1.2, 0.6, 2.4, "hole") + // barrel, slotted flash hider
+      C(5, y + 3.3, 2.7, "steel") + C(5, y + 3.3, 1.7, "plate") + C(5, y + 3.3, 0.7, "c-20"); // drum
+  } else {
+    gun += R(-5.8, y - 1.4, 1.2, 2.8, "rubber") + P([-4.6, y - 1.5, 0, y - 1.9, 0, y + 1.9, -4.6, y + 1.5], "hull") + // collapsible stock
+      R(0, y - 1.9, 9, 3.8, "steel") + R(9, y - 1.6, 6.4, 3.2, "hull") + R(9.6, y - 0.3, 5.2, 0.6, "steel") + // receiver, railed handguard
+      R(15.4, y - 2, 9, 4, "rubber") + R(16.2, y - 1.3, 7.4, 2.6, "hull") + // suppressor
+      R(1.8, y - 1.4, 5, 2.8, "hull") + R(5.8, y - 0.7, 0.9, 1.4, "c!") + // red-dot sight on top
+      R(10, y + 1.6, 3.8, 1.8, "steel") + R(13.8, y + 2, 0.7, 1, "c!"); // laser module
+  }
+  let over = "";
+  // belt at the waist with two magazine pouches hanging back from it
+  over += R(-8, -13, 1.6, 26, dark ? "hole" : "c-62");
+  for (const s of [-1, 1]) over += P(cut(-10.8, s * 7.4 - 1.9, -7.4, s * 7.4 + 1.9, 0.8, 0), dark ? "c-82" : "c-56") + R(-8.6, s * 7.4 - 1.9, 0.6, 3.8, dark ? "hole" : "c-66");
+  if (!dark) {
+    if (lv >= 3) { // field pack on the left of the back, its straps over the shoulders
+      over += L(-5, -5.4, 3.6, -5.4, "c-66", 1) + L(-5, 5.4, 3.6, 5.4, "c-66", 1);
+      over += P(cut(-6.4, -12.8, 2.2, -5.4, 1.2), "c-56") + P(cut(-2.6, -12, 1.4, -6.2, 0.8), "c-46") + R(-5.4, -9.6, 1.4, 1, "steel");
+    }
+    over += militaryMark(-1.2, 0, 1, torso, "c-36");
+  } else {
+    // plate carrier: three magazine pouches across the front, the mark below them, a radio on the left
+    over += P(cut(-6.6, -11.2, 3.8, 11.2, 1.6), "hull") + P(cut(-5.8, -10.4, 3, 10.4, 1.2), "c-84");
+    for (const py of [-7.6, -2.6, 2.4]) over += P(cut(0.2, py - 2, 3.4, py + 2, 0.6, 0), "c-70") + R(2.6, py - 2, 0.8, 4, "hole");
+    over += militaryMark(-3.2, 4.2, 0.62, "c-84", "c+10");
+    over += P(cut(-5.6, -10, -1.4, -6, 0.6), "steel") + R(-4.8, -9.2, 2.6, 0.8, "c!") + L(-5, -8.4, -11.6, -15.6, "gun", 0.6) + C(-11.6, -15.6, 0.7, "steelHi"); // radio
+  }
+  over += nub(1);
+  if (lv >= 2) over += goggles();
+  if (dark) over += R(5.2, -14.2, 3.2, 2.4, "hull") + R(5.2, 11.8, 3.2, 2.4, "hull") + L(8, 13, 11.6, 9.6, "hull", 0.8) + R(11, 8.8, 1.4, 1.4, "hull"); // headset, boom mic
+  return { base: pad(2, 2), turret: outline() + gun + body({ torso, legs }) + over };
 };
 
 TOWERS.bomb = (lv) => {
@@ -4682,7 +4730,7 @@ Object.assign(Game.prototype, {
 // Muzzle points in art units (20 per cell) on the turned turret: [forward, to the right], per level;
 // a second row of points means two guns that take turns.
 const MUZZLE = {
-  soldier: [[[20.4, 15.8]], [[20.4, 15.8]], [[22.8, 15.8]], [[24, 15.8]]],
+  soldier: [[[21.6, 15.8]], [[21.6, 15.8]], [[24, 15.8]], [[24.4, 15.8]]],
   minigun: [[[20.5, 15.8]], [[20.5, 15.8]], [[20.5, 15.8]], [[20.5, 15.8], [20.5, -15.8]]],
   sniper: [[[26, 15.8]], [[26, 15.8]], [[26.6, 15.8]], [[31, 15.8]]],
   shotgun: [[[16.4, 15.8]], [[16.4, 15.8]], [[19.4, 15.8]], [[19.4, 15.8]]],
