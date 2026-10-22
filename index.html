@@ -850,7 +850,7 @@ document.addEventListener('click',e=>{if(performance.now()-swipeAt<400&&e.target
 function warnTap(e,msg){const id=e.pointerId,x=e.clientX,up=ev=>{if(ev.pointerId!==id)return;window.removeEventListener('pointerup',up);if(Math.abs(ev.clientX-x)<30)warn(msg);};window.addEventListener('pointerup',up);}
 
 // the game's version, shown on the title screen and in the 정보 window
-const APP_VERSION='4.12.32';
+const APP_VERSION='4.12.33';
 function home(){fitLoadout(profile);if(cloudWaiting)setTimeout(()=>cloudSync(),0);if(game&&!game.ended){if(game.config.tutorial){game=null;coachStop();}else{game.paused=true;savedRun=game.snapshot();}}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p data-action="version-tap">버전 ${APP_VERSION}</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
 function openDialog(title,body,buttons,kind='dialog'){if(kind!=='result')sound(kind.startsWith('msg')?'question':'open');dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2><span>${title}</span>${button('dialog-x','<i>×</i>','xp-x','aria-label="닫기"')}</h2><div class="dialog-body">${body}</div><div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('.dialog').classList.toggle('msgbox',kind.startsWith('msg'));(modal.querySelector('.xp-yes')??modal.querySelector('.dialog-actions button')??modal.querySelector('button'))?.focus();backNavigation?.sync?.();}
 // Yes/no question in a Windows message box: icon, text, then [예] [아니요] on the right.
@@ -2003,32 +2003,42 @@ TOWERS.robot = (lv) => {
   b += R(-68.6, -68.6, 137.2, 137.2, "none", 2.4, ' stroke="c" stroke-width="2.8"');
   return { base: b };
 };
-// 신호기 5×5: a cold-launch cruise missile battery. Launch cells sit around a fire-control radar that turns
-// to the target; one hatch stands open on a missile nose. Lv2 고폭 탄두: eight cells, armoured rims and
-// warning bands. Lv3 전략 미사일: bigger cells, outrigger jacks at the corners and a long twin radar array.
+// 신호기 7×4: an operator on the left works a giant missile pod on the right through a hologram, as if
+// steering it by hand. The pod (three tubes, glowing rims) sits on a jointed arm over a round platform and
+// turns to the target about its own pivot. Lv2 고폭 탄두: armoured pod, warning band, a visor.
+// Lv3 전략 미사일: longer, thicker tubes, a doubled arm, cooling fins and a second hologram screen.
+const SIGNAL_POD = 30; // pod pivot, SVG units right of the center (1.5 cells); the engine fires from it
 TOWERS.signal = (lv) => {
-  let b = pad(5, 5) + P(cut(-44, -44, 44, 44, 9), "floor");
-  if (lv >= 3) for (const sx of [-1, 1]) for (const sy of [-1, 1]) b += R(sx * 42 - 4, sy * 42 - 4, 8, 8, "steel") + R(sx * 42 - 2, sy * 42 - 2, 4, 4, "plate");
-  if (lv >= 2) for (const s of [-1, 1]) {
-    const y0 = s < 0 ? -42.6 : 38.6;
-    b += R(-30, y0, 60, 4, "c-76") + stripes(-30, y0, 30, y0 + 4, 2.4, "c+30");
-  }
-  const h = lv >= 3 ? 11.5 : 10, at = lv >= 3 ? 26 : 24;
-  const cells = [[-1, -1], [1, -1], [-1, 1], [1, 1], [0, -1], [-1, 0], [1, 0], [0, 1]].slice(0, lv >= 2 ? 8 : 4);
-  cells.forEach(([cx, cy], k) => {
-    const x = cx * at, y = cy * at;
-    b += R(x - h, y - h, h * 2, h * 2, lv >= 2 ? "plate" : "c-55", 1.6) + R(x - h + 1.4, y - h + 1.4, h * 2 - 2.8, h * 2 - 2.8, "c-35", 1);
-    if (k === 0) b += R(x - h + 3, y - h + 3, h * 2 - 6, h * 2 - 6, "hole", 1) + C(x, y, h * 0.5, "c!") + C(x, y, h * 0.2, "gunHi");
-    else b += R(x - h + 3, y - h + 3, h - 3.4, h * 2 - 6, "steel", 0.8) + R(x + 0.4, y - h + 3, h - 3.4, h * 2 - 6, "steel", 0.8) + R(x - h + 4.4, y - 1, 2, 2, "c+20") + R(x + h - 6.4, y - 1, 2, 2, "c+20");
-  });
-  b += C(0, 0, 12.6, "c-62") + C(0, 0, 10.6, "steel");
-  // radar: a round mount, a phased-array panel facing forward (+x), a counterweight behind
-  const ph = lv >= 3 ? 11 : 8.4;
-  let t = R(-9.4, -3.2, 5, 6.4, "steelHi", 1) + C(0, 0, 7.6, "c-30") + C(0, 0, 5, "c-8");
-  if (lv >= 3) t += L(-2, 0, -13, 0, "gunHi", 1.4) + C(-13, 0, 1.4, "c!");
-  t += P(cut(3, -ph, 7.6, ph, 1.6), "c-50") + R(4.2, -ph + 1.4, 2.4, ph * 2 - 2.8, "c+22");
-  for (const y of lv >= 3 ? [-7.4, -2.5, 2.5, 7.4] : [-4.6, 0, 4.6]) t += R(6.6, y - 0.8, 1.2, 1.6, "c!");
-  return { base: b, turret: t };
+  let b = pad(7, 4) + P(cut(-66, -36, 66, 36, 6), "floor");
+  // the operator's plate and the hologram projector strip in front of it
+  b += R(-60, -15, 26, 30, "c-62", 2) + R(-58.6, -13.6, 23.2, 27.2, "none", 1.4, ' stroke="c-40" stroke-width="1"');
+  b += R(-31, -19, 3, 38, "c-55", 1) + R(-30.2, -17, 1.4, 34, "c!");
+  if (lv >= 2) b += R(-62, 26, 30, 4, "c-76") + stripes(-62, 26, -32, 30, 2.4, "c+30");
+  // the pod's round platform with a glowing ring
+  b += C(SIGNAL_POD, 0, 27, "c-66") + C(SIGNAL_POD, 0, 25, "none", ' stroke="c!" stroke-width="1.6" opacity="0.8"') + C(SIGNAL_POD, 0, 21, "steel");
+  for (let k = 0; k < 8; k++) { const a = (k * Math.PI) / 4; b += R(SIGNAL_POD + Math.cos(a) * 23 - 1, Math.sin(a) * 23 - 1, 2, 2, "c+20"); }
+  // the hologram: a see-through screen between operator and pod with the pod drawn on it, lines toward the pod
+  const screen = (x, y, w, h) => G("", R(x, y, w, h, "c!", 1.2) + R(x, y, w, h, "none", 1.2, ' stroke="c!" stroke-width="1"') +
+    [-1, 0, 1].map((k) => C(x + w / 2, y + h / 2 + k * h * 0.24, Math.min(w, h) * 0.12, "c-30")).join(""), ' opacity="0.42"');
+  b += screen(-27, -16, 8, 32);
+  if (lv >= 3) b += screen(-27, -31, 8, 12) + screen(-27, 19, 8, 12);
+  b += G("", L(-19, -12, SIGNAL_POD - 14, -6, "c!", 0.8) + L(-19, 12, SIGNAL_POD - 14, 6, "c!", 0.8), ' opacity="0.35"');
+  // the operator, facing the pod, goggles on (a visor from Lv2), hands up toward the screen
+  let op = body({ legs: "c-74", torso: "c-58", head: "c+42" }) + goggles() + R(10, -15.6, 3.8, 3.8, "c+42") + R(10, 11.8, 3.8, 3.8, "c+42");
+  if (lv >= 2) op += R(-6.6, -10, 7, 20, "c-70", 1.6) + R(-5.6, -8.6, 1.6, 17.2, "c!");
+  if (lv >= 3) op += R(2, -14.4, 3, 28.8, "c-80", 1) + C(3.5, -14.4, 2, "c!") + C(3.5, 14.4, 2, "c!");
+  b += G("", op, ' transform="translate(-47 0)"');
+  // the pod: arm behind, three tubes forward (+x) with glowing rims at the muzzles
+  const big = lv >= 3, len = big ? 36 : 33, tr = big ? 4.4 : 3.8, gap = big ? 9.4 : 8.4, half = gap + tr + 2.6;
+  let t = "";
+  for (const s2 of big ? [-3.4, 3.4] : [0]) t += R(-24, s2 - 3.4, 22, 6.8, "c-66", 2.4) + R(-21, s2 - 0.6, 15, 1.2, "c!");
+  t += C(-24, 0, 5.4, "c-40") + C(-24, 0, 2.4, "c!") + C(0, 0, 9, "c-50") + C(0, 0, 5.6, "steelHi");
+  t += P(cut(-9, -half, len - 4, half, 4), "hull") + P(cut(-7, -half + 2, len - 6, half - 2, 3), "c-62");
+  if (lv >= 2) for (const s2 of [-1, 1]) t += R(-5, s2 > 0 ? half - 1 : -half - 1.6, len - 10, 2.6, "plate", 0.8);
+  if (big) for (const x of [-4, 0, 4]) t += R(x - 0.8, -half - 3.4, 1.6, 3.4, "steel") + R(x - 0.8, half, 1.6, 3.4, "steel");
+  for (const y of [-gap, 0, gap]) t += R(-4, y - tr, len, tr * 2, "c-38", tr) + R(-2, y - tr * 0.35, len - 6, tr * 0.7, "c-14", tr * 0.35) +
+    C(len - 4, y, tr, "hole") + C(len - 4, y, tr, "none", ' stroke="c!" stroke-width="1.3"');
+  return { base: b, turret: t, pivot: [SIGNAL_POD, 0] };
 };
 // Runway: the art the player liked, with the plane of the current level.
 TOWERS.plane = (lv) => {
@@ -2751,7 +2761,7 @@ function drawTower(g, kind, level, o = {}) {
   const c = TOWER[kind].color;
   const parts = list(`${kind}:${level}`, c, () => {
     const m = TOWERS[kind](level);
-    return G("base", m.base) + (m.turret ? G("turret", m.turret) : "");
+    return G("base", m.base) + (m.turret ? G("turret", m.turret, m.pivot ? ` transform="translate(${m.pivot[0]} ${m.pivot[1]})"` : "") : "");
   });
   const dyn = { turret: { rotate: o.aim ?? 0 } };
   // the unit always stands in its building: several can be out on the road at once
@@ -2808,7 +2818,7 @@ function towerSVG(kind, level, part = "tower") {
     w = h = 3.4;
   } else {
     const m = TOWERS[kind](level);
-    body = m.base + (m.turret ? G("turret", m.turret, ' transform="rotate(-90)"') : "");
+    body = m.base + (m.turret ? G("turret", m.turret, ` transform="${m.pivot ? `translate(${m.pivot[0]} ${m.pivot[1]}) ` : ""}rotate(-90)"`) : "");
     [w, h] = TOWER[kind].size;
   }
   body = body.replace(/<g id="(treadB|empty)"[^>]*data-off="1"[^>]*>.*?<\/g>/g, "").replace(/href="face"/g, `href="${FACE}"`);
@@ -2839,7 +2849,7 @@ function iconSVG(kind) {
     vb = "-25 -26 50 50";
   } else {
     const m = TOWERS[kind](1), [w, h] = TOWER[kind].size, square = w === 3 && h === 3, s = square ? 25 : Math.max(w, h) * 10;
-    body = m.base.replace(square ? pad(3, 3) : "\u0000", "") + (m.turret ? G("", m.turret, ' transform="rotate(-90)"') : "");
+    body = m.base.replace(square ? pad(3, 3) : "\u0000", "") + (m.turret ? G("", m.turret, ` transform="${m.pivot ? `translate(${m.pivot[0]} ${m.pivot[1]}) ` : ""}rotate(-90)"`) : "");
     vb = kind === "laser" ? "-25 -28.6 50 50" : `${-s} ${-s} ${s * 2} ${s * 2}`;
   }
   body = body.replace(/<g id="(treadB|empty)"[^>]*data-off="1"[^>]*>.*?<\/g>/g, "").replace(/href="face"/g, `href="${FACE}"`);
@@ -3018,7 +3028,7 @@ function createBoard(canvas,map){
  // Drawn at least about 12 px long so it reads when zoomed out. Missiles saved before 4.12.30 start at the cell.
  function cruise(b,px){const T=TOWER.signal,c=T.color,el=b.duration-b.remaining,q=Math.min(1,el/Math.max(1e-6,b.duration)),k=Math.max(1,9*px),m=.5*k,ex=b.ex??b.x,ey=b.ey??b.y;let x,y,ang,lit;ctx.save();
   if(b.x2==null){const f=1-(1-q)*(1-q);x=b.x+(ex-b.x)*f;y=b.y+(ey-b.y)*f;ang=Math.atan2(ey-b.y,ex-b.x);lit=false;
-   ctx.globalAlpha=.45*(1-q);ctx.fillStyle='#d0d0d0';ctx.beginPath();ctx.arc(b.x,b.y,(.5+q*1.2)*k,0,Math.PI*2);ctx.fill();}
+   ctx.globalAlpha=.3*(1-q);ctx.fillStyle='#d0d0d0';ctx.beginPath();ctx.arc(b.x,b.y,(.3+q*.8)*k,0,Math.PI*2);ctx.fill();}
   else{ctx.globalAlpha=.6;ctx.strokeStyle=c;ctx.lineWidth=1.5*px;ctx.beginPath();ctx.moveTo(b.x2-m,b.y2);ctx.lineTo(b.x2+m,b.y2);ctx.moveTo(b.x2,b.y2-m);ctx.lineTo(b.x2,b.y2+m);ctx.stroke();
    x=ex+(b.x2-ex)*q;y=ey+(b.y2-ey)*q;ang=Math.atan2(b.y2-ey,b.x2-ex);lit=true;
    ctx.globalAlpha=.35*(1-q*.5);ctx.strokeStyle='#d0d0d0';ctx.lineWidth=2*px;ctx.beginPath();ctx.moveTo(b.x,b.y);ctx.lineTo(ex,ey);ctx.lineTo(x,y);ctx.stroke();}
@@ -3232,7 +3242,7 @@ const TOWER=Object.fromEntries(TOWERS.map(t=>[t.id,t]));
  // It turns only as the shell is ready (last 0.3 s), fires once it faces the target, then holds still.
  Object.assign(TOWER.spawner,{rocket:[0,0,0,0,60],rocketRadius:5,rocketPeriod:3.5,rocketRange:[0,0,0,0,24]});}
 // Footprint in cells at rotation 0 ([width, height]); `turns` = rotating changes the shape or the front.
-const FOOTPRINT={soldier:[2,2],bomb:[2,2],sniper:[2,2],farm:[4,3],flame:[2,2],tesla:[3,3],minigun:[2,2],shotgun:[2,2],spawner:[3,5],plane:[3,6],commander:[2,2],gauss:[3,3],laser:[3,3],agent:[2,2],robot:[7,7],signal:[5,5],icu:[10,10],platinum:[6,3]};
+const FOOTPRINT={soldier:[2,2],bomb:[2,2],sniper:[2,2],farm:[4,3],flame:[2,2],tesla:[3,3],minigun:[2,2],shotgun:[2,2],spawner:[3,5],plane:[3,6],commander:[2,2],gauss:[3,3],laser:[3,3],agent:[2,2],robot:[7,7],signal:[7,4],icu:[10,10],platinum:[6,3]};
 for(const t of TOWERS){t.size=FOOTPRINT[t.id];t.turns=t.size[0]!==t.size[1]||['robot','spawner','plane'].includes(t.id);}
 const dims=(kind,r=0)=>{const[w,h]=TOWER[kind].size;return r%2?[h,w]:[w,h];};
 // Displayed numbers follow the carried-over distances ("사거리 +0.3" becomes "+2").
@@ -4279,15 +4289,15 @@ class Game{
   if(d.burst){t.ammo--;if(t.ammo<=0){t.cooldown+=s.period;t.ammo=this.magazine(t);t.ramp=1;t.lastTarget=null;}else t.cooldown+=(Array.isArray(d.shot)?d.shot[i]:d.shot)/this.km(t.kind).fire;}else t.cooldown+=s.period;
   return true;
  }
- // 신호기, cold launch: as soon as anything is in its band it spits missileCount missiles out of its cells, each in a
+ // 신호기, cold launch: as soon as anything is in its band it spits missileCount missiles out of its pod's tubes, each in a
  // random direction (spread about a third of a turn apart), engines off: they coast ejectDistance cells and slow
  // down (launchTime). Only then does each
  // light up, pick a target at random among those in the band, snap round and fly straight and fast to the spot
  // that target stands on then. It does not follow the target and has no direct hit, only its blast. Inside the
  // dead zone it sees nothing; Lv.3 hits harder the farther out the target is (×(1+farBonus) at the edge of its reach).
  signalBand(t,range=this.stat(t).range*this.buffs(t).range){const dead=TOWER.signal.deadzone[t.level-1];return {range,dead,list:this.enemies.filter(e=>{if(e.dead||e.hp<=0||!this.visible(e,t))return false;const r=distance(t,e);return r>dead&&r<=range;})};}
- signalLaunch(t,s,range){const d=TOWER.signal,i=t.level-1,{list}=this.signalBand(t,range);if(!list.length)return false;const cell=i>=2?1.3:1.2,a0=this.random()*Math.PI*2;
-  for(let n=0;n<d.missileCount;n++){const e=list[Math.floor(this.random()*list.length)],[cx,cy]=[[-1,-1],[1,-1],[-1,1],[1,1]][n%4],x=t.x+cx*cell,y=t.y+cy*cell,a=a0+n*Math.PI*2/d.missileCount+(this.random()-.5)*1;
+ signalLaunch(t,s,range){const d=TOWER.signal,i=t.level-1,{list}=this.signalBand(t,range);if(!list.length)return false;const a0=this.random()*Math.PI*2,rot=(t.r??0)*Math.PI/2,aim=t.angle??-Math.PI/2,mx=t.x+Math.cos(rot)*1.5+Math.cos(aim)*1.5,my=t.y+Math.sin(rot)*1.5+Math.sin(aim)*1.5;
+  for(let n=0;n<d.missileCount;n++){const e=list[Math.floor(this.random()*list.length)],side=(n-(d.missileCount-1)/2)*.45,x=mx-Math.sin(aim)*side,y=my+Math.cos(aim)*side,a=a0+n*Math.PI*2/d.missileCount+(this.random()-.5)*1;
    this.bombs.push({id:this.nextId++,source:t.id,kind:'signal',level:t.level,x,y,ex:x+Math.cos(a)*d.ejectDistance,ey:y+Math.sin(a)*d.ejectDistance,x2:null,y2:null,target:e.id,tx:e.x,ty:e.y,damage:s.damage,radius:d.splash[i],remaining:d.launchTime,duration:d.launchTime});}
   t.cooldown+=s.period;return true;}
  // lit: a random target in the band now (the launch target, or where it stood, if the tower is gone or sees nobody)
