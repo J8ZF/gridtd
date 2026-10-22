@@ -868,7 +868,7 @@ document.addEventListener('click',e=>{if(performance.now()-swipeAt<400&&e.target
 function warnTap(e,msg){const id=e.pointerId,x=e.clientX,up=ev=>{if(ev.pointerId!==id)return;window.removeEventListener('pointerup',up);if(Math.abs(ev.clientX-x)<30)warn(msg);};window.addEventListener('pointerup',up);}
 
 // the game's version, shown on the title screen and in the 정보 window
-const APP_VERSION='4.12.54';
+const APP_VERSION='4.12.55';
 function home(){fitLoadout(profile);if(cloudWaiting)setTimeout(()=>cloudSync(),0);if(game&&!game.ended){if(game.config.tutorial){game=null;coachStop();}else{game.paused=true;savedRun=game.snapshot();}}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p data-action="version-tap">버전 ${APP_VERSION}</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
 function openDialog(title,body,buttons,kind='dialog'){if(kind!=='result')sound(kind.startsWith('msg')?'question':'open');dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2><span>${title}</span>${button('dialog-x','<i>×</i>','xp-x','aria-label="닫기"')}</h2><div class="dialog-body">${body}</div><div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('.dialog').classList.toggle('msgbox',kind.startsWith('msg'));(modal.querySelector('.xp-yes')??modal.querySelector('.dialog-actions button')??modal.querySelector('button'))?.focus();backNavigation?.sync?.();}
 // Yes/no question in a Windows message box: icon, text, then [예] [아니요] on the right.
@@ -1863,19 +1863,51 @@ TOWERS.sniper = (lv) => {
   return tower(gun, over + nub(0.4));
 };
 
+// 화염방사기 (remake #2), after the reference: a flamer with one big fuel tank on the back, its hose running to the
+// weapon's rear; the tank sits behind the body, out past the legs. The weapon is a copper tube with black bands, grip end and muzzle ring; three vents in its cooling
+// jacket glow with the fire and a pilot flame burns at the tip. Lv2 연료 증량: a bigger tank and a thicker hose, and
+// from here on the mask helmet: a black shell over the whole head, black in front where the respirator and its two
+// filters sit, a brown dome set into it behind, a black strap with a ring across the dome and black ear pieces. Lv3 방화광: black clothes, the dome red, two
+// black flamers with flared nozzles, red vents and a red line along each tube, each fed by its own black tank through
+// a glass hose with red fuel in it.
+const COPPER = "#9a5b3b", COPPER_DARK = "#74412a";
 TOWERS.flame = (lv) => {
-  const y = GY;
-  let gun = R(-2, y - 1.7, 12, 3.4, "steelHi", 1);
-  gun += lv >= 3 ? P([10, y - 1.8, 17, y - 3.2, 17, y + 2.8, 10, y + 1.4], "gunHi") + C(18.4, y - 0.2, 1.7, "c+55")
-                 : R(10, y - 1.1, 7, 2.2, "gunHi") + C(18, y, 1.3, "c+55");
-  // fuel tanks on the back, seen from above as round tops on the torso; hose to the gun
-  let over = "";
-  const ys = lv >= 2 ? [-9, -3.2, 2.6] : [-7, 0.4], tr = lv >= 2 ? 2.9 : 3.5;
-  for (const t of ys) over += C(-2, t, tr, "c-40") + C(-2, t, tr * 0.45, "c+12");
-  over += L(-2, ys.at(-1) + tr, 0, 14, "rubber", 1.4);
-  // pyromaniac: gas mask over the mouth
-  if (lv >= 3) over += R(9.2, -5.4, 3.8, 10.8, "hole", 2) + C(13.6, 0, 2.2, "steel") + C(13.6, 0, 0.9, "gun");
-  return tower(gun, over + nub(1));
+  const dark = lv >= 3, twin = lv >= 3, glow = dark ? "#ff3a2a" : "#ffb040";
+  const flamer = (s) => {
+    const y = s * GY;
+    let g = R(-4.6, y - 1.4, 1.8, 2.8, dark ? "steel" : "rubber") + R(-2.8, y - 1.6, 13.8, 3.2, dark ? "rubber" : COPPER); // hose port, tube
+    for (const x of [1.4, 6.2]) g += R(x, y - 1.9, 1, 3.8, dark ? "steel" : "rubber"); // bands
+    if (dark) g += R(-1.8, y - 0.4, 12.6, 0.8, glow); // the red line along the tube
+    g += R(11, y - 2, 6.4, 4, dark ? "hull" : COPPER_DARK); // cooling jacket
+    for (const x of [11.8, 13.6, 15.4]) g += R(x, y - 0.7, 1.1, 1.4, glow); // vents, lit by the fire
+    if (twin) g += P([17.4, y - 1.9, 20.6, y - 3, 20.6, y + 3, 17.4, y + 1.9], "hole") + C(21.6, y, 1.4, glow);
+    else g += R(17.4, y - 1.9, 1.4, 3.8, "hole") + R(18.8, y - 1.1, 0.8, 2.2, COPPER_DARK) + C(20, y, 1.1, glow); // muzzle ring, nozzle, pilot flame
+    return g;
+  };
+  const under = flamer(1) + (twin ? flamer(-1) : "");
+  // the tank behind the body, out past the legs, cap and valve on top; harness straps run from it over the shoulders.
+  // Lv3 carries two, one for each flamer, fed through glass hoses with the red fuel showing.
+  const tr = dark ? 5.4 : lv >= 2 ? 6.6 : 5.8, tx = -14.6, tys = dark ? [-5.6, 5.6] : [0], strap = dark ? "rubber" : "c-66";
+  let over = L(tx, -5.4, 3.6, -5.4, strap, 1) + L(tx, 5.4, 3.6, 5.4, strap, 1);
+  for (const ty of tys) over += C(tx, ty, tr, dark ? "rubber" : "c-45") + C(tx, ty, tr - 1.3, dark ? "hull" : "c-30") + R(tx - tr, ty - 0.5, tr * 2, 1, dark ? "hole" : "c-56") +
+    C(tx, ty, 1.9, "steel") + C(tx, ty, 0.9, "gun");
+  if (dark) for (const s of [-1, 1]) {
+    const x0 = tx + 2, y0 = s * (5.6 + tr - 1), x1 = -4.6, y1 = s * GY;
+    over += L(x0, y0, x1, y1, "#cfdce6", 2.4, ' opacity="0.35"') + L(x0, y0, x1, y1, "#e0281c", 1.1) + L(x0, y0, x1, y1, "#ff8a6a", 0.5, ' stroke-dasharray="0.8 2.4"'); // glass, fuel, flow
+  } else over += L(tx + 1.6, tr - 1, -4.6, GY, "rubber", lv >= 2 ? 1.8 : 1.4); // fuel hose
+  if (lv >= 2) {
+    // mask helmet: a black shell over the whole head, black in front for the respirator, the colored dome set
+    // into it behind with a lighter crown, a black strap with a ring across the dome, black ear pieces
+    const dome = dark ? "#a8261d" : "#6e4128", top = dark ? "#c2342a" : "#82502f";
+    over += P(cut(2.8, -14.2, 14.6, 14.2, 4.2), "hole") + P(cut(3.6, -13.4, 11, 13.4, 3.6), dome) + P(cut(5, -10, 9.8, 10, 2.4), top);
+    over += R(5, -14.4, 1.2, 28.8, "hole") + C(5.6, 0, 1.4, "hole") + C(5.6, 0, 0.6, "steel"); // strap and ring
+    for (const s of [-1, 1]) over += P(cut(5.4, s > 0 ? 12.8 : -15.6, 8.8, s > 0 ? 15.6 : -12.8, 0.8), "hole") + R(6.6, s * 14.2 - 0.5, 1, 1, "steel"); // ear pieces
+    over += P(cut(11.6, -3.8, 15.6, 3.8, 1.2), "rubber") + R(15.2, -1.2, 0.8, 2.4, "steel"); // respirator
+    for (const s of [-1, 1]) over += G("", R(0, -1.5, 3.4, 3, "rubber") + R(3.4, -1.5, 0.8, 3, "steel"), ` transform="translate(13.4 ${s * 3.4}) rotate(${s * 30})"`); // filters
+  }
+  const glove = (s) => R(1, s > 0 ? 11.8 : -15.6, 3.8, 3.8, "rubber", 0, ' stroke="steel" stroke-width="0.8"');
+  over += dark ? glove(1) + glove(-1) : nub(1);
+  return { base: pad(2, 2), turret: outline() + under + body(dark ? { torso: "hull", legs: "rubber" } : {}) + over };
 };
 
 TOWERS.minigun = (lv) => {
@@ -3135,13 +3167,24 @@ function createBoard(canvas,map){
   if(TOWER[v.kind].gun[v.level-1]>0){ctx.save();ctx.rotate(v.gunAngle);ctx.strokeStyle=c;ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(23,0);ctx.stroke();ctx.restore();}
   ctx.fillStyle='#2e2e2e';ctx.fillRect(-16,-20,32,3);ctx.fillStyle=c;ctx.fillRect(-16,-20,Math.max(0,v.hp/v.maxHp*32),3);ctx.restore();}
  function range(t,game,radiusOverride){const T=TOWER[t.kind];if(t.kind==='plane'){const R=(game.stat?game.stat(t):stat(t)).range;if(!(R>0))return;ctx.save();ctx.strokeStyle=ctx.fillStyle=T.color;ctx.beginPath();ctx.arc(t.x,t.y,R,0,Math.PI*2);ctx.globalAlpha=.4;ctx.lineWidth=1/scale;ctx.setLineDash([6/scale,5/scale]);ctx.stroke();ctx.setLineDash([]);if(radiusOverride==null){const g=TOWER.plane.gunRange[t.level-1]*(game.km?game.km('plane').range:1)*(game.buffs?game.buffs(t).range:1),N=(t.flight??TAKEOFF)>=TAKEOFF?Math.round(game.mods?.['wing@plane']??0):0;for(let k=0;k<=N;k++){const p=planePosition(k?{...t,orbit:t.orbit+Math.PI*2*k/(N+1)}:t);ctx.beginPath();ctx.arc(p.x,p.y,g,0,Math.PI*2);ctx.globalAlpha=.065;ctx.fill();ctx.globalAlpha=.65;ctx.lineWidth=1.5/scale;ctx.stroke();}}ctx.restore();return;}const r=radiusOverride??(game.stat?game.stat(t):stat(t)).range*(['plane','commander'].includes(t.kind)?1:game.buffs(t).range);if(!(r>0))return;const dz=T.deadzone?.[(t.level??1)-1]??0;ctx.save();ctx.beginPath();ctx.arc(t.x,t.y,r,0,Math.PI*2);if(dz>0){ctx.moveTo(t.x+dz,t.y);ctx.arc(t.x,t.y,dz,0,Math.PI*2,true);}if(t.kind!=='plane'){ctx.fillStyle=T.color;ctx.globalAlpha=.065;ctx.fill();}ctx.globalAlpha=.65;ctx.strokeStyle=T.color;ctx.lineWidth=1.5/scale;if(t.kind==='plane')ctx.setLineDash([6/scale,5/scale]);ctx.stroke();ctx.restore();}
+ // A flamer's burst: square puffs leave the nozzle one after another and spread through the cone, tumbling as they
+ // go, white-hot at the nozzle,
+ // orange and red further out and smoke at the end. Each puff's spread and reach come from the effect's id, so nothing
+ // is stored per puff.
+ const FLAME_STOPS=['#fff2b8','#ffc24a','#ff8a34','#e2452a','#4a3a36'];
+ function flameJet(f,a){const cone=f.cone??.65,p=1-a,n=18;
+  for(let k=0;k<n;k++){const t=(p-k/n*.62)/.4;if(t<=0||t>=1)continue; // puffs leave over most of the burst, each crosses the range in 40% of it
+   const h1=Math.sin(f.id*12.9898+k*78.233)*43758.5453,r1=h1-Math.floor(h1),h2=Math.sin(f.id*39.346+k*11.135)*24634.634,r2=h2-Math.floor(h2);
+   const ang=f.angle+(r1*2-1)*cone*Math.min(1,.3+t),d=f.r*t*(.82+r2*.22),side=(.22+t*1.15)*1.8,smoke=t>.82;
+   ctx.save();ctx.globalCompositeOperation=smoke?'source-over':'lighter';ctx.globalAlpha=smoke?(1-t)*1.6:.75*Math.sqrt(1-t);ctx.fillStyle=FLAME_STOPS[Math.min(4,Math.floor(t*5))];
+   ctx.translate(f.x+Math.cos(ang)*d,f.y+Math.sin(ang)*d);ctx.rotate(ang+(r1-.5)*t*2.4);ctx.fillRect(-side/2,-side/2,side,side);ctx.restore();}}
  function effects(game,eo){const px=1/scale;for(const f of game.effects){if(eo?.hidePlanes&&f.air)continue;const a=Math.max(0,f.life/f.maxLife);ctx.save();ctx.globalAlpha=1;
   if(f.type==='income'){ctx.restore();continue;}
   if(f.type==='arc'){ctx.globalAlpha=a;ctx.strokeStyle=f.color;ctx.lineWidth=2.6*px;const dx=f.x2-f.x,dy=f.y2-f.y;ctx.beginPath();ctx.moveTo(f.x,f.y);ctx.lineTo(f.x+dx*.35+.8,f.y+dy*.35-.9);ctx.lineTo(f.x+dx*.68-.7,f.y+dy*.68+.7);ctx.lineTo(f.x2,f.y2);ctx.stroke();}
   else if(f.type==='rail'){ctx.globalAlpha=a;ctx.strokeStyle=f.color;ctx.lineWidth=5*px;ctx.beginPath();ctx.moveTo(f.x,f.y);ctx.lineTo(f.x2,f.y2);ctx.stroke();ctx.strokeStyle='#ffffff';ctx.lineWidth=1.6*px;ctx.stroke();}
   else if(f.type==='flash'){const r=f.r*(1-a*.35);ctx.globalAlpha=a*.3;ctx.fillStyle=f.color;ctx.beginPath();ctx.arc(f.x,f.y,r,0,Math.PI*2);ctx.fill();ctx.globalAlpha=a;ctx.strokeStyle=f.color;ctx.lineWidth=3*px;ctx.stroke();}
   else if(f.type==='shot'||f.type==='laser'){ctx.globalAlpha=a*.85;ctx.strokeStyle=f.color;ctx.lineWidth=(f.type==='laser'?2.8:f.heavy?3:1.6)*px;ctx.beginPath();ctx.moveTo(f.x,f.y);ctx.lineTo(f.x2,f.y2);ctx.stroke();ctx.globalAlpha=a;ctx.fillStyle=f.color;ctx.beginPath();ctx.arc(f.x2,f.y2,(f.heavy?4:2)*px,0,Math.PI*2);ctx.fill();}
-  else if(f.type==='flame'){const cone=f.cone??.65;ctx.globalAlpha=a*.28;ctx.fillStyle=f.color;ctx.beginPath();ctx.moveTo(f.x,f.y);ctx.lineTo(f.x+Math.cos(f.angle-cone)*f.r,f.y+Math.sin(f.angle-cone)*f.r);ctx.quadraticCurveTo(f.x+Math.cos(f.angle)*f.r*1.25,f.y+Math.sin(f.angle)*f.r*1.25,f.x+Math.cos(f.angle+cone)*f.r,f.y+Math.sin(f.angle+cone)*f.r);ctx.closePath();ctx.fill();}
+  else if(f.type==='flame')flameJet(f,a);
   else{const r=Math.max(.01,f.r*(f.type==='pulse'?1-a*.5:1-a*.65));ctx.beginPath();ctx.arc(f.x,f.y,r,0,Math.PI*2);if(f.type==='blast'){ctx.globalAlpha=a*.15;ctx.fillStyle=f.color;ctx.fill();}ctx.globalAlpha=a;ctx.strokeStyle=f.color;ctx.lineWidth=2*px;ctx.stroke();}
   ctx.restore();}
   for(const b of game.bombs){if(b.kind==='signal'){cruise(b,px);continue;}if(eo?.hidePlanes)continue;const q=1-b.remaining/b.duration,x=b.x+(b.x2-b.x)*q,y=b.y+(b.y2-b.y)*q;ctx.fillStyle='#88c5ef';ctx.beginPath();ctx.arc(x,y,(5-q*2)*px*1.4,0,Math.PI*2);ctx.fill();}}
@@ -4400,7 +4443,7 @@ class Game{
   if(t.kind==='signal')return this.signalLaunch(t,s,range);
   const e=this.select(t,origin,range,cone,true,t.kind==='flame'?e=>e.burn<=d.burnInterval||e.burnDamage<d.burn[i]*(this.enemyData(e).burnResist??1):()=>true);if(!e)return false;t.angle=Math.atan2(e.y-origin.y,e.x-origin.x);
   if(t.kind==='bomb'){this.fx('shot',this.muzzle(t),{x2:e.x,y2:e.y,color:d.color,life:.2,heavy:true});this.splash(e,s.damage,d.splash[i],t,t.level>=d.centerLevel);}
-  else if(t.kind==='flame'){for(const victim of [...this.enemies])if(!victim.dead&&distance(t,victim)<=range&&Math.abs(angleDiff(Math.atan2(victim.y-t.y,victim.x-t.x),t.angle))<d.cone[i])this.ignite(victim,t);this.fx('flame',this.muzzle(t),{angle:t.angle,cone:d.cone[i],r:range,color:d.color,life:.3});}
+  else if(t.kind==='flame'){for(const victim of [...this.enemies])if(!victim.dead&&distance(t,victim)<=range&&Math.abs(angleDiff(Math.atan2(victim.y-t.y,victim.x-t.x),t.angle))<d.cone[i])this.ignite(victim,t);this.fx('flame',this.muzzle(t),{angle:t.angle,cone:d.cone[i],r:range,color:d.color,life:s.period});}
   else if(t.kind==='tesla'){const chain=[e],links=d.chain[i]+(this.mods['chain@tesla']??0);while(chain.length<links){const last=chain.at(-1);const next=this.enemies.filter(a=>!a.dead&&!chain.includes(a)&&this.visible(a,t)&&distance(a,last)<=TESLA_JUMP).sort((a,b)=>distance(a,last)-distance(b,last))[0];if(!next)break;chain.push(next);}const weights=chain.map(()=>.1+this.random()),sum=weights.reduce((a,b)=>a+b,0);chain.forEach((victim,j)=>{const share=this.mods['full@tesla']>0?s.damage:s.damage*Math.max(1,chain.length/d.chain[i])*weights[j]/sum;this.hit(victim,share,t);if(share/(victim.maxHp+(victim.maxShield??0))>=.04)this.stunEnemy(victim,.1+t.level*.025);const p=j?chain[j-1]:t;this.fx('arc',p,{x2:victim.x,y2:victim.y,color:d.color,life:.2});});}
   else if(t.kind==='shotgun'){ // 4.11.39 buckshot: each pellet hits the first enemy along its line, or nothing
    const R=range,mz=this.muzzle(t),pool=this.enemies.filter(v=>!v.dead&&v.hp>0&&this.visible(v,t)&&distance(t,v)<=R+1.5);
@@ -4736,7 +4779,7 @@ const MUZZLE = {
   shotgun: [[[16.4, 15.8]], [[16.4, 15.8]], [[19.4, 15.8]], [[19.4, 15.8]]],
   agent: [[[18.9, 15.8]], [[18.9, 15.8]], [[23.4, 15.8], [23.4, -15.8]]],
   bomb: [[[11, 16.4]], [[11, 16.4]], [[11, 16.4]]],
-  flame: [[[18, 15.8]], [[18, 15.8]], [[18.4, 15.8]]],
+  flame: [[[20, 15.8]], [[20, 15.8]], [[21.6, 15.8], [21.6, -15.8]]],
   laser: [[[28, 0]], [[28, 0]], [[28, 0]], [[34, 0]]]
 };
 // robot: minigun arms (drawn 1.5×), the Lv.4 center gun; the garage's Lv.4 car: its roof gun (drawn 2×)
