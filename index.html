@@ -868,7 +868,7 @@ document.addEventListener('click',e=>{if(performance.now()-swipeAt<400&&e.target
 function warnTap(e,msg){const id=e.pointerId,x=e.clientX,up=ev=>{if(ev.pointerId!==id)return;window.removeEventListener('pointerup',up);if(Math.abs(ev.clientX-x)<30)warn(msg);};window.addEventListener('pointerup',up);}
 
 // the game's version, shown on the title screen and in the 정보 window
-const APP_VERSION='4.12.67';
+const APP_VERSION='4.12.68';
 function home(){fitLoadout(profile);if(cloudWaiting)setTimeout(()=>cloudSync(),0);if(game&&!game.ended){if(game.config.tutorial){game=null;coachStop();}else{game.paused=true;savedRun=game.snapshot();}}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p data-action="version-tap">버전 ${APP_VERSION}</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
 function openDialog(title,body,buttons,kind='dialog'){if(kind!=='result')sound(kind.startsWith('msg')?'question':'open');dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2><span>${title}</span>${button('dialog-x','<i>×</i>','xp-x','aria-label="닫기"')}</h2><div class="dialog-body">${body}</div><div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('.dialog').classList.toggle('msgbox',kind.startsWith('msg'));(modal.querySelector('.xp-yes')??modal.querySelector('.dialog-actions button')??modal.querySelector('button'))?.focus();backNavigation?.sync?.();}
 // Yes/no question in a Windows message box: icon, text, then [예] [아니요] on the right.
@@ -1832,17 +1832,43 @@ TOWERS.soldier = (lv) => {
   return { base: pad(2, 2), turret: outline() + gun + body({ torso, legs }) + over };
 };
 
+// 폭탄 (remake #8): a grenadier in the tower color who frags: a frag grenade in a gloved hand (black body, gray fuse
+// cap toward the front, the spoon along its side and the pin ring), a belt with two pouches and two more grenades
+// clipped on the chest. Lv2 야간 고글: our visor. Lv3 폭파 전문가: an EOD suit in dark orange (saturated, not the
+// brown the dark tones give): a big helmet with a black face shield in a darker frame, a thick collar, a chest plate
+// with grenades on it, padded shoulders and a heavy glove with a cuff; a bigger grenade.
+const GRENADE = "#2e2e2e", GRENADE_HI = "#474747", GRENADE_SEAM = "#1c1c1c";
+// coyote tan gloves, so the black grenade stays clear in the hand
+const GLOVE = "#9a8262", GLOVE_DARK = "#6e5c44";
+const EOD = { suit: "#b5531c", dark: "#8f4015", darker: "#6e300f", darkest: "#4e2209", helmet: "#c4601f" };
+function grenade(x, y, k) {
+  let m = P(cut(x - 3.2 * k, y - 3.2 * k, x + 3.2 * k, y + 3.2 * k, 1.3 * k), GRENADE) + P(cut(x - 2.4 * k, y - 2.4 * k, x + 0.8 * k, y + 0.8 * k, 0.8 * k), GRENADE_HI);
+  m += R(x - 3.2 * k, y + 0.2 * k, 6.4 * k, 0.7 * k, GRENADE_SEAM); // seam
+  m += R(x + 3 * k, y - 1.4 * k, 2 * k, 2.8 * k, "steelHi") + R(x - 1.8 * k, y + 2.9 * k, 6.6 * k, 1 * k, "gun"); // fuse cap, spoon
+  if (k > 0.8) m += C(x + 5.4 * k, y - 2.2 * k, 1 * k, "none", ` stroke="#d0d0d0" stroke-width="${f(0.5 * k)}"`); // pin ring on the cap
+  return m;
+}
 TOWERS.bomb = (lv) => {
-  const r = lv >= 3 ? 4.6 : 3.8, bx = 11, by = GY + 0.6;
-  const bomb = C(bx, by, r, "#303030") + C(bx - r * 0.35, by - r * 0.35, r * 0.28, "#555555") +
-    L(bx + r * 0.7, by - r * 0.3, bx + r + 2, by - r * 0.3, "paint", 1) + C(bx + r + 2.4, by - r * 0.3, 1.4, "c+55");
-  let over = R(-6, -12.6, 6.4, 5.4, "c-55", 1.4) + C(-2.8, -9.9, 1.2, "c-20"); // hip satchel
-  if (lv >= 3) {
-    // bandolier of small bombs across the chest
-    over += L(-6, -12, 3, 9, "c-62", 2);
-    for (const [x, y] of [[-4.6, -8.6], [-2, -2.6], [0.6, 3.4]]) over += C(x, y, 1.9, "#303030") + C(x - 0.5, y - 0.5, 0.6, "#555555");
+  const eod = lv >= 3, k = eod ? 1.15 : 1, gx = 9.6, gy = GY + 0.2;
+  const under = grenade(gx, gy, k);
+  const torso = eod ? EOD.suit : "c-8", legs = eod ? EOD.darker : "c-38";
+  let over = R(-8, -13, 1.6, 26, eod ? "hole" : "c-62"); // belt
+  for (const s of [-1, 1]) over += P(cut(-10.8, s * 7.4 - 1.9, -7.4, s * 7.4 + 1.9, 0.8, 0), eod ? EOD.darkest : "c-56") + R(-8.6, s * 7.4 - 1.9, 0.6, 3.8, eod ? "hole" : "c-66");
+  if (!eod) {
+    over += L(-6.6, -8.4, 3.8, -8.4, "c-62", 1.2); // shoulder strap
+    for (const x of [-3.2, 1.4]) over += grenade(x, -8.4, 0.5);
+    over += R(6.8, 11.8, 3.8, 3.8, GLOVE, 0, ` stroke="${GLOVE_DARK}" stroke-width="0.8"`) + R(9.8, 12.3, 0.6, 2.8, GLOVE_DARK); // glove, its knuckle strip
+    if (lv >= 2) over += goggles();
+  } else {
+    for (const s of [-1, 1]) over += P(cut(-6.4, s > 0 ? 10 : -16, 3.4, s > 0 ? 16 : -10, 1.6), EOD.dark) + L(-3, s * 10.6, -3, s * 15.4, EOD.darkest, 0.6) + L(0.4, s * 10.6, 0.4, s * 15.4, EOD.darkest, 0.6); // padded shoulders
+    over += P(cut(-6.6, -9.8, 3, 9.8, 1.8), EOD.darkest) + P(cut(-5.8, -9, 2.2, 9, 1.4), EOD.darker) + R(-5.8, -0.5, 8, 1, "c"); // chest plate, band
+    for (const y of [-5.6, 5.6]) over += grenade(-2.4, y, 0.55);
+    over += R(6.4, 11.2, 5, 5, EOD.dark, 0, ` stroke="${EOD.darkest}" stroke-width="0.8"`) + R(6.4, 11.2, 1.4, 5, EOD.darkest) + R(10.2, 11.8, 0.7, 3.8, EOD.darkest); // heavy glove, its cuff
+    over += P(cut(2.2, -14.2, 5.2, 14.2, 1), EOD.darker); // collar
+    over += P(cut(4.2, -12.8, 14.4, 12.8, 3.8, 1.6), EOD.helmet) + R(4.2, -12.8, 1.4, 25.6, EOD.dark); // helmet, its back rim
+    over += P(cut(6.8, -10.6, 14, 10.6, 3, 1.4), EOD.darkest) + P(cut(7.6, -9.8, 13.2, 9.8, 2.4, 1), "#1a1c22"); // face shield in its darker frame
   }
-  return tower(bomb, over + nub(8.6) + (lv >= 2 ? goggles() : ""));
+  return { base: pad(2, 2), turret: outline() + under + body({ torso, legs }) + over };
 };
 
 // 스나이퍼 (remake #3), after the reference: a marksman in a blue shirt with suspenders down to dark trousers; from Lv2 a
@@ -5040,7 +5066,7 @@ const MUZZLE = {
   sniper: [[[25, 15.8]], [[25, 15.8]], [[26.2, 15.8]], [[33, 15.8]]],
   shotgun: [[[17, 15.8]], [[19.4, 15.8]], [[19.2, 15.8]]],
   agent: [[[18.9, 15.8]], [[18.9, 15.8]], [[23.4, 15.8], [23.4, -15.8]]],
-  bomb: [[[11, 16.4]], [[11, 16.4]], [[11, 16.4]]],
+  bomb: [[[9.6, 16]], [[9.6, 16]], [[9.6, 16]]], // the grenade in the hand
   flame: [[[20, 15.8]], [[20, 15.8]], [[21.6, 15.8], [21.6, -15.8]]],
   laser: [[[28, 0]], [[28, 0]], [[28, 0]], [[34, 0]]]
 };
