@@ -850,7 +850,7 @@ document.addEventListener('click',e=>{if(performance.now()-swipeAt<400&&e.target
 function warnTap(e,msg){const id=e.pointerId,x=e.clientX,up=ev=>{if(ev.pointerId!==id)return;window.removeEventListener('pointerup',up);if(Math.abs(ev.clientX-x)<30)warn(msg);};window.addEventListener('pointerup',up);}
 
 // the game's version, shown on the title screen and in the 정보 window
-const APP_VERSION='4.12.40';
+const APP_VERSION='4.12.41';
 function home(){fitLoadout(profile);if(cloudWaiting)setTimeout(()=>cloudSync(),0);if(game&&!game.ended){if(game.config.tutorial){game=null;coachStop();}else{game.paused=true;savedRun=game.snapshot();}}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p data-action="version-tap">버전 ${APP_VERSION}</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
 function openDialog(title,body,buttons,kind='dialog'){if(kind!=='result')sound(kind.startsWith('msg')?'question':'open');dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2><span>${title}</span>${button('dialog-x','<i>×</i>','xp-x','aria-label="닫기"')}</h2><div class="dialog-body">${body}</div><div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('.dialog').classList.toggle('msgbox',kind.startsWith('msg'));(modal.querySelector('.xp-yes')??modal.querySelector('.dialog-actions button')??modal.querySelector('button'))?.focus();backNavigation?.sync?.();}
 // Yes/no question in a Windows message box: icon, text, then [예] [아니요] on the right.
@@ -1716,12 +1716,15 @@ function pad(w, h) {
 // side (+y) and are drawn under it; small hand nubs at the edge hold them.
 // Things worn on the back (packs, tanks, ammo boxes) sit on the torso.
 const HX = 4, TX = -7, CUT = 3.4, GY = 15.8;
-const band = (x0, fill) => P([x0, -13, 13 - CUT, -13, 13, -13 + CUT, 13, 13 - CUT, 13 - CUT, 13, x0, 13], fill);
+const band = (x0, fill, more = "") => P([x0, -13, 13 - CUT, -13, 13, -13 + CUT, 13, 13 - CUT, 13 - CUT, 13, x0, 13], fill, more);
+// A half-transparent black edge around the token, drawn under it so only its outer half shows: it keeps
+// people apart from floors and lines they stand on.
+const outline = () => G("", band(-13, "none", ' stroke="#000000" stroke-width="2.4"'), ' opacity="0.5"');
 // eyes sit at (6.9, ±4.3) once the face is placed
 const EYE_X = 6.9, EYE_Y = 4.3;
 function body(o = {}) {
   const legs = o.legs ?? "c-38", torso = o.torso ?? "c-8", head = o.head ?? "c+42";
-  return band(-13, legs) + band(TX, torso) + band(HX, head) +
+  return outline() + band(-13, legs) + band(TX, torso) + band(HX, head) +
     G("", `<image href="face" x="-11" y="-4.3" width="22" height="8.6"/>`, ` transform="translate(8.5 0) rotate(-90)"`);
 }
 // one square hand on the token edge holding the weapon, s = side (1 right, -1 left)
@@ -2456,7 +2459,7 @@ function icuTrooper(lv) {
   for (const d of [-1.4, 0, 1.4]) p += L(6, y + d, 19.6, y + d, "gunHi", 1);
   p += R(15.4, y - 2.4, 1.6, 4.8, "gun");
   p += R(-2.6, -y - 2.2, 7.4, 4.4, "steel") + R(4.8, -y - 2.9, 9.4, 5.8, "plate") + R(14.2, -y - 2.1, 1.4, 4.2, "hole");
-  p += band(-13, legs) + band(TX, torso) + band(HX, head);
+  p += outline() + band(-13, legs) + band(TX, torso) + band(HX, head);
   // chest plate and belt
   p += P(cut(-5.6, -9.4, 2.4, 9.4, 1.8), dark ? "c-44" : "c+4") + R(-7.4, -11.6, 1.2, 23.2, dark ? "c-78" : "c-46");
   // helmet: a raised crest and the visor across the front
