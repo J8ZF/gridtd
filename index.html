@@ -850,7 +850,7 @@ document.addEventListener('click',e=>{if(performance.now()-swipeAt<400&&e.target
 function warnTap(e,msg){const id=e.pointerId,x=e.clientX,up=ev=>{if(ev.pointerId!==id)return;window.removeEventListener('pointerup',up);if(Math.abs(ev.clientX-x)<30)warn(msg);};window.addEventListener('pointerup',up);}
 
 // the game's version, shown on the title screen and in the 정보 window
-const APP_VERSION='4.12.36';
+const APP_VERSION='4.12.37';
 function home(){fitLoadout(profile);if(cloudWaiting)setTimeout(()=>cloudSync(),0);if(game&&!game.ended){if(game.config.tutorial){game=null;coachStop();}else{game.paused=true;savedRun=game.snapshot();}}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p data-action="version-tap">버전 ${APP_VERSION}</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
 function openDialog(title,body,buttons,kind='dialog'){if(kind!=='result')sound(kind.startsWith('msg')?'question':'open');dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2><span>${title}</span>${button('dialog-x','<i>×</i>','xp-x','aria-label="닫기"')}</h2><div class="dialog-body">${body}</div><div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('.dialog').classList.toggle('msgbox',kind.startsWith('msg'));(modal.querySelector('.xp-yes')??modal.querySelector('.dialog-actions button')??modal.querySelector('button'))?.focus();backNavigation?.sync?.();}
 // Yes/no question in a Windows message box: icon, text, then [예] [아니요] on the right.
@@ -2003,7 +2003,7 @@ TOWERS.robot = (lv) => {
   b += R(-68.6, -68.6, 137.2, 137.2, "none", 2.4, ' stroke="c" stroke-width="2.8"');
   return { base: b };
 };
-// 신호기 5×3: a missile launcher on a base shaped []▪O. Left, a tall plate carrying the spare-missile magazine (top)
+// 신호기 8×5: a missile launcher on a base shaped []▪O. Left, a tall plate carrying the spare-missile magazine (top)
 // and the power unit (bottom); right, an octagonal base with the slewing ring on it; between them a lower, darker
 // link the two sit on, with one cable from each unit running right into the ring. On the ring turns one assembly:
 // the launcher's carriage with a three-tube pod forward and, bolted to its side, a railed platform where the
@@ -2012,7 +2012,8 @@ TOWERS.robot = (lv) => {
 // hologram grows from a short screen to a wide one to three wrapped around him (/──\).
 // Lv2 고폭 탄두: armoured pod sides, more missiles in the magazine. Lv3 전략 미사일: longer, heavier tubes with a
 // sensor block on the pod.
-const SIGNAL_RING = 15; // ring center, SVG units right of the tower center (0.75 cells); the engine fires from it
+// It is drawn small and then scaled by SIGNAL_SCALE so the operator stands as tall as the other towers' people.
+const SIGNAL_RING = 15, SIGNAL_SCALE = 1 / 0.62; // ring center before scaling (1.21 cells right of the tower center once scaled)
 TOWERS.signal = (lv) => {
   const big = lv >= 3;
   const X = SIGNAL_RING, oct = (a) => cut(X - a, -a, X + a, a, (2 * a) / (2 + Math.SQRT2));
@@ -2069,7 +2070,8 @@ TOWERS.signal = (lv) => {
   op += screen(24, -sw, 24, sw);
   if (big) op += screen(24, -sw, 17, -sw - 8) + screen(24, sw, 17, sw + 8);
   t += G("", op, ` transform="translate(-6 ${oy}) scale(0.62)"`);
-  return { base, turret: t, pivot: [X, 0] };
+  const k = ` transform="scale(${f(SIGNAL_SCALE)})"`;
+  return { base: G("", base, k), turret: G("", t, k), pivot: [f(X * SIGNAL_SCALE), 0] };
 };
 // Runway: the art the player liked, with the plane of the current level.
 TOWERS.plane = (lv) => {
@@ -3273,7 +3275,7 @@ const TOWER=Object.fromEntries(TOWERS.map(t=>[t.id,t]));
  // It turns only as the shell is ready (last 0.3 s), fires once it faces the target, then holds still.
  Object.assign(TOWER.spawner,{rocket:[0,0,0,0,60],rocketRadius:5,rocketPeriod:3.5,rocketRange:[0,0,0,0,24]});}
 // Footprint in cells at rotation 0 ([width, height]); `turns` = rotating changes the shape or the front.
-const FOOTPRINT={soldier:[2,2],bomb:[2,2],sniper:[2,2],farm:[4,3],flame:[2,2],tesla:[3,3],minigun:[2,2],shotgun:[2,2],spawner:[3,5],plane:[3,6],commander:[2,2],gauss:[3,3],laser:[3,3],agent:[2,2],robot:[7,7],signal:[5,3],icu:[10,10],platinum:[6,3]};
+const FOOTPRINT={soldier:[2,2],bomb:[2,2],sniper:[2,2],farm:[4,3],flame:[2,2],tesla:[3,3],minigun:[2,2],shotgun:[2,2],spawner:[3,5],plane:[3,6],commander:[2,2],gauss:[3,3],laser:[3,3],agent:[2,2],robot:[7,7],signal:[8,5],icu:[10,10],platinum:[6,3]};
 for(const t of TOWERS){t.size=FOOTPRINT[t.id];t.turns=t.size[0]!==t.size[1]||['robot','spawner','plane'].includes(t.id);}
 const dims=(kind,r=0)=>{const[w,h]=TOWER[kind].size;return r%2?[h,w]:[w,h];};
 // Displayed numbers follow the carried-over distances ("사거리 +0.3" becomes "+2").
@@ -4327,8 +4329,8 @@ class Game{
  // that target stands on then. It does not follow the target and has no direct hit, only its blast. Inside the
  // dead zone it sees nothing; Lv.3 hits harder the farther out the target is (×(1+farBonus) at the edge of its reach).
  signalBand(t,range=this.stat(t).range*this.buffs(t).range){const dead=TOWER.signal.deadzone[t.level-1];return {range,dead,list:this.enemies.filter(e=>{if(e.dead||e.hp<=0||!this.visible(e,t))return false;const r=distance(t,e);return r>dead&&r<=range;})};}
- signalLaunch(t,s,range){const d=TOWER.signal,i=t.level-1,{list}=this.signalBand(t,range);if(!list.length)return false;const a0=this.random()*Math.PI*2,rot=(t.r??0)*Math.PI/2,aim=t.angle??-Math.PI/2,mx=t.x+Math.cos(rot)*.75+Math.cos(aim)*1.4,my=t.y+Math.sin(rot)*.75+Math.sin(aim)*1.4;
-  for(let n=0;n<d.missileCount;n++){const e=list[Math.floor(this.random()*list.length)],side=(n-(d.missileCount-1)/2)*.45,x=mx-Math.sin(aim)*side,y=my+Math.cos(aim)*side,a=a0+n*Math.PI*2/d.missileCount+(this.random()-.5)*1;
+ signalLaunch(t,s,range){const d=TOWER.signal,i=t.level-1,{list}=this.signalBand(t,range);if(!list.length)return false;const a0=this.random()*Math.PI*2,rot=(t.r??0)*Math.PI/2,aim=t.angle??-Math.PI/2,mx=t.x+Math.cos(rot)*1.21+Math.cos(aim)*2.26,my=t.y+Math.sin(rot)*1.21+Math.sin(aim)*2.26;
+  for(let n=0;n<d.missileCount;n++){const e=list[Math.floor(this.random()*list.length)],side=(n-(d.missileCount-1)/2)*.73,x=mx-Math.sin(aim)*side,y=my+Math.cos(aim)*side,a=a0+n*Math.PI*2/d.missileCount+(this.random()-.5)*1;
    this.bombs.push({id:this.nextId++,source:t.id,kind:'signal',level:t.level,x,y,ex:x+Math.cos(a)*d.ejectDistance,ey:y+Math.sin(a)*d.ejectDistance,x2:null,y2:null,target:e.id,tx:e.x,ty:e.y,damage:s.damage,radius:d.splash[i],remaining:d.launchTime,duration:d.launchTime});}
   t.cooldown+=s.period;return true;}
  // lit: a random target in the band now (the launch target, or where it stood, if the tower is gone or sees nobody)
