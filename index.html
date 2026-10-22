@@ -850,7 +850,7 @@ document.addEventListener('click',e=>{if(performance.now()-swipeAt<400&&e.target
 function warnTap(e,msg){const id=e.pointerId,x=e.clientX,up=ev=>{if(ev.pointerId!==id)return;window.removeEventListener('pointerup',up);if(Math.abs(ev.clientX-x)<30)warn(msg);};window.addEventListener('pointerup',up);}
 
 // the game's version, shown on the title screen and in the 정보 window
-const APP_VERSION='4.12.39';
+const APP_VERSION='4.12.40';
 function home(){fitLoadout(profile);if(cloudWaiting)setTimeout(()=>cloudSync(),0);if(game&&!game.ended){if(game.config.tutorial){game=null;coachStop();}else{game.paused=true;savedRun=game.snapshot();}}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p data-action="version-tap">버전 ${APP_VERSION}</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
 function openDialog(title,body,buttons,kind='dialog'){if(kind!=='result')sound(kind.startsWith('msg')?'question':'open');dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2><span>${title}</span>${button('dialog-x','<i>×</i>','xp-x','aria-label="닫기"')}</h2><div class="dialog-body">${body}</div><div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('.dialog').classList.toggle('msgbox',kind.startsWith('msg'));(modal.querySelector('.xp-yes')??modal.querySelector('.dialog-actions button')??modal.querySelector('button'))?.focus();backNavigation?.sync?.();}
 // Yes/no question in a Windows message box: icon, text, then [예] [아니요] on the right.
@@ -1733,9 +1733,8 @@ const nub = (x, s = 1) => R(x, s > 0 ? 11.8 : -15.6, 3.8, 3.8, "c+42", 0, ' stro
 const gogglePts = (k) => [4.2 + k, -10.4 + k, 4.2 + k, 10.4 - k, 7.8 - k * 0.4, 10.4 - k, 9.4 - k, 8.6 - k * 0.4,
   9.4 - k, 2.8, 7.9 - k * 0.5, 0, 9.4 - k, -2.8, 9.4 - k, -8.6 + k * 0.4, 7.8 - k * 0.4, -10.4 + k];
 const goggles = () => R(EYE_X - 0.8, -13, 1.6, 26, "c-62") + P(gogglePts(0), "c-74") + P(gogglePts(1.1), "c!");
-// A one-handed person stands a little left of the pad center so token + weapon
-// stay inside the pad frame; two-handed (both sides) stays centered.
-const tower = (under, over = "", shift = -2.6) => ({ base: pad(2, 2), turret: G("", under + body() + over, ` transform="translate(0 ${shift})"`) });
+// A person stands on the pad center and turns about the center of its token; a held weapon may reach past the frame.
+const tower = (under, over = "") => ({ base: pad(2, 2), turret: under + body() + over });
 
 // ---- towers: { base, turret } per level -----------------------------------
 const TOWERS = {};
@@ -1819,7 +1818,7 @@ TOWERS.minigun = (lv) => {
     if (twin) over += L(0, by + 2, 1.6, -13, "c+28", 1.8, ' stroke-dasharray="1.2 0.8"');
   }
   over += nub(1.2) + (twin ? nub(1.2, -1) : "");
-  return tower(gun(1) + (twin ? gun(-1) : ""), over + (lv >= 3 ? goggles() : ""), twin ? 0 : -2.6);
+  return tower(gun(1) + (twin ? gun(-1) : ""), over + (lv >= 3 ? goggles() : ""));
 };
 
 TOWERS.shotgun = (lv) => {
@@ -1861,7 +1860,7 @@ TOWERS.agent = (lv) => {
   t += R(4.7, -9.4, 4.4, 18.8, "hole", 2.2);
   if (lv >= 2) t += L(6.9, -7.6, 6.9, 7.6, "c+60", 0.8, ' opacity="0.85"') + C(4, -12.6, 1.2, "paint"); // night lens + earpiece
   t += nub(4) + (lv >= 3 ? nub(4, -1) : "");
-  return { base: pad(2, 2), turret: G("", under + t, ` transform="translate(0 ${lv >= 3 ? 0 : -2.6})"`) };
+  return { base: pad(2, 2), turret: under + t };
 };
 
 // ---- road units -------------------------------------------------------------
@@ -2869,7 +2868,7 @@ function iconSVG(kind, hero = false) {
   let body, vb;
   if (PEOPLE.has(kind)) {
     body = G("", TOWERS[kind](1).turret, ' transform="rotate(-90)"');
-    vb = "-19 -23 39 39";
+    vb = "-16.4 -23 39 39";
   } else if (kind === "robot") {
     body = G("", robotUnit(1), ' transform="rotate(-90)"');
     vb = "-27 -28 54 54";
@@ -4645,15 +4644,15 @@ Object.assign(Game.prototype, {
 });
 // ---- shots leave the weapon, not the body (4.4) -------------------------------------------------------
 // Muzzle points in art units (20 per cell) on the turned turret: [forward, to the right], per level;
-// a second row of points means two guns that take turns. One-handed people stand 2.6 units left.
+// a second row of points means two guns that take turns.
 const MUZZLE = {
-  soldier: [[[20.4, 13.2]], [[20.4, 13.2]], [[22.8, 13.2]], [[24, 13.2]]],
-  minigun: [[[20.5, 13.2]], [[20.5, 13.2]], [[20.5, 13.2]], [[20.5, 15.8], [20.5, -15.8]]],
-  sniper: [[[26, 13.2]], [[26, 13.2]], [[26.6, 13.2]], [[31, 13.2]]],
-  shotgun: [[[16.4, 13.2]], [[16.4, 13.2]], [[19.4, 13.2]], [[19.4, 13.2]]],
-  agent: [[[18.9, 13.2]], [[18.9, 13.2]], [[23.4, 15.8], [23.4, -15.8]]],
-  bomb: [[[11, 13.8]], [[11, 13.8]], [[11, 13.8]]],
-  flame: [[[18, 13.2]], [[18, 13.2]], [[18.4, 13.2]]],
+  soldier: [[[20.4, 15.8]], [[20.4, 15.8]], [[22.8, 15.8]], [[24, 15.8]]],
+  minigun: [[[20.5, 15.8]], [[20.5, 15.8]], [[20.5, 15.8]], [[20.5, 15.8], [20.5, -15.8]]],
+  sniper: [[[26, 15.8]], [[26, 15.8]], [[26.6, 15.8]], [[31, 15.8]]],
+  shotgun: [[[16.4, 15.8]], [[16.4, 15.8]], [[19.4, 15.8]], [[19.4, 15.8]]],
+  agent: [[[18.9, 15.8]], [[18.9, 15.8]], [[23.4, 15.8], [23.4, -15.8]]],
+  bomb: [[[11, 16.4]], [[11, 16.4]], [[11, 16.4]]],
+  flame: [[[18, 15.8]], [[18, 15.8]], [[18.4, 15.8]]],
   laser: [[[28, 0]], [[28, 0]], [[28, 0]], [[34, 0]]]
 };
 // robot: minigun arms (drawn 1.5×), the Lv.4 center gun; the garage's Lv.4 car: its roof gun (drawn 2×)
