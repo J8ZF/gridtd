@@ -206,7 +206,7 @@ h1,h2,.wallet,.home-menu button,.home-menu button span,.inv-title strong,.dialog
 .inventory .inv-desc{min-height:0}
 .inventory .inv-actions{align-self:end}
 .inventory .inv-cell{height:auto;aspect-ratio:1/1}
-.inventory .inv-cell .tower-icon{width:58%;height:58%;top:9%}
+.inventory .inv-cell .tower-icon{width:72%;height:72%;top:3%}
 .home-bottom .slot{aspect-ratio:1/1;height:auto;min-height:0;padding:4px 1px}
 .home-bottom .slot .tower-icon{width:46%;height:46%}
 /* 3.9.4 phone: dragging a tower up out of the tray was taken by the browser as a
@@ -856,7 +856,7 @@ document.addEventListener('click',e=>{if(performance.now()-swipeAt<400&&e.target
 function warnTap(e,msg){const id=e.pointerId,x=e.clientX,up=ev=>{if(ev.pointerId!==id)return;window.removeEventListener('pointerup',up);if(Math.abs(ev.clientX-x)<30)warn(msg);};window.addEventListener('pointerup',up);}
 
 // the game's version, shown on the title screen and in the 정보 window
-const APP_VERSION='4.12.44';
+const APP_VERSION='4.12.45';
 function home(){fitLoadout(profile);if(cloudWaiting)setTimeout(()=>cloudSync(),0);if(game&&!game.ended){if(game.config.tutorial){game=null;coachStop();}else{game.paused=true;savedRun=game.snapshot();}}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p data-action="version-tap">버전 ${APP_VERSION}</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
 function openDialog(title,body,buttons,kind='dialog'){if(kind!=='result')sound(kind.startsWith('msg')?'question':'open');dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2><span>${title}</span>${button('dialog-x','<i>×</i>','xp-x','aria-label="닫기"')}</h2><div class="dialog-body">${body}</div><div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('.dialog').classList.toggle('msgbox',kind.startsWith('msg'));(modal.querySelector('.xp-yes')??modal.querySelector('.dialog-actions button')??modal.querySelector('button'))?.focus();backNavigation?.sync?.();}
 // Yes/no question in a Windows message box: icon, text, then [예] [아니요] on the right.
@@ -2891,7 +2891,8 @@ function iconSVG(kind, hero = false) {
     body = G("", planeUnit(1), ' transform="rotate(-90)"');
     vb = "-25 -26 50 50";
   } else {
-    const m = TOWERS[kind](1), [w, h] = TOWER[kind].size, square = w === 3 && h === 3, s = square ? 25 : Math.max(w, h) * 10;
+    // a long tower is framed on its short side plus a third of the difference, so it is not drawn small; its ends are cut off
+    const m = TOWERS[kind](1), [w, h] = TOWER[kind].size, square = w === 3 && h === 3, s = square ? 25 : (Math.min(w, h) + Math.abs(w - h) / 3) * 10;
     body = m.base.replace(square ? pad(3, 3) : "\u0000", "") + (m.turret ? G("", m.turret, ` transform="${m.pivot ? `translate(${m.pivot[0]} ${m.pivot[1]}) ` : ""}rotate(-90)"`) : "");
     vb = kind === "laser" ? "-25 -28.6 50 50" : `${-s} ${-s} ${s * 2} ${s * 2}`;
   }
