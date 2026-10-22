@@ -868,7 +868,7 @@ document.addEventListener('click',e=>{if(performance.now()-swipeAt<400&&e.target
 function warnTap(e,msg){const id=e.pointerId,x=e.clientX,up=ev=>{if(ev.pointerId!==id)return;window.removeEventListener('pointerup',up);if(Math.abs(ev.clientX-x)<30)warn(msg);};window.addEventListener('pointerup',up);}
 
 // the game's version, shown on the title screen and in the 정보 window
-const APP_VERSION='4.12.52';
+const APP_VERSION='4.12.53';
 function home(){fitLoadout(profile);if(cloudWaiting)setTimeout(()=>cloudSync(),0);if(game&&!game.ended){if(game.config.tutorial){game=null;coachStop();}else{game.paused=true;savedRun=game.snapshot();}}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p data-action="version-tap">버전 ${APP_VERSION}</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
 function openDialog(title,body,buttons,kind='dialog'){if(kind!=='result')sound(kind.startsWith('msg')?'question':'open');dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2><span>${title}</span>${button('dialog-x','<i>×</i>','xp-x','aria-label="닫기"')}</h2><div class="dialog-body">${body}</div><div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('.dialog').classList.toggle('msgbox',kind.startsWith('msg'));(modal.querySelector('.xp-yes')??modal.querySelector('.dialog-actions button')??modal.querySelector('button'))?.focus();backNavigation?.sync?.();}
 // Yes/no question in a Windows message box: icon, text, then [예] [아니요] on the right.
@@ -2027,7 +2027,7 @@ TOWERS.robot = (lv) => {
   b += R(-42, -41.6, 84, 2.4, "slot") + G("sortie", R(-42, -41.6, 84, 2.4, "c+25"), ' data-pivot="-42,0"');
   b += G("parked", robotUnit(lv), ' transform="translate(0 9) rotate(-90)"');
   b += G("empty", R(-26, -19, 52, 56, "none", 0, ' stroke="c-30" stroke-width="2" stroke-dasharray="7 5"'), ' data-off="1"');
-  b += R(-68.9, -68.9, 137.8, 137.8, "none", 2.4, ' stroke="c" stroke-width="2.2"');
+  b += R(-68.8, -68.8, 137.6, 137.6, "none", 2.4, ' stroke="c" stroke-width="2.4"');
   return { base: b };
 };
 // 신호기 8×5: a missile launcher on a base shaped []▪O. Left, a tall plate carrying the spare-missile magazine (top)
@@ -2647,7 +2647,7 @@ TOWERS.icu = (lv) => {
   for (const x of [-40, 0, 40]) b += park(x, 76, -90, .8, icuTrooper(lv));
   if (lv >= 2) b += park(-77, 0, -90, .82, icuTruck(lv));
   if (lv >= 4) b += park(77, 0, -90, .7, icuTank());
-  b += R(-97.9, -97.9, 195.8, 195.8, "none", 0, NEON(2.2));
+  b += R(-97.8, -97.8, 195.6, 195.6, "none", 0, NEON(2.4));
   return { base: b };
 };
 
