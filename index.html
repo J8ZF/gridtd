@@ -748,7 +748,7 @@ const {encounterHTML,bossStatusHTML,bossWarnings,remainingEnemies}=require("enco
 const {ECONOMY}=require("economy.js");
 const {cumulativeCost}=require("balance.js");
 const {installBackNavigation,preventTextSelection,installBattleShortcuts}=require("navigation.js");
-const {icon,towerIcon,glyph,enemyShape,enemyIcon}=require("icons.js");
+const {icon,towerIcon,towerFaceSrc,glyph,enemyShape,enemyIcon}=require("icons.js");
 const $=s=>document.querySelector(s),app=$('#app'),modal=$('#modal-root'),KEY='grid-defense-v1';
 const money=c=>Math.round(c/100).toLocaleString('en-US');
 const wallet=()=>profile.cheats.coins?'∞':money(profile.coins);
@@ -850,7 +850,7 @@ document.addEventListener('click',e=>{if(performance.now()-swipeAt<400&&e.target
 function warnTap(e,msg){const id=e.pointerId,x=e.clientX,up=ev=>{if(ev.pointerId!==id)return;window.removeEventListener('pointerup',up);if(Math.abs(ev.clientX-x)<30)warn(msg);};window.addEventListener('pointerup',up);}
 
 // the game's version, shown on the title screen and in the 정보 window
-const APP_VERSION='4.12.42';
+const APP_VERSION='4.12.43';
 function home(){fitLoadout(profile);if(cloudWaiting)setTimeout(()=>cloudSync(),0);if(game&&!game.ended){if(game.config.tutorial){game=null;coachStop();}else{game.paused=true;savedRun=game.snapshot();}}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p data-action="version-tap">버전 ${APP_VERSION}</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
 function openDialog(title,body,buttons,kind='dialog'){if(kind!=='result')sound(kind.startsWith('msg')?'question':'open');dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2><span>${title}</span>${button('dialog-x','<i>×</i>','xp-x','aria-label="닫기"')}</h2><div class="dialog-body">${body}</div><div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('.dialog').classList.toggle('msgbox',kind.startsWith('msg'));(modal.querySelector('.xp-yes')??modal.querySelector('.dialog-actions button')??modal.querySelector('button'))?.focus();backNavigation?.sync?.();}
 // Yes/no question in a Windows message box: icon, text, then [예] [아니요] on the right.
@@ -1000,7 +1000,7 @@ const PICTO={
 // Tower faces for tower pieces: the inventory art, tinted to one colour.
 const FACE_IMG={};let FACE_TINT={};const FACE_TINT_CLEAR=()=>{FACE_TINT={};};
 function towerFace(kind,color){const key=kind+color;if(FACE_TINT[key])return FACE_TINT[key];let img=FACE_IMG[kind];
- if(!img){const src=LOWRES.get('T:'+kind);if(!src)return null;img=FACE_IMG[kind]=new Image();img.onload=()=>{pieceArt.clear();FACE_TINT_CLEAR();refreshModules();};img.src=src;}
+ if(!img){const src=towerFaceSrc(kind);if(!src)return null;img=FACE_IMG[kind]=new Image();img.onload=()=>{pieceArt.clear();FACE_TINT_CLEAR();refreshModules();};img.src=src;}
  if(!img.complete||!img.naturalWidth)return null;const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');g.drawImage(img,0,0,64,64);g.globalCompositeOperation='color';g.fillStyle=color;g.fillRect(0,0,64,64);g.globalCompositeOperation='destination-in';g.drawImage(img,0,0,64,64);return FACE_TINT[key]=c;}
 // Draw one piece (cells in board units) into g at `px` pixels per cell.
 function drawPiece(g,id,cs,px,o={}){const m=MODS.MODULE[id],P=MOD_PAL[m.pal]??MOD_PAL[m.grade],set=new Set(cs.map(([x,y])=>x+','+y)),n=cs.length;
@@ -4760,6 +4760,8 @@ function glyph(kind){return `<g fill="none" stroke="currentColor" stroke-width="
 const LOWRES=new Map();
 function rasterize(key,svg,px){return new Promise(done=>{const img=new Image();img.onload=()=>{try{const c=document.createElement('canvas');c.width=c.height=px;const g=c.getContext('2d');g.imageSmoothingEnabled=true;g.drawImage(img,0,0,px,px);LOWRES.set(key,c.toDataURL());}catch{}done();};img.onerror=()=>done();img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg.includes('xmlns=')?svg:svg.replace('<svg ','<svg xmlns="http://www.w3.org/2000/svg" '));});}
 function preloadIcons(){const art=require('art.js'),jobs=[];for(const k of Object.keys(TOWER)){const svg=art.iconSVG(k);if(svg){jobs.push(rasterize('t:'+k,svg,30));jobs.push(rasterize('T:'+k,svg,64));jobs.push(rasterize('H:'+k,art.iconSVG(k,true),89));}}for(const k of Object.keys(ENEMIES))jobs.push(rasterize('e:'+k,enemyIcon(k,'x',true),24));return Promise.all(jobs);}
+// the 64 px tower icon for module pieces (null until rasterized)
+const towerFaceSrc=(kind)=>LOWRES.get('T:'+kind)??null;
 function towerIcon(kind,cls='tower-icon'){const hero=cls==='inv-hero-art',low=kind&&LOWRES.get((hero?'H:':'t:')+kind);if(low)return `<img class="${cls} tower-art lowres" src="${low}" alt="" aria-hidden="true" draggable="false">`;const art=kind&&require('art.js').iconSVG(kind,hero);if(art)return art.replace('<svg ',`<svg class="${cls} tower-art" aria-hidden="true" `);if(!kind)return icon('plus',cls);return `<svg class="${cls}" viewBox="-24 -24 48 48" style="color:${TOWER[kind].color}" aria-hidden="true">${glyph(kind)}</svg>`;}
 // Local +X is travel direction; the long point at -X is the trailing end.
 const FINAL_BOSS_OUTLINE=[[-18,0],[-6,-9],[-9,-14],[11,-12],[14,-6],[14,6],[11,12],[-9,14],[-6,9]];
@@ -5036,6 +5038,7 @@ Object.defineProperty(exports,"enemyFront",{enumerable:true,get:()=>enemyFront})
 Object.defineProperty(exports,"glyph",{enumerable:true,get:()=>glyph});
 Object.defineProperty(exports,"icon",{enumerable:true,get:()=>icon});
 Object.defineProperty(exports,"towerIcon",{enumerable:true,get:()=>towerIcon});
+Object.defineProperty(exports,"towerFaceSrc",{enumerable:true,get:()=>towerFaceSrc});
 Object.defineProperty(exports,"preloadIcons",{enumerable:true,get:()=>preloadIcons});
 },
 "legacy-enemies.js":function(require,exports){
