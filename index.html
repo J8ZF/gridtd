@@ -868,7 +868,7 @@ document.addEventListener('click',e=>{if(performance.now()-swipeAt<400&&e.target
 function warnTap(e,msg){const id=e.pointerId,x=e.clientX,up=ev=>{if(ev.pointerId!==id)return;window.removeEventListener('pointerup',up);if(Math.abs(ev.clientX-x)<30)warn(msg);};window.addEventListener('pointerup',up);}
 
 // the game's version, shown on the title screen and in the 정보 window
-const APP_VERSION='4.12.73';
+const APP_VERSION='4.12.74';
 function home(){fitLoadout(profile);if(cloudWaiting)setTimeout(()=>cloudSync(),0);if(game&&!game.ended){if(game.config.tutorial){game=null;coachStop();}else{game.paused=true;savedRun=game.snapshot();}}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p data-action="version-tap">버전 ${APP_VERSION}</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
 function openDialog(title,body,buttons,kind='dialog'){if(kind!=='result')sound(kind.startsWith('msg')?'question':'open');dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2><span>${title}</span>${button('dialog-x','<i>×</i>','xp-x','aria-label="닫기"')}</h2><div class="dialog-body">${body}</div><div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('.dialog').classList.toggle('msgbox',kind.startsWith('msg'));(modal.querySelector('.xp-yes')??modal.querySelector('.dialog-actions button')??modal.querySelector('button'))?.focus();backNavigation?.sync?.();}
 // Yes/no question in a Windows message box: icon, text, then [예] [아니요] on the right.
@@ -3540,11 +3540,13 @@ function createBoard(canvas,map){
   ctx.restore();}
  // Drawing order of towers, units and enemies (4.12.73): what stands taller is drawn on top; the same height, the
  // one made later on top. Height = size × weight. Size is a length in cells: an enemy's drawn width (1.9 per unit of
- // its scale, so every boss gets its own), a unit's width (the one its health bar uses), a tower √(w × h). Weight is
- // how tall the kind stands: enemies 1, bosses 1.5, final bosses 2.5; units 1, the robot (a tall machine) 1.2;
- // people towers 1, machines 0.8, buildings that are wide but low 0.35, the plane's runway 0.15.
- const TOWER_WEIGHT={plane:.15,farm:.35,spawner:.35,robot:.35,signal:.35,icu:.35,gauss:.8,laser:.8,tesla:.8,platinum:.8};
- function enemyHeight(e){const d=ENEMIES[e.kind];return 1.9*enemyScale(e)*(d.finalBoss?2.5:d.boss?1.5:1);}
+ // its scale), a unit's width (the one its health bar uses), a tower √(w × h). An enemy's weight grows with its base
+ // health, +0.3 for every tenfold past 30, but only as far as it is big: none at scale 0.85 or less, all of it from
+ // 1.45 (4.12.74), so a small tough mob stays low and the big strong bosses rise; difficulty does not change it.
+ // Units 1, the robot (a tall machine) 1.2; people towers 1, machines 0.8, the signal's launcher 0.6, buildings that
+ // are wide but low 0.35, the plane's runway 0.15.
+ const TOWER_WEIGHT={plane:.15,farm:.35,spawner:.35,robot:.35,icu:.35,signal:.6,gauss:.8,laser:.8,tesla:.8,platinum:.8};
+ function enemyHeight(e){const s=enemyScale(e),big=Math.max(0,Math.min(1,(s-.85)/.6));return 1.9*s*(1+.3*Math.max(0,Math.log10((ENEMIES[e.kind].hp||1)/30))*big);}
  function unitHeight(v){if(v.kind==='icu')return (ICU_UNIT[v.unit]??ICU_UNIT.trooper)[2];if(v.kind==='skeleton')return (v.big?2.6:1.7)*1.3;return v.kind==='robot'?3.4*1.2:3;}
  function towerHeight(t){return Math.sqrt(t.w*t.h)*(TOWER_WEIGHT[t.kind]??1);}
  function draw(game,o){artGame=game;artTime=o.time??0;terrain();ctx.setTransform(1,0,0,1,0,0);ctx.imageSmoothingEnabled=true;const [jx,jy]=icuShake(game);ctx.drawImage(cache,jx*DPR,jy*DPR,canvas.width,canvas.height);ctx.setTransform(DPR*scale,0,0,DPR*scale,DPR*(ox+jx),DPR*(oy+jy));
