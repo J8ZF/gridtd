@@ -868,7 +868,7 @@ document.addEventListener('click',e=>{if(performance.now()-swipeAt<400&&e.target
 function warnTap(e,msg){const id=e.pointerId,x=e.clientX,up=ev=>{if(ev.pointerId!==id)return;window.removeEventListener('pointerup',up);if(Math.abs(ev.clientX-x)<30)warn(msg);};window.addEventListener('pointerup',up);}
 
 // the game's version, shown on the title screen and in the 정보 window
-const APP_VERSION='4.12.69';
+const APP_VERSION='4.12.70';
 function home(){fitLoadout(profile);if(cloudWaiting)setTimeout(()=>cloudSync(),0);if(game&&!game.ended){if(game.config.tutorial){game=null;coachStop();}else{game.paused=true;savedRun=game.snapshot();}}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p data-action="version-tap">버전 ${APP_VERSION}</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
 function openDialog(title,body,buttons,kind='dialog'){if(kind!=='result')sound(kind.startsWith('msg')?'question':'open');dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2><span>${title}</span>${button('dialog-x','<i>×</i>','xp-x','aria-label="닫기"')}</h2><div class="dialog-body">${body}</div><div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('.dialog').classList.toggle('msgbox',kind.startsWith('msg'));(modal.querySelector('.xp-yes')??modal.querySelector('.dialog-actions button')??modal.querySelector('button'))?.focus();backNavigation?.sync?.();}
 // Yes/no question in a Windows message box: icon, text, then [예] [아니요] on the right.
@@ -2075,19 +2075,54 @@ TOWERS.shotgun = (lv) => {
   return { base: pad(2, 2), turret: outline() + gun + body({ torso, legs }) + over };
 };
 
+// 커맨더 (remake #9), an admiral in the tower's yellow: a long yellow coat with cream trim that flares out to the
+// sides as it goes down, open at the back so the legs show in the middle; a big cream star on the back and a
+// collar; long sleeves down the sides, wider than the hands, about two thirds coat with a cream cuff, the square
+// hands in front; plain dark gray shoulder boards on the outer sides of the torso; a flag on a pole at the
+// left: gold cloth with a fold, a ragged fly edge and a dark star, a gold finial. Lv2 전투 훈련: a sabre at the
+// right hip. Lv3 콜 투 암즈: a deeper yellow coat with a second trim, a bigger flag, two stripes on the cuffs,
+// darker trousers, a megaphone in hand and the white peaked cap (black band with a gold star, black peak) set on
+// the back, a little to the left and turned a little anticlockwise, looking off to the front-left.
+// the coat in saturated yellow (the dark tones of the tower color turn khaki); cream trim
+const COAT = { coat: "#efc75a", edge: "#b8952f", deep: "#d2a83c", deepEdge: "#8f701c", trim: "#fff2c8", legs: "#6a5018", board: "#5e5e5e", boardEdge: "#454545", gold: "#f3c54a" };
+// a five-pointed star, one point toward the front (+x), inner radius 0.382 of the outer
+function star5(cx, cy, r, fill) {
+  const pts = [];
+  for (let k = 0; k < 10; k++) {
+    const a = (k * Math.PI) / 5, rr = k % 2 ? r * 0.382 : r;
+    pts.push(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr);
+  }
+  return P(pts, fill);
+}
 TOWERS.commander = (lv) => {
-  const big = lv >= 3, fl = big ? 1.3 : 1;
-  // pennant flying from a pole worn on the back-left; bigger with a star at Lv3
-  let under = P([-11, -11, -11 - 11 * fl, -13.6 - 2 * fl, -11 - 8 * fl, -9.4 + 1.4 * fl], "c+15");
-  if (big) under += C(-19, -12.2, 1.3, "c-40") +
-    R(4.6, GY - 1.2, 3.4, 2.4, "steel", 0.6) + P([8, GY - 1, 8, GY + 1, 15.6, GY + 3.2, 15.6, GY - 3.2], "gunHi"); // megaphone
-  let over = C(-11, -11, 1.6, "gun");
-  if (lv >= 2) over += R(-6.4, 1.6, 5.6, 7.4, "steel", 1) + L(-3.6, 3, -10, 9.4, "gun", 0.8) + C(-10, 9.4, 1, "c+42"); // radio pack
-  // epaulettes + a star badge
-  over += R(-4, -13.6, 6, 2.4, "c+42", 0.6) + R(-4, 11.2, 6, 2.4, "c+42", 0.6) +
-    P([0, -2.4, 0.7, -0.7, 2.5, -0.7, 1.1, 0.4, 1.6, 2.2, 0, 1.2, -1.6, 2.2, -1.1, 0.4, -2.5, -0.7, -0.7, -0.7], "c+42");
-  if (big) over += nub(4.4);
-  return tower(under, over);
+  const big = lv >= 3, coat = big ? COAT.deep : COAT.coat, edge = big ? COAT.deepEdge : COAT.edge;
+  let under = "";
+  if (big) under += R(4, GY - 1.4, 3.6, 2.8, "steel") + R(5, GY + 1.4, 1.6, 2.6, "hull") + P([7.6, GY - 1.6, 7.6, GY + 1.6, 15.4, GY + 3.6, 15.4, GY - 3.6], "#e8e4d8") + R(14.4, GY - 3.6, 1, 7.2, "c-10") + R(9.6, GY - 2.1, 0.9, 4.2, "c-10"); // megaphone: grip, bell, gold bands
+  // the long coat: the body over the torso, the skirt flaring out past the sides toward the back, open in the middle
+  let over = P([4.4, -13.4, 4.4, 13.4, -7, 13.4, -17.6, 17.4, -17.6, 4.6, -8.6, 0, -17.6, -4.6, -17.6, -17.4, -7, -13.4], coat);
+  for (const s of [-1, 1]) {
+    over += L(-17.6, s * 4.6, -17.6, s * 17.4, COAT.trim, 0.8); // hem
+    if (big) over += L(-16.6, s * 5.2, -16.6, s * 16.8, COAT.trim, 0.5);
+  }
+  over += star5(-2.6, 0, 5.5, edge) + star5(-2.6, 0, 4.6, COAT.trim); // big star on the back
+  over += R(3, -12.6, 1.6, 25.2, edge) + L(4.4, -12.6, 4.4, 12.6, COAT.trim, 0.7); // collar, its cream edge
+  // the flag: a pole up the left side, the cloth flying out to the left
+  const fy = -14.2, w = big ? 5.6 : 5, x0 = big ? -17 : -15.4, x1 = -3.4;
+  over += L(x0 - 0.8, fy, x1 + 2, fy, "#3a3226", 1.2) + P([x1 + 1.8, fy - 0.7, x1 + 3.4, fy, x1 + 1.8, fy + 0.7], "c+30"); // pole, finial
+  const cloth = [x1, fy - 0.6];
+  for (let x = x1, k = 0; x > x0 + 0.5; x -= 2, k++) cloth.push(x, fy - w - (k % 2 ? 0.7 : 0));
+  cloth.push(x0, fy - w, x0, fy - 0.6);
+  over += P(cloth, "c") + R(x1 - 7, fy - w + 0.2, 2.6, w - 0.8, "c-16") + R(x0, fy - 1.6, x1 - x0, 1, "c-30") + star5(x1 - 3.4, fy - w / 2 - 0.4, 1.9, COAT.deepEdge); // fold, hoist, dark star
+  if (lv >= 2) over += L(-7, 15.4, -17.6, 18.6, "#4a3a1e", 1.6) + L(-15.6, 18, -17.6, 18.6, COAT.trim, 1.6) + R(-7.8, 13.8, 1.2, 3.4, "c") + R(-6.6, 14.8, 2.4, 1.2, "c-10"); // sabre: scabbard, chape, guard, hilt
+  for (const s of [-1, 1]) over += R(-5, s > 0 ? 7.6 : -11.2, 7.6, 3.6, COAT.board, 0, ` stroke="${COAT.boardEdge}" stroke-width="0.6"`); // plain dark gray shoulder boards on the outer sides of the torso
+  for (const s of [-1, 1]) { // long sleeves, wider than the hands, with cream cuffs; the hands in front
+    const y0 = s > 0 ? 11.8 : -15.6, w0 = y0 - 0.8;
+    over += R(-5.4, w0, 6.4, 5.4, coat, 0, ` stroke="${edge}" stroke-width="0.6"`) + R(0.2, w0, 0.8, 5.4, COAT.trim) + (big ? R(-1.2, w0, 0.8, 5.4, COAT.trim) : "");
+    over += R(1, y0, 3.8, 3.8, "c+42", 0, ' stroke="c+12" stroke-width="0.8"');
+  }
+  if (big) over += G("", P([5.4, -5.6, 9.4, -4.2, 10.6, 0, 9.4, 4.2, 5.4, 5.6], "#1e1e1e") + R(4.6, -5.8, 2.6, 11.6, "#2c2c2c") + star5(5.9, 0, 1.5, COAT.gold) +
+    P(cut(-7.4, -7.6, 5, 7.6, 3.2), "#f7f7f5", ' stroke="#c8c8c0" stroke-width="0.6"') + P(cut(-5.8, -6, 3.4, 6, 2.4), "#ecece8"), ' transform="translate(-3.4 -4.6) rotate(-20) scale(0.86)"'); // peaked cap on the back, over everything else
+  return { base: pad(2, 2), turret: outline() + under + body(big ? { legs: COAT.legs } : {}) + over };
 };
 
 TOWERS.agent = (lv) => {
