@@ -488,11 +488,10 @@ img.tower-icon,img.enemy-icon{flex-shrink:0}
 .tower-heading>div:last-child{display:flex;align-items:center;gap:4px}
 /* one deck viewport for the battle bar, the home deck and the inventory deck: the battle slot's shape, the icon
    84% of the slot's height, centered across it near the top, and the label (price or name) over its lower edge.
-   The icon is drawn on an image 1.5× that box around it (deck-art). 4.12.78: that image is 112% of the slot's
-   height from 3% above it, so every tower's whole art (guns, antennas, the long towers' ends) stays inside. */
+   The icon is drawn on an image 1.5× that box around it (deck-art), so the art runs to the button's edge. */
 .home-bottom .slot,.inventory .inv-slot{aspect-ratio:71/68;height:auto;min-height:0;padding:0;position:relative}
 .battle-footer .slot .tower-icon,.home-bottom .slot .tower-icon,.inventory .inv-slot .tower-icon{position:absolute;left:50%;top:4.5%;width:auto;height:84%;aspect-ratio:1/1;margin:0;transform:translateX(-50%)}
-.battle-footer .slot .deck-art,.home-bottom .slot .deck-art,.inventory .inv-slot .deck-art{top:-3%;height:112%;max-width:none}
+.battle-footer .slot .deck-art,.home-bottom .slot .deck-art,.inventory .inv-slot .deck-art{top:-16.5%;height:126%;max-width:none}
 .inventory .inv-cell .deck-art{width:108%;height:108%;top:-15%;max-width:none}
 .battle-footer .slot.empty{justify-content:center}
 .home-bottom .slot:not(.empty)>span{position:absolute;left:0;right:0;bottom:0;padding:13px 2px 3px;font-size:11px;line-height:13px;text-align:center;background:linear-gradient(to top,#000000eb 35%,#0000);-webkit-text-stroke:3px #000;paint-order:stroke fill}
@@ -869,7 +868,7 @@ document.addEventListener('click',e=>{if(performance.now()-swipeAt<400&&e.target
 function warnTap(e,msg){const id=e.pointerId,x=e.clientX,up=ev=>{if(ev.pointerId!==id)return;window.removeEventListener('pointerup',up);if(Math.abs(ev.clientX-x)<30)warn(msg);};window.addEventListener('pointerup',up);}
 
 // the game's version, shown on the title screen and in the 정보 window
-const APP_VERSION='4.12.78';
+const APP_VERSION='4.12.79';
 function home(){fitLoadout(profile);if(cloudWaiting)setTimeout(()=>cloudSync(),0);if(game&&!game.ended){if(game.config.tutorial){game=null;coachStop();}else{game.paused=true;savedRun=game.snapshot();}}save();setScreen('home',`<header class="bar xp-title home-top"><h2>그리드 타워 디펜스</h2>${button('codex',`${icon('book')}<span>적 도감</span>`,'xp-tool','aria-label="적 도감"')}</header><div class="home-launcher"><div class="home-banner">${BANNER?`<img class="home-banner-map" src="${BANNER}" alt="">`:''}<div class="home-banner-text"><img class="home-mark" src="${logoImage()}" alt="" aria-hidden="true"><div><h1>그리드 타워 디펜스</h1><p data-action="version-tap">버전 ${APP_VERSION}</p></div></div></div><fieldset class="xp-group home-menu">${button('play',`${icon('play')}<span>플레이</span>`,'primary home-start')}<div class="home-sub">${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('settings',`${icon('settings')}<span>설정</span>`)}</div></fieldset><div class="home-gap"></div><fieldset class="xp-group home-bottom">${slots()}</fieldset></div>`);}
 function openDialog(title,body,buttons,kind='dialog'){if(kind!=='result')sound(kind.startsWith('msg')?'question':'open');dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2><span>${title}</span>${button('dialog-x','<i>×</i>','xp-x','aria-label="닫기"')}</h2><div class="dialog-body">${body}</div><div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('.dialog').classList.toggle('msgbox',kind.startsWith('msg'));(modal.querySelector('.xp-yes')??modal.querySelector('.dialog-actions button')??modal.querySelector('button'))?.focus();backNavigation?.sync?.();}
 // Yes/no question in a Windows message box: icon, text, then [예] [아니요] on the right.
