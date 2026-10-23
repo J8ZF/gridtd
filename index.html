@@ -522,11 +522,14 @@ img.tower-icon,img.enemy-icon{flex-shrink:0}
 [data-skin]{position:relative;isolation:isolate}
 canvas.skin{position:absolute;z-index:-1;pointer-events:none}
 .overlay{background:rgba(24,32,52,.12)}
-#modal-root .dialog{--bg:transparent;--panel:rgba(255,255,255,.4);--tile:rgba(255,255,255,.3);--muted:#2a3650;--line:rgba(30,60,120,.22);--text:#0c1630;--field:rgba(255,255,255,.75);--fieldline:#7f9db9;--legend:#0046d5;--cash:#1f8f1f;--gold:#8a6800;--red:#c8202c;--accent:#0046d5;
+#modal-root .dialog{--bg:transparent;--panel:rgba(255,255,255,.4);--tile:rgba(255,255,255,.3);--muted:#45526b;--line:rgba(30,60,120,.22);--text:#0c1630;--field:rgba(255,255,255,.75);--fieldline:#7f9db9;--legend:#0046d5;--cash:#1f8f1f;--gold:#8a6800;--red:#c8202c;--accent:#0046d5;
  color:var(--text);background:none;border:0;border-radius:0;box-shadow:none;overflow:visible;padding:0 15px 15px}
 #modal-root .dialog::before{content:"";position:absolute;inset:0;z-index:-2;clip-path:polygon(9px 0,calc(100% - 9px) 0,calc(100% - 2.64px) 2.64px,100% 9px,100% 100%,0 100%,0 9px,2.64px 2.64px);-webkit-backdrop-filter:blur(5px) saturate(1.7) brightness(1.05);backdrop-filter:blur(5px) saturate(1.7) brightness(1.05)}
 /* dark text on glass, lifted off what shows through by a white glow (as Windows 7 did on its glass) */
-#modal-root .dialog-body,#modal-root .dialog-actions{text-shadow:0 0 var(--text-blur) currentColor,0 0 1.5px #fff,0 0 1.5px #fff,0 0 4px #fff,0 0 8px rgba(255,255,255,.85),0 0 14px rgba(255,255,255,.5)}
+#modal-root .dialog-body,#modal-root .dialog-actions{text-shadow:0 0 var(--text-blur) currentColor}
+/* as on the settings cards: the main lines dark, the asides grey-blue */
+#modal-root .dialog p{color:var(--text)}
+#modal-root .dialog p.muted,#modal-root .dialog .muted{color:var(--muted)}
 #modal-root .dialog>h2{margin:0 -15px 14px;padding:4px 6px 4px 12px;min-height:34px;background:none;border-radius:0;font-size:15px;color:#fff;text-shadow:0 0 var(--text-blur) currentColor,1px 1px var(--text-blur) rgba(0,20,90,.8)}
 #modal-root .dialog-body{margin:0 -12px;padding:0 12px}
 #modal-root .dialog button[data-skin]{background:none;border:0;border-radius:0;box-shadow:none;color:var(--text);font-style:normal;font-weight:400;text-shadow:inherit}
@@ -5513,7 +5516,7 @@ new MutationObserver(()=>{for(const el of document.querySelectorAll('#app>main.s
 const UI_RES=1.5,R=()=>Math.min(UI_RES,devicePixelRatio||1);
 const SHADE='rgba(70,78,104,.17)';
 const GLASS={
- wash:[[0,'rgba(246,251,255,.45)'],[1,'rgba(226,238,252,.55)']], // the window's body, top to bottom
+ wash:[[0,'rgba(252,254,255,.74)'],[1,'rgba(238,245,253,.66)']], // the window's body, top to bottom: light, so plain dark text reads on it
  // the title bar: the main menu's 플레이 blue (XP.css's title bar), let through a little
  title:[[0,'rgba(9,151,255,.82)'],[.08,'rgba(0,83,238,.82)'],[.4,'rgba(0,80,238,.78)'],[.88,'rgba(0,102,255,.74)'],[.95,'rgba(0,91,255,.8)'],[1,'rgba(0,61,215,.85)']],
  // the close button, shaped and lit like XP's own (from the top left), in a raspberry red
@@ -5566,7 +5569,8 @@ const SKINS={
  // a glass button: a glossy top half and a rim; the window's main one tinted blue, a pressed one darker with its
  // gloss turned to the bottom, a disabled one faint
  button:{draw(g,w,h,el){const s=state(el);shape(g,.5,.5,w-1,h-1,all(3));
-  g.fillStyle=s==='disabled'?'rgba(255,255,255,.18)':s==='pressed'?'rgba(10,40,110,.14)':s==='default'?'rgba(0,83,238,.16)':s==='hover'?'rgba(255,255,255,.45)':'rgba(255,255,255,.3)';g.fill();
+  g.fillStyle=s==='disabled'?'rgba(255,255,255,.35)':'rgba(255,255,255,.62)';g.fill();
+  if(s==='pressed'||s==='default'||s==='hover'){g.fillStyle=s==='pressed'?'rgba(10,40,110,.16)':s==='default'?'rgba(0,83,238,.14)':'rgba(255,255,255,.3)';g.fill();}
   if(s!=='disabled'){g.fillStyle=grad(g,0,0,0,h,s==='pressed'?[[0,'rgba(255,255,255,0)'],[.55,'rgba(255,255,255,0)'],[1,'rgba(255,255,255,.45)']]:[[0,'rgba(255,255,255,.7)'],[.5,'rgba(255,255,255,.15)'],[.51,'rgba(255,255,255,0)'],[1,'rgba(255,255,255,.2)']]);g.fill();}
   g.strokeStyle=s==='default'?'rgba(0,70,210,.75)':s==='disabled'?'rgba(30,60,120,.2)':'rgba(30,60,120,.45)';g.lineWidth=1;g.stroke();
   rim(g,1,1,w-2,h-2,all(2));}},
