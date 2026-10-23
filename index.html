@@ -588,16 +588,35 @@ button[data-skin]:active:not(:disabled){filter:none}
 .screen.inventory .inv-list{padding:14px 16px 22px}
 .screen.inventory .inv-tier{padding:0 12px 12px}
 .screen.inventory .inv-tier>.section-label{margin:0;padding:10px 0 8px;font-size:13px;color:#0053ee}
-.screen.inventory .inv-cell,.screen.inventory .inv-slot{background:rgba(255,255,255,.6);border-color:rgba(30,60,120,.3);border-bottom-color:var(--color)}
-.screen.inventory .inv-cell.on,.screen.inventory .inv-slot.on{background:var(--sel-bg);border-color:var(--sel)}
-.screen.inventory .inv-slot.empty{background:rgba(255,255,255,.35);border:1px dashed rgba(30,60,120,.35)}
+/* the slots and the towers, as on the main menu's deck (ui-parts.js paints the glass, the colour triangle, the ring round
+   the picked one): square, the tower at its own centre at the deck's size, free to stand out of its slot */
+.screen.inventory .inv-slot,.screen.inventory .inv-cell,.screen.inventory .inv-slot:active:not(:disabled),.screen.inventory .inv-cell:active:not(:disabled){background:none;border:0;border-radius:0;box-shadow:none;filter:none;overflow:visible}
+.screen.inventory .inv-slot{aspect-ratio:1/1}
+.screen.inventory .inv-slot .deck-art,.screen.inventory .inv-cell .deck-art{position:absolute;left:50%;top:50%;width:111%;height:111%;max-width:none;margin:0;transform:translate(-50%,-50%)}
+.screen.inventory .inv-slot.empty{color:#7a808c}
+.screen.inventory .inv-slot.empty svg{width:30%;height:30%}
 .screen.inventory .inv-more-btn[data-skin]{background:none;border:0;border-radius:0;box-shadow:none;color:var(--text);font-weight:400;font-style:normal}
+/* the picked tower stands on a grid (painted by ui-parts.js); its tags white on the dark bar's navy */
+.screen.inventory .inv-hero{background:none;border:0;overflow:visible}
+.screen.inventory .inv-tags{left:10px;top:6px}
+.screen.inventory .inv-tags span{font-size:12px;color:#fff;background:#0b2a6b;border:0;padding:3px 5px}
+/* its buttons: the big size (40 px), side by side at one width, one cut; 더보기 glass, the actions in the main menu's
+   플레이 gradient (equip and buy) or the same gradient in raspberry (unequip), turned over while pressed */
+.screen.inventory .inv-actions{grid-template-columns:1fr 1fr}
+.screen.inventory .inv-actions button{height:40px;min-height:40px;font-size:14px;font-weight:400;font-style:normal}
+.screen.inventory .inv-act,.screen.inventory .inv-act:active:not(:disabled){border:0;border-radius:0;box-shadow:none;filter:none;color:#fff;text-shadow:0 0 var(--text-blur) currentColor;
+ clip-path:polygon(3px 0,calc(100% - 3px) 0,100% 3px,100% calc(100% - 3px),calc(100% - 3px) 100%,3px 100%,0 calc(100% - 3px),0 3px)}
+.screen.inventory .inv-act.equip-button,.screen.inventory .inv-act.credit{background:var(--title)}
+.screen.inventory .inv-act.equip-button:active:not(:disabled),.screen.inventory .inv-act.credit:active:not(:disabled){background:linear-gradient(180deg,#003dd7,#0050ee 12%,#0053ee 60%,#0066ff)}
+.screen.inventory .inv-act.unequip-button{background:linear-gradient(180deg,#f0709a,#d0285c 8%,#cc2459 40%,#dc3468 88%,#dc3468 93%,#d22c60 95%,#a8104a 96%,#a8104a)}
+.screen.inventory .inv-act.unequip-button:active:not(:disabled){background:linear-gradient(180deg,#a8104a,#cc2459 12%,#d0285c 60%,#dc3468)}
+.screen.inventory .inv-act.credit-off,.screen.inventory .inv-act:disabled{background:linear-gradient(180deg,#a3b1c8,#8797b3 50%,#7a8aa7);color:rgba(255,255,255,.92)}
 /* the credit counters (led() in the page, painted by ui-parts.js) */
 canvas.led{display:block;height:23px}
-/* the reset: white on flat blue, like a blue screen */
-.screen .card button.danger{border:0;border-radius:0;background:#0053ee;color:#fff;box-shadow:none;font-weight:400;text-shadow:0 0 var(--text-blur) currentColor;
+/* the reset: white on the 플레이 blue, turned over while pressed */
+.screen .card button.danger{border:0;border-radius:0;background:var(--title);color:#fff;box-shadow:none;font-weight:400;text-shadow:0 0 var(--text-blur) currentColor;
  clip-path:polygon(3px 0,calc(100% - 3px) 0,100% 3px,100% calc(100% - 3px),calc(100% - 3px) 100%,3px 100%,0 calc(100% - 3px),0 3px)}
-.screen .card button.danger:active:not(:disabled){background:#003dd7}
+.screen .card button.danger:active:not(:disabled){background:linear-gradient(180deg,#003dd7,#0050ee 12%,#0053ee 60%,#0066ff)}
 </style>
 <div id="app"></div><div id="modal-root"></div><div id="toast" role="status" aria-live="polite"></div><input id="import-file" type="file" accept="application/json,.json" hidden><script>
 (()=>{
@@ -5605,12 +5624,37 @@ const SKINS={
  toggle:{draw(g,w,h,el){const on=el.classList.contains('on'),k=h-6;shape(g,.5,.5,w-1,h-1,all(4));
   g.fillStyle=on?GLASS.blue:'rgba(255,255,255,.5)';g.fill();g.strokeStyle=on?'#003dd7':'rgba(30,60,120,.4)';g.lineWidth=1;g.stroke();
   shape(g,on?w-3-k:3,3,k,k,all(3));g.fillStyle='#fff';g.fill();if(!on){g.strokeStyle='rgba(30,60,120,.35)';g.stroke();}}},
+ // a tower's slot, as on the main menu's deck: glass cut at the top left and the bottom right, the flat shadow outside it,
+ // the tower's colour in a triangle over the cut corner (2 px off the frame, reaching 2 px past it; none when empty), a
+ // blue ring round the picked one
+ slab:{pad:10,draw(g,w,h,el){const c=[8,0,8,0];g.save();g.fillStyle=SHADE;shape(g,7,8,w,h,c);g.fill();g.globalCompositeOperation='destination-out';shape(g,0,0,w,h,c);g.fill();g.restore();
+  g.save();shape(g,0,0,w,h,c);g.clip();g.fillStyle=grad(g,0,0,0,h,GLASS.card);g.fillRect(0,0,w,h);if(state(el)==='pressed'){g.fillStyle='rgba(10,40,110,.1)';g.fillRect(0,0,w,h);}g.restore();rim(g,0,0,w,h,c);
+  corner(g,el,c[0]);if(el.classList.contains('on')){shape(g,.75,.75,w-1.5,h-1.5,c);g.strokeStyle=GLASS.blue;g.lineWidth=1.5;g.stroke();}}},
+ // the picked tower's stand: glass ruled in a grid whose cells do not fit the window, so its edges cut them part way on
+ // every side, the tower's flat shadow on it; cut and shadowed like a slot
+ stand:{pad:10,draw(g,w,h,el){const c=[8,0,8,0],s=w*.22,o=-s*.35;
+  g.save();g.fillStyle=SHADE;shape(g,7,8,w,h,c);g.fill();g.globalCompositeOperation='destination-out';shape(g,0,0,w,h,c);g.fill();g.restore();
+  g.save();shape(g,0,0,w,h,c);g.clip();g.fillStyle='rgba(255,255,255,.55)';g.fillRect(0,0,w,h);
+  g.beginPath();for(let x=o;x<w;x+=s)if(x>0){g.moveTo(x,0);g.lineTo(x,h);}for(let y=o;y<h;y+=s)if(y>0){g.moveTo(0,y);g.lineTo(w,y);}g.strokeStyle='rgba(30,60,120,.16)';g.lineWidth=1;g.stroke();
+  const t=shadowOf(el);if(t)g.drawImage(t,w*.045,h*.055,w,h);g.restore();
+  rim(g,0,0,w,h,c);}},
  // a tab: the chosen one brighter, with a blue line along its top
  tab:{draw(g,w,h,el){const on=el.classList.contains('active');shape(g,.5,.5,w-1,h-1,[3,3,0,0]);
   g.fillStyle=on?'rgba(255,255,255,.6)':'rgba(255,255,255,.22)';g.fill();g.strokeStyle='rgba(30,60,120,.4)';g.lineWidth=1;g.stroke();
   if(on){g.save();shape(g,.5,.5,w-1,h,[3,3,0,0]);g.clip();g.fillStyle=GLASS.tabTop;g.fillRect(0,0,w,2.5);g.restore();}
   rim(g,1,1,w-2,h-1,[2,2,0,0]);}},
 };
+// a tower's colour in the triangle over a frame's cut top left corner (cut px), as on the main menu's deck
+function corner(g,el,cut){const col=el.style.getPropertyValue('--color');if(!col||el.classList.contains('empty'))return;const E=2,k=cut-2+E;
+ g.beginPath();g.moveTo(-E,-E);g.lineTo(-E+k+E,-E);g.lineTo(-E,-E+k+E);g.closePath();g.fillStyle=col;g.fill();}
+// a tower picture's flat shadow: its shape filled with the shadow's tint, at the picture's size; made once a picture has
+// loaded, then the stand is painted again
+const shadows=new Map();
+function shadowOf(el){const art=el.querySelector('.inv-hero-art'),w=el.offsetWidth,h=el.offsetHeight;if(!art||!w||!h)return null;
+ const key=(art.tagName==='IMG'?art.src:art.outerHTML)+w+'x'+h;if(shadows.has(key))return shadows.get(key);shadows.set(key,null);
+ const img=new Image();img.onload=()=>{const r=R(),c=document.createElement('canvas');c.width=Math.round(w*r);c.height=Math.round(h*r);const q=c.getContext('2d');
+  q.drawImage(img,0,0,c.width,c.height);q.globalCompositeOperation='source-in';q.fillStyle=SHADE;q.fillRect(0,0,c.width,c.height);shadows.set(key,c);if(el.isConnected)paint(el);};
+ img.src=art.tagName==='IMG'?art.src:'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(new XMLSerializer().serializeToString(art));return null;}
 // a part's state: pressed under a finger, hover under a mouse, default for the window's main button, disabled
 function state(el){return el.disabled?'disabled':el===held?'pressed':el===over?'hover':el.matches('.xp-yes,.primary')?'default':'';}
 
@@ -5659,7 +5703,7 @@ function paintIcon(c){const s=c.offsetWidth,r=R();if(!s)return;c.width=c.height=
 // which skin each part of a window wears
 const DRESS=[['.dialog','window'],['.dialog>h2 .xp-x','close'],['.dialog .guide-tabs button','tab'],['.dialog button','button'],
  ['main .bar.xp-title','bar'],['main .xp-status','bar'],['main .bar .xp-x','close'],['main .bar .xp-tool','button'],['#toast','pane'],
- ['main .card','card'],['main .card .switch','toggle'],['main .card .setting-row button:not(.switch,.danger)','button'],['main .inv-more-btn','button'],
+ ['main .card','card'],['main .card .switch','toggle'],['main .card .setting-row button:not(.switch,.danger)','button'],['main .inv-more-btn','button'],['main .inv-slot','slab'],['main .inv-cell','slab'],['main .inv-hero','stand'],
  ['main .map-card','card'],['main .difficulty-card','card'],['main .mod-open button','button']];
 const sized=new ResizeObserver(list=>{for(const e of list)if(e.target.isConnected)(e.target.dataset.skin?paint:e.target.dataset.led?paintLED:paintIcon)(e.target);});
 function dress(root){for(const [sel,skin] of DRESS)for(const el of root.querySelectorAll(sel)){if(!el.dataset.skin){el.dataset.skin=skin;sized.observe(el);}
@@ -5667,12 +5711,14 @@ function dress(root){for(const [sel,skin] of DRESS)for(const el of root.querySel
  for(const c of root.querySelectorAll('canvas[data-icon],canvas[data-led]'))if(!c.dataset.painted){c.dataset.painted='1';sized.observe(c);}}
 // a press, and a mouse passing over, repaint the part they touch
 let held=null,over=null;const repaint=el=>{if(el?.isConnected&&el.dataset.skin)paint(el);};
-const partAt=e=>e.target.closest?.('[data-skin=button],[data-skin=close],[data-skin=tab],button[data-skin=card]')??null;
+const partAt=e=>e.target.closest?.('[data-skin=button],[data-skin=close],[data-skin=tab],button[data-skin=card],button[data-skin=slab]')??null;
 addEventListener('pointerdown',e=>{const was=held;held=partAt(e);repaint(was);repaint(held);});
 for(const t of ['pointerup','pointercancel'])addEventListener(t,()=>{const was=held;held=null;repaint(was);});
 addEventListener('pointerover',e=>{if(e.pointerType!=='mouse')return;const was=over;over=partAt(e);if(was!==over){repaint(was);repaint(over);}});
 // windows as they open, screens as they are drawn, the toast as it changes
 const watch=new MutationObserver(()=>dress(document.body));for(const id of ['modal-root','app','toast'])watch.observe(document.getElementById(id),{childList:true,subtree:true});
+// a part whose class changes (the slot picked in the inventory) is painted again
+new MutationObserver(list=>{for(const m of list)if(m.target.dataset?.skin&&m.target.isConnected)paint(m.target);}).observe(document.getElementById('app'),{attributes:true,attributeFilter:['class'],subtree:true});
 
 Object.defineProperty(exports,"dress",{enumerable:true,get:()=>dress});
 },
