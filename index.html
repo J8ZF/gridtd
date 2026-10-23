@@ -527,9 +527,9 @@ canvas.skin{position:absolute;z-index:-1;pointer-events:none}
 #modal-root .dialog::before{content:"";position:absolute;inset:0;z-index:-2;clip-path:polygon(9px 0,calc(100% - 9px) 0,calc(100% - 2.64px) 2.64px,100% 9px,100% 100%,0 100%,0 9px,2.64px 2.64px);-webkit-backdrop-filter:blur(5px) saturate(1.7) brightness(1.05);backdrop-filter:blur(5px) saturate(1.7) brightness(1.05)}
 /* dark text on glass, lifted off what shows through by a white glow (as Windows 7 did on its glass) */
 #modal-root .dialog-body,#modal-root .dialog-actions{text-shadow:0 0 var(--text-blur) currentColor}
-/* as on the settings cards: the main lines dark, the asides grey-blue */
-#modal-root .dialog p{color:var(--text)}
-#modal-root .dialog p.muted,#modal-root .dialog .muted{color:var(--muted)}
+/* a window's lines all in the same dark writing, its asides too */
+#modal-root .dialog p,#modal-root .dialog p.muted{color:var(--text)}
+#modal-root .dialog p.small{font-size:13px}
 #modal-root .dialog>h2{margin:0 -15px 14px;padding:4px 6px 4px 12px;min-height:34px;background:none;border-radius:0;font-size:15px;color:#fff;text-shadow:0 0 var(--text-blur) currentColor,1px 1px var(--text-blur) rgba(0,20,90,.8)}
 #modal-root .dialog-body{margin:0 -12px;padding:0 12px}
 #modal-root .dialog button[data-skin]{background:none;border:0;border-radius:0;box-shadow:none;color:var(--text);font-style:normal;font-weight:400;text-shadow:inherit}
