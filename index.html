@@ -534,8 +534,10 @@ canvas.skin{position:absolute;z-index:-1;pointer-events:none}
 #modal-root .dialog .xp-x{width:24px;min-width:24px;height:24px;min-height:24px}
 #modal-root .dialog .xp-x i{visibility:hidden}
 /* the screens' close buttons are painted too: the old button and its × are not drawn under them */
-main .bar .xp-x[data-skin]{background:none;border:0;border-radius:0}
+main .bar .xp-x[data-skin]{background:none;border:0;border-radius:0;box-shadow:none}
 main .bar .xp-x[data-skin] i{visibility:hidden}
+/* a painted part shows its own pressed look, not the old button's brightening */
+button[data-skin]:active:not(:disabled){filter:none}
 #modal-root .dialog .guide-tabs button[data-skin]{padding:4px 9px}
 #modal-root .dialog .guide-tabs{background:rgba(238,244,252,.9)} /* stays readable while the guide scrolls under it */
 .xp-qicon{width:34px;height:34px}
