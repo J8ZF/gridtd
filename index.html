@@ -584,7 +584,9 @@ button[data-skin]:active:not(:disabled){filter:none}
 .screen .mod-open button.active[data-skin]{color:#0053ee}
 /* 5.0 inventory: the picked tower and the loadout, its details and each tier on glass cards over the picture */
 .screen.inventory .inv-top.card{margin:14px 16px 0;padding:12px;border-bottom:0}
-.screen.inventory .inv-detail.card{margin:12px 16px 0;padding:10px 12px;border-bottom:0;background:none}
+/* the details card stays put and only its writing scrolls (scrolled itself, it would carry its glass away with it) */
+.screen.inventory .inv-detail.card{margin:12px 16px 0;padding:0;overflow:visible;display:flex;flex-direction:column;border-bottom:0;background:none}
+.screen.inventory .inv-detail-body{min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;padding:10px 12px}
 .screen.inventory .inv-list{padding:14px 16px 22px}
 .screen.inventory .inv-tier{padding:0 12px 12px}
 .screen.inventory .inv-tier>.section-label{margin:0;padding:10px 0 8px;font-size:13px;color:#0053ee}
@@ -1046,7 +1048,7 @@ function invLoadoutHTML(){return `<div class="inv-loadout-wrap" data-key="${prof
 function invBadge(id){return profile.loadout.includes(id)?`<i class="inv-badge eq">${icon('check')}</i>`:invOwned(id)?'':`<i class="inv-badge">${icon('lock')}</i>`;}
 function invCellHTML(x){const o=invOwned(x.id),e=profile.loadout.includes(x.id),v=TOWER[invShow(x.id)];return button('inv-pick',`${towerIcon(v.id,'tower-icon deck-art')}<span class="inv-name">${v.name}</span>${invBadge(x.id)}`,`inv-cell ${x.id===invSel?'on':''} ${o?'':'locked'}`,`style="--color:${v.color}" data-kind="${x.id}" aria-label="${v.name}${e?' 장착됨':o?'':' 잠김'}"`);}
 function inventory(){fitLoadout(profile);if(!TOWER[invSel])invSel=profile.loadout.find(Boolean)??TOWERS[0].id;
- setScreen('inventory',header('인벤토리','home','',true)+`<section class="inv-top card">${invLoadoutHTML()}${invPickHTML()}</section>${invMore?`<div class="inv-detail card" data-kind="${invSel}">${invDetails(invSel)}</div>`:''}<div class="scroll inv-list">${[1,2,3,4].map(tier=>{const list=TOWERS.filter(x=>x.tier===tier);return `<div class="card inv-tier"><div class="section-label"><span>티어 ${tier}</span></div><div class="inv-grid">${list.map(invCellHTML).join('')}</div></div>`;}).join('')}</div>`);fitInv();document.fonts?.ready?.then(fitInv);}
+ setScreen('inventory',header('인벤토리','home','',true)+`<section class="inv-top card">${invLoadoutHTML()}${invPickHTML()}</section>${invMore?`<div class="inv-detail card" data-kind="${invSel}"><div class="inv-detail-body">${invDetails(invSel)}</div></div>`:''}<div class="scroll inv-list">${[1,2,3,4].map(tier=>{const list=TOWERS.filter(x=>x.tier===tier);return `<div class="card inv-tier"><div class="section-label"><span>티어 ${tier}</span></div><div class="inv-grid">${list.map(invCellHTML).join('')}</div></div>`;}).join('')}</div>`);fitInv();document.fonts?.ready?.then(fitInv);}
 addEventListener('resize',()=>{if(screen==='inventory')fitInv();});
 function fitInv(){for(const el of document.querySelectorAll('.inv-title strong'))fitLine(el,18,12);for(const el of document.querySelectorAll('.inv-name'))fitLine(el,11,8);}
 // ---- Modules ----------------------------------------------------------------------------
@@ -1347,7 +1349,7 @@ function confirmBuy(id){const t=TOWER[id];if(!canBuyTower(profile,id))return;if(
 function refreshInventory(){save();const top=$('.inventory .inv-top');if(screen!=='inventory'||!top){inventory();return;}
  top.querySelector('.inv-pick').outerHTML=invPickHTML();
  const key=profile.loadout.join(',');const lo=top.querySelector('.inv-loadout-wrap');if(lo.dataset.key!==key)lo.outerHTML=invLoadoutHTML();else for(const el of lo.querySelectorAll('.inv-slot[data-kind]'))el.classList.toggle('on',el.dataset.kind===invSel);
- const det=$('.inv-detail');if(invMore){const html=`<div class="inv-detail card" data-kind="${invSel}">${invDetails(invSel)}</div>`;if(!det)top.insertAdjacentHTML('afterend',html);else if(det.dataset.kind!==invSel)det.outerHTML=html;}else det?.remove();
+ const det=$('.inv-detail');if(invMore){const html=`<div class="inv-detail card" data-kind="${invSel}"><div class="inv-detail-body">${invDetails(invSel)}</div></div>`;if(!det)top.insertAdjacentHTML('afterend',html);else if(det.dataset.kind!==invSel)det.outerHTML=html;}else det?.remove();
  for(const el of document.querySelectorAll('.inv-cell')){const id=el.dataset.kind,o=invOwned(id);el.classList.toggle('on',id===invSel);el.classList.toggle('locked',!o);const want=invBadge(id),badge=el.querySelector('.inv-badge');if((badge?.outerHTML??'')!==want){badge?.remove();if(want)el.insertAdjacentHTML('beforeend',want);}el.setAttribute('aria-label',`${TOWER[invShow(id)].name}${profile.loadout.includes(id)?' 장착됨':o?'':' 잠김'}`);}
  const w=$('.inventory .wallet');if(w)w.innerHTML=`${icon('coin')}${wallet()}`;fitInv();}
 function unequip(id){const index=profile.loadout.indexOf(id);if(index===-1)return;profile.loadout[index]=null;refreshInventory();}
