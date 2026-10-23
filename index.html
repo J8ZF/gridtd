@@ -874,7 +874,7 @@ document.addEventListener('click',e=>{if(performance.now()-swipeAt<400&&e.target
 function warnTap(e,msg){const id=e.pointerId,x=e.clientX,up=ev=>{if(ev.pointerId!==id)return;window.removeEventListener('pointerup',up);if(Math.abs(ev.clientX-x)<30)warn(msg);};window.addEventListener('pointerup',up);}
 
 // the game's version, shown on the title screen and in the 정보 window
-const APP_VERSION='4.12.83';
+const APP_VERSION='4.12.84';
 function home(){fitLoadout(profile);if(cloudWaiting)setTimeout(()=>cloudSync(),0);if(game&&!game.ended){if(game.config.tutorial){game=null;coachStop();}else{game.paused=true;savedRun=game.snapshot();}}save();setScreen('home',`<div class="h5"><canvas class="h5-scene"></canvas><canvas class="h5-glass"></canvas><canvas class="h5-ui"></canvas><div class="h5-title" role="heading" aria-level="1" aria-label="그리드 타워 디펜스"><div class="r1"><span>그</span><span>리</span><span>드</span></div><div class="r2"><span>타</span><span>워</span><span>디</span><span>펜</span><span>스</span></div><p class="ver" data-action="version-tap">버전 ${APP_VERSION}</p></div><nav class="h5-menu h5-slab" aria-label="메뉴">${button('play',`${icon('play')}<span>플레이</span>`,'h5-play')}${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('codex',`${icon('book')}<span>도감</span>`)}</nav><div class="h5-deck" aria-label="장착한 타워">${homeSlots()}</div></div>`);homeScene.mount(app.querySelector('.h5'));}
 // the equipped towers on the main menu: a see-through slot each (painted by home-scene.js), five to a page
 function homeSlots(){return paged('home',profile.loadout.map((id,i)=>{const t=TOWER[id];return t?button('inventory','','h5-slab',`style="--c:${t.color}" data-kind="${id}" aria-label="${t.name}"`):button('inventory',icon('plus'),'h5-slab empty',`aria-label="빈 슬롯 ${i+1}"`);}),'h5-row');}
@@ -5324,20 +5324,14 @@ function frame(now){const v=view,t=now/1000*PACE,{g,W,H,k,cx,cy}=v,S=CROWN.shado
  d.globalCompositeOperation='source-in';d.drawImage(v.mask,0,0);d.fillStyle=SHADOW;d.fillRect(0,0,W,H);g.drawImage(v.dim,0,0);
  drawGlass(g.canvas);}
 
-// the equipped towers, painted like the game's icons (one image pixel per CSS pixel) on the whole slot, centred on
-// the drawing's own extent: the icon's box takes ICON of the slot, and a tower too big for it is drawn smaller to fit
-const ICON=.74,PAD=4,deckArt=new Map();
+// the equipped towers, painted like the game's icons (one image pixel per CSS pixel) on the whole interface: the
+// tower's own middle (a person's body) on the slot's middle, the icon's box ICON of the slot; a tower bigger than its
+// slot runs over the frame (drawn on an image twice the icon's box, so nothing is cut)
+const ICON=.74,deckArt=new Map();
 function towerArt(kind,s){const key=kind+':'+s;if(deckArt.has(key))return deckArt.get(key);const art={img:null};deckArt.set(key,art);
- art.ready=load(require('art.js').iconSVG(kind,false,2)).then(src=>{if(!src)return;
-  const paint=side=>{const c=layer(side,side);c.getContext('2d',{willReadFrequently:true}).drawImage(src,0,0,side,side);return c;};
-  let side=Math.round(ICON*s*2),c=paint(side),b=extent(c);const f=Math.min(1,(s-2*PAD)/Math.max(b.w,b.h));
-  if(f<1){side=Math.round(side*f);c=paint(side);b=extent(c);}
-  art.img=layer(b.w,b.h);art.img.getContext('2d').drawImage(c,b.x,b.y,b.w,b.h,0,0,b.w,b.h);});
+ art.ready=load(require('art.js').iconSVG(kind,false,2)).then(src=>{if(!src)return;const side=Math.round(ICON*s*2),c=layer(side,side);
+  c.getContext('2d').drawImage(src,0,0,side,side);art.img=c;});
  return art;}
-// the pixels a drawing actually covers
-function extent(c){const {width:w,height:h}=c,d=c.getContext('2d',{willReadFrequently:true}).getImageData(0,0,w,h).data;let x0=w,y0=h,x1=-1,y1=-1;
- for(let y=0;y<h;y++)for(let x=0;x<w;x++)if(d[(y*w+x)*4+3]>8){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y;}
- return x1<0?{x:0,y:0,w:1,h:1}:{x:x0,y:y0,w:x1-x0+1,h:y1-y0+1};}
 function paintDeck(){for(const el of root.querySelectorAll('.h5-deck .h5-slab[data-kind]')){const art=towerArt(el.dataset.kind,Math.round(box(el).width));if(!art.img)art.ready.then(()=>drawUI());}}
 const iconSource=el=>{const s=el.cloneNode(true);s.removeAttribute('class');s.setAttribute('color',getComputedStyle(el).color);return s.outerHTML;};
 
