@@ -545,7 +545,7 @@ button[data-skin]:active:not(:disabled){filter:none}
 .screen[data-backdrop]{position:relative;isolation:isolate}
 .screen>canvas.backdrop{position:absolute;left:0;top:0;width:100%;height:100%;z-index:-1;pointer-events:none}
 .screen[data-backdrop]>.bar.xp-title,.screen[data-backdrop]>.xp-status{-webkit-backdrop-filter:blur(5px) saturate(1.7) brightness(1.05);backdrop-filter:blur(5px) saturate(1.7) brightness(1.05)}
-.screen .scroll:has(>.card){padding:14px 16px}
+.screen .scroll:has(>.card){padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px))} /* no status line under it to keep clear of the phone's bottom edge */
 .screen .card{--muted:#45526b;--line:rgba(30,60,120,.16);color:var(--text);margin-bottom:14px;padding:0 14px;text-shadow:0 0 var(--text-blur) currentColor}
 .screen .card::before{content:"";position:absolute;inset:0;z-index:-2;clip-path:polygon(6px 0,calc(100% - 6px) 0,100% 6px,100% calc(100% - 6px),calc(100% - 6px) 100%,6px 100%,0 calc(100% - 6px),0 6px);-webkit-backdrop-filter:blur(5px) saturate(1.7) brightness(1.05);backdrop-filter:blur(5px) saturate(1.7) brightness(1.05)}
 .screen .card .setting-row{box-sizing:border-box;min-height:56px;padding:12px 0;font-size:15px}
@@ -910,7 +910,7 @@ function vibrate(ms=8){if(profile.settings.vibration)navigator.vibrate?.(ms);}
 function button(action,label,cls='',extra=''){return `<button class="${cls}" data-action="${action}" ${extra}>${label}</button>`;}
 function header(title,back='home',extra=''){return `<header class="bar xp-title"><h2>${title}</h2>${extra&&extra!=='<span></span>'?`<span class="xp-extra">${extra}</span>`:''}${button(back,'<i>×</i>','xp-x','aria-label="닫기"')}</header>`;}
 function statusBar(){return `<footer class="xp-status"><span class="xp-cell grow">준비</span><span class="xp-cell wallet">${icon('coin')}${wallet()}</span></footer>`;}
-function setScreen(name,html){if(name!=='battle'){placing=null;dragPointer=null;}screen=name;app.innerHTML=`<main class="screen ${name}">${html}${name==='battle'||name==='home'?'':statusBar()}</main>`;controlSignature='';backNavigation?.sync?.();}
+function setScreen(name,html){if(name!=='battle'){placing=null;dragPointer=null;}screen=name;app.innerHTML=`<main class="screen ${name}">${html}${['battle','home','settings'].includes(name)?'':statusBar()}</main>`;controlSignature='';backNavigation?.sync?.();}
 function slots(loadout=profile.loadout,battle=false,removable=false){return paged(battle?'battle':'home',loadout.map((id,i)=>{const t=TOWER[id];return t?button(battle?'build':removable?'unequip':'inventory',`${towerIcon(id,'tower-icon deck-art')}${battle?`<span class="price" data-price="${id}">${money(game.buildCost(id))}</span>`:`<span>${t.name}</span>`}`,`slot ${removable?'removable':''} ${battle&&placing?.kind===id?'active':''}`,`style="--color:${t.color}" data-kind="${id}" aria-label="${t.name}${battle?' 배치 '+t.cost+'원':removable?' 해제':''}" ${battle&&(!game.canBuild(id)||!game.canAfford(game.buildCost(id)))?'disabled':''}`):button(battle?'noop':'inventory',icon('plus'),'slot empty',`aria-label="빈 슬롯 ${i+1}" ${battle?'disabled':''}`);}),'loadout');}
 // Six to ten slots come as pages of five: swipe across them (or tap the pips) to turn.
 // (var and function declarations: the profile is read before this part of the file runs)
