@@ -517,6 +517,25 @@ img.tower-icon,img.enemy-icon{flex-shrink:0}
 /* more than five towers turn in pages; the page pips are painted with the panels */
 .h5-deck .pager-strip{transition:none}
 .h5-deck .pager-pips{opacity:0}
+/* 5.0 windows: frosted glass in XP's shapes. What lies behind is blurred into the window (::before, cut like its
+   frame); ui-parts.js paints the wash, the title bar, the rim, the buttons and the icons behind the content */
+[data-skin]{position:relative;isolation:isolate}
+canvas.skin{position:absolute;z-index:-1;pointer-events:none}
+.overlay{background:rgba(24,32,52,.12)}
+#modal-root .dialog{--bg:transparent;--panel:rgba(255,255,255,.4);--tile:rgba(255,255,255,.3);--muted:#2a3650;--line:rgba(30,60,120,.22);--text:#0c1630;--field:rgba(255,255,255,.75);--fieldline:#7f9db9;--legend:#0046d5;--cash:#1f8f1f;--gold:#8a6800;--red:#c8202c;--accent:#0046d5;
+ color:var(--text);background:none;border:0;border-radius:0;box-shadow:none;overflow:visible;padding:0 15px 15px}
+#modal-root .dialog::before{content:"";position:absolute;inset:0;z-index:-2;clip-path:polygon(9px 0,calc(100% - 9px) 0,calc(100% - 2.64px) 2.64px,100% 9px,100% 100%,0 100%,0 9px,2.64px 2.64px);-webkit-backdrop-filter:blur(5px) saturate(1.7) brightness(1.05);backdrop-filter:blur(5px) saturate(1.7) brightness(1.05)}
+/* dark text on glass, lifted off what shows through by a white glow (as Windows 7 did on its glass) */
+#modal-root .dialog-body,#modal-root .dialog-actions{text-shadow:0 0 var(--text-blur) currentColor,0 0 1.5px #fff,0 0 1.5px #fff,0 0 4px #fff,0 0 8px rgba(255,255,255,.85),0 0 14px rgba(255,255,255,.5)}
+#modal-root .dialog>h2{margin:0 -15px 14px;padding:4px 6px 4px 12px;min-height:34px;background:none;border-radius:0;font-size:15px;color:#fff;text-shadow:0 0 var(--text-blur) currentColor,1px 1px var(--text-blur) rgba(0,20,90,.8)}
+#modal-root .dialog-body{margin:0 -12px;padding:0 12px}
+#modal-root .dialog button[data-skin]{background:none;border:0;border-radius:0;box-shadow:none;color:var(--text);font-style:normal;font-weight:400;text-shadow:inherit}
+#modal-root .dialog button[data-skin]:disabled{color:#7c8698}
+#modal-root .dialog .xp-x{width:24px;min-width:24px;height:24px;min-height:24px}
+#modal-root .dialog .xp-x i{visibility:hidden}
+#modal-root .dialog .guide-tabs button[data-skin]{padding:4px 9px}
+#modal-root .dialog .guide-tabs{background:rgba(238,244,252,.9)} /* stays readable while the guide scrolls under it */
+.xp-qicon{width:34px;height:34px}
 </style>
 <div id="app"></div><div id="modal-root"></div><div id="toast" role="status" aria-live="polite"></div><input id="import-file" type="file" accept="application/json,.json" hidden><script>
 (()=>{
@@ -781,6 +800,7 @@ const {cumulativeCost}=require("balance.js");
 const {installBackNavigation,preventTextSelection,installBattleShortcuts}=require("navigation.js");
 const {icon,towerIcon,towerFaceSrc,glyph,enemyShape,enemyIcon}=require("icons.js");
 const homeScene=require("home-scene.js");
+require("ui-parts.js"); // dresses the windows as they open
 const $=s=>document.querySelector(s),app=$('#app'),modal=$('#modal-root'),KEY='grid-defense-v1';
 const money=c=>Math.round(c/100).toLocaleString('en-US');
 const wallet=()=>profile.cheats.coins?'∞':money(profile.coins);
@@ -888,7 +908,7 @@ function home(){fitLoadout(profile);if(cloudWaiting)setTimeout(()=>cloudSync(),0
 function homeSlots(){return paged('home',profile.loadout.map((id,i)=>{const t=TOWER[id];return t?button('inventory','','h5-slab',`style="--c:${t.color}" data-kind="${id}" aria-label="${t.name}"`):button('inventory',icon('plus'),'h5-slab empty',`aria-label="빈 슬롯 ${i+1}"`);}),'h5-row');}
 function openDialog(title,body,buttons,kind='dialog'){if(kind!=='result')sound(kind.startsWith('msg')?'question':'open');dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2><span>${title}</span>${button('dialog-x','<i>×</i>','xp-x','aria-label="닫기"')}</h2><div class="dialog-body">${body}</div><div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('.dialog').classList.toggle('msgbox',kind.startsWith('msg'));(modal.querySelector('.xp-yes')??modal.querySelector('.dialog-actions button')??modal.querySelector('button'))?.focus();backNavigation?.sync?.();}
 // Yes/no question in a Windows message box: icon, text, then [예] [아니요] on the right.
-const QUESTION='<svg class="xp-qicon" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="14" fill="#2f6fd8" stroke="#fff" stroke-width="2"/><text x="16" y="22.5" text-anchor="middle" font-size="19" font-weight="700" fill="#fff">?</text></svg>';
+const QUESTION='<canvas class="xp-qicon" data-icon="question" aria-hidden="true"></canvas>';
 function msgBox(title,text,yes,extra='',kind='msg'){openDialog(title,`<div class="xp-msg">${QUESTION}<div>${text}</div></div>`,button(yes,'<span>예(<u>Y</u>)</span>','xp-yes',extra)+button('close-dialog','<span>아니요(<u>N</u>)</span>','xp-no'),kind);}
 function closeDialog(){dialogKind='';modal.innerHTML='';backNavigation?.sync?.();}
 function play(){if((game&&!game.ended)||savedRun){openDialog('진행 중인 전투',`<p>${MAPS.find(m=>m.id===(game?.map.id??savedRun.mapId)).name} · ${DIFFICULTIES[game?.difficulty??savedRun.difficulty].name}<br>웨이브 ${game?.wave??savedRun.wave}</p>`,button('resume-saved','이어하기','primary')+button('new-game','새 게임')+button('close-dialog','취소','flat'));}else pickMap();}
@@ -5409,6 +5429,113 @@ function drawGlass(scene){const R=glass.R,g=glass.el?.getContext('2d');if(!g)ret
 Object.defineProperty(exports,"mount",{enumerable:true,get:()=>mount});
 Object.defineProperty(exports,"tick",{enumerable:true,get:()=>tick});
 Object.defineProperty(exports,"ready",{enumerable:true,get:()=>ready});
+},
+"ui-parts.js":function(require,exports){
+// 5.0 interface parts: frosted glass in Windows XP's shapes. A window lets what lies behind show through, blurred
+// (the page's backdrop filter, see the CSS), under a thin icy wash, with a bright rim; its frame, title bar, buttons and
+// icons are painted into a canvas behind each part at the interface's own resolution (UI_RES canvas pixels per CSS
+// pixel; the board is painted at 1, the text is a soft blur). Corners are cut at 45°; the big windows' are cut twice,
+// so a little less.
+const UI_RES=1.5,R=()=>Math.min(UI_RES,devicePixelRatio||1);
+const SHADE='rgba(70,78,104,.17)';
+const GLASS={
+ wash:[[0,'rgba(246,251,255,.45)'],[1,'rgba(226,238,252,.55)']], // the window's body, top to bottom
+ // the title bar: the main menu's 플레이 blue (XP.css's title bar), let through a little
+ title:[[0,'rgba(9,151,255,.82)'],[.08,'rgba(0,83,238,.82)'],[.4,'rgba(0,80,238,.78)'],[.88,'rgba(0,102,255,.74)'],[.95,'rgba(0,91,255,.8)'],[1,'rgba(0,61,215,.85)']],
+ // the close button, shaped and lit like XP's own (from the top left), in a cool red
+ close:{base:[[0,'rgba(240,138,148,.92)'],[.45,'rgba(226,57,75,.9)'],[1,'rgba(179,18,42,.92)']],hover:[[0,'rgba(255,156,166,.94)'],[.45,'rgba(240,74,92,.92)'],[1,'rgba(200,29,54,.94)']],
+  pressed:[[0,'rgba(122,18,32,.9)'],[1,'rgba(79,10,18,.9)']]},
+ tabTop:'#0053ee',
+};
+const grad=(g,x0,y0,x1,y1,stops)=>{const gr=g.createLinearGradient(x0,y0,x1,y1);for(const [o,c] of stops)gr.addColorStop(o,c);return gr;};
+// a box with its corners cut at 45°, c = [top left, top right, bottom right, bottom left]; cut twice, a corner gets two
+// facets on the quarter circle of that size instead of one
+function shape(g,x,y,w,h,c,twice=false){const k=1-Math.SQRT1_2,mid=(cx,cy,dx,dy,r)=>{if(twice&&r)g.lineTo(cx+dx*r*k,cy+dy*r*k);};g.beginPath();
+ g.moveTo(x+c[0],y);g.lineTo(x+w-c[1],y);mid(x+w,y,-1,1,c[1]);g.lineTo(x+w,y+c[1]);g.lineTo(x+w,y+h-c[2]);mid(x+w,y+h,-1,-1,c[2]);g.lineTo(x+w-c[2],y+h);
+ g.lineTo(x+c[3],y+h);mid(x,y+h,1,-1,c[3]);g.lineTo(x,y+h-c[3]);g.lineTo(x,y+c[0]);mid(x,y,1,1,c[0]);g.closePath();}
+const all=n=>[n,n,n,n];
+// a pane's rim: light along the top and left, a touch of shade along the bottom and right
+function rim(g,x,y,w,h,c,twice){g.save();shape(g,x,y,w,h,c,twice);g.clip();
+ g.lineWidth=2;shape(g,x+1,y+1,w-2,h-2,c,twice);g.strokeStyle=grad(g,x,y,x+w*.4,y+h,[[0,'rgba(255,255,255,.95)'],[.5,'rgba(255,255,255,.35)'],[1,'rgba(255,255,255,.12)']]);g.stroke();
+ g.lineWidth=1;shape(g,x+.5,y+.5,w-1,h-1,c,twice);g.strokeStyle=grad(g,x,y,x+w,y+h,[[0,'rgba(255,255,255,.5)'],[.6,'rgba(40,70,130,.18)'],[1,'rgba(20,40,90,.38)']]);g.stroke();g.restore();}
+
+const SKINS={
+ // a window: the icy wash, the blue title bar with its gloss, the rim; the game's flat shadow only outside the pane
+ // (under it, it would show through)
+ window:{pad:10,draw(g,w,h,el){const T=el.querySelector(':scope>h2')?.offsetHeight??0,c=[9,9,0,0];
+  g.save();g.fillStyle=SHADE;shape(g,7,8,w,h,c,true);g.fill();g.globalCompositeOperation='destination-out';shape(g,0,0,w,h,c,true);g.fill();g.restore();
+  g.save();shape(g,0,0,w,h,c,true);g.clip();
+  g.fillStyle=grad(g,0,T,0,h,GLASS.wash);g.fillRect(0,0,w,h);
+  g.fillStyle=grad(g,0,0,0,T,GLASS.title);g.fillRect(0,0,w,T);
+  g.fillStyle=grad(g,0,0,0,T*.55,[[0,'rgba(255,255,255,.45)'],[1,'rgba(255,255,255,0)']]);g.fillRect(0,0,w,T*.55); // the title's gloss
+  g.fillStyle=grad(g,0,T,0,T+16,[[0,'rgba(255,255,255,.55)'],[1,'rgba(255,255,255,0)']]);g.fillRect(0,T,w,16); // light caught under the title
+  g.fillStyle='rgba(0,40,140,.35)';g.fillRect(0,T-1,w,1);g.restore();
+  rim(g,0,0,w,h,c,true);}},
+ // XP's close button: a white rim and a white X on glossy red
+ close:{draw(g,w,h,el){const s=state(el),k=w/21;shape(g,.5,.5,w-1,h-1,all(3*k));
+  g.fillStyle=grad(g,0,0,w,h,GLASS.close[s==='pressed'?'pressed':s==='hover'?'hover':'base']);g.fill();
+  g.fillStyle=grad(g,0,0,0,h*.5,[[0,'rgba(255,255,255,.5)'],[1,'rgba(255,255,255,0)']]);g.fill();
+  g.strokeStyle='rgba(255,255,255,.95)';g.lineWidth=1;g.stroke();
+  g.beginPath();g.moveTo(6*k,6*k);g.lineTo(w-6*k,h-6*k);g.moveTo(w-6*k,6*k);g.lineTo(6*k,h-6*k);g.lineWidth=2.4*k;g.lineCap='square';g.strokeStyle='#fff';g.stroke();}},
+ // a glass button: a glossy top half and a rim; the window's main one tinted blue, a pressed one darker with its
+ // gloss turned to the bottom, a disabled one faint
+ button:{draw(g,w,h,el){const s=state(el);shape(g,.5,.5,w-1,h-1,all(3));
+  g.fillStyle=s==='disabled'?'rgba(255,255,255,.18)':s==='pressed'?'rgba(10,40,110,.14)':s==='default'?'rgba(0,83,238,.16)':s==='hover'?'rgba(255,255,255,.45)':'rgba(255,255,255,.3)';g.fill();
+  if(s!=='disabled'){g.fillStyle=grad(g,0,0,0,h,s==='pressed'?[[0,'rgba(255,255,255,0)'],[.55,'rgba(255,255,255,0)'],[1,'rgba(255,255,255,.45)']]:[[0,'rgba(255,255,255,.7)'],[.5,'rgba(255,255,255,.15)'],[.51,'rgba(255,255,255,0)'],[1,'rgba(255,255,255,.2)']]);g.fill();}
+  g.strokeStyle=s==='default'?'rgba(0,70,210,.75)':s==='disabled'?'rgba(30,60,120,.2)':'rgba(30,60,120,.45)';g.lineWidth=1;g.stroke();
+  rim(g,1,1,w-2,h-2,all(2));}},
+ // a tab: the chosen one brighter, with a blue line along its top
+ tab:{draw(g,w,h,el){const on=el.classList.contains('active');shape(g,.5,.5,w-1,h-1,[3,3,0,0]);
+  g.fillStyle=on?'rgba(255,255,255,.6)':'rgba(255,255,255,.22)';g.fill();g.strokeStyle='rgba(30,60,120,.4)';g.lineWidth=1;g.stroke();
+  if(on){g.save();shape(g,.5,.5,w-1,h,[3,3,0,0]);g.clip();g.fillStyle=GLASS.tabTop;g.fillRect(0,0,w,2.5);g.restore();}
+  rim(g,1,1,w-2,h-1,[2,2,0,0]);}},
+};
+// a part's state: pressed under a finger, hover under a mouse, default for the window's main button, disabled
+function state(el){return el.disabled?'disabled':el===held?'pressed':el===over?'hover':el.matches('.xp-yes,.primary')?'default':'';}
+
+// message icons, after XP's: the question and the note in a white speech balloon, the warning a yellow triangle, the
+// error a red octagon
+const ICONS={
+ question(g,s){bubble(g,s);mark(g,s,'?');},
+ info(g,s){bubble(g,s);mark(g,s,'i');},
+ warning(g,s){const k=s/32,tri=()=>{g.beginPath();g.moveTo(16*k,2.5*k);g.lineTo(29.5*k,27*k);g.lineTo(2.5*k,27*k);g.closePath();};
+  g.save();g.translate(1.5*k,2*k);tri();g.fillStyle='rgba(0,0,0,.18)';g.fill();g.restore();
+  tri();g.fillStyle=grad(g,0,2*k,0,28*k,[[0,'#fff6a8'],[.35,'#ffe14a'],[1,'#f2b705']]);g.fill();g.strokeStyle='#7a5a00';g.lineWidth=1.1*k;g.stroke();
+  g.fillStyle='#111';g.beginPath();g.moveTo(14.3*k,10*k);g.lineTo(17.7*k,10*k);g.lineTo(16.8*k,20*k);g.lineTo(15.2*k,20*k);g.closePath();g.fill();g.fillRect(14.6*k,22*k,2.8*k,2.8*k);},
+ error(g,s){const k=s/32,c=16*k,r=13*k,oct=(x,y,r)=>{g.beginPath();for(let i=0;i<8;i++){const a=(i+.5)*Math.PI/4;g[i?'lineTo':'moveTo'](x+r*Math.cos(a)*1.04,y+r*Math.sin(a)*1.04);}g.closePath();};
+  g.save();g.translate(1.5*k,2*k);oct(c,c,r);g.fillStyle='rgba(0,0,0,.18)';g.fill();g.restore();
+  oct(c,c,r);g.fillStyle=grad(g,0,3*k,0,29*k,[[0,'#ff8a7a'],[.45,'#e62a14'],[1,'#a80c00']]);g.fill();g.strokeStyle='#7d0a00';g.lineWidth=1.1*k;g.stroke();
+  g.save();oct(c,c-3.5*k,r*.72);g.clip();g.fillStyle='rgba(255,255,255,.28)';g.fillRect(0,0,s,c-2*k);g.restore();
+  g.beginPath();g.moveTo(11*k,11*k);g.lineTo(21*k,21*k);g.moveTo(21*k,11*k);g.lineTo(11*k,21*k);g.strokeStyle='#fff';g.lineWidth=3.2*k;g.lineCap='square';g.stroke();},
+};
+function bubble(g,s){const k=s/32,body=()=>{g.beginPath();[[7,2],[25,2],[30,7],[30,19],[25,24],[14,24],[5,29.5],[8,24],[7,24],[2,19],[2,7]].forEach(([x,y],i)=>g[i?'lineTo':'moveTo'](x*k,y*k));g.closePath();};
+ g.save();g.translate(1.5*k,1.5*k);body();g.fillStyle='rgba(0,0,0,.16)';g.fill();g.restore();
+ body();g.fillStyle=grad(g,0,2*k,0,26*k,[[0,'#ffffff'],[.6,'#f3f6fb'],[1,'#d6deea']]);g.fill();g.strokeStyle='#6c7a90';g.lineWidth=1.1*k;g.stroke();}
+function mark(g,s,ch){const k=s/32;g.fillStyle=grad(g,0,5*k,0,22*k,[[0,'#4f86ff'],[1,'#0b3fbf']]);
+ if(ch==='?'){g.beginPath();g.moveTo(11.2*k,9.6*k);g.bezierCurveTo(11.4*k,5.2*k,20.8*k,4.8*k,20.8*k,9.8*k);g.bezierCurveTo(20.8*k,12.4*k,17.6*k,13*k,17.2*k,15.4*k);g.lineTo(17.2*k,17*k);g.lineTo(14.6*k,17*k);g.lineTo(14.6*k,15*k);
+  g.bezierCurveTo(14.8*k,11.6*k,18*k,11.6*k,18*k,9.8*k);g.bezierCurveTo(18*k,7.4*k,14*k,7.6*k,13.9*k,9.9*k);g.closePath();g.fill();g.fillRect(14.6*k,18.6*k,2.6*k,2.6*k);}
+ else{g.fillRect(14.6*k,5.6*k,2.8*k,2.8*k);g.fillRect(14.6*k,10*k,2.8*k,10*k);g.fillRect(13.2*k,10*k,1.4*k,1.6*k);g.fillRect(13.2*k,18.4*k,5.6*k,1.6*k);}}
+
+// paint a part: a canvas behind its content, the skin's pad larger all round (for a shadow)
+function paint(el){const sk=SKINS[el.dataset.skin],pad=sk.pad??0,w=el.offsetWidth,h=el.offsetHeight,r=R();if(!w||!h)return;
+ let c=el.querySelector(':scope>canvas.skin');if(!c){c=document.createElement('canvas');c.className='skin';c.setAttribute('aria-hidden','true');el.prepend(c);}
+ c.width=Math.round((w+2*pad)*r);c.height=Math.round((h+2*pad)*r);Object.assign(c.style,{left:-pad+'px',top:-pad+'px',width:w+2*pad+'px',height:h+2*pad+'px'});
+ const g=c.getContext('2d');g.setTransform(r,0,0,r,pad*r,pad*r);sk.draw(g,w,h,el);}
+function paintIcon(c){const s=c.offsetWidth,r=R();if(!s)return;c.width=c.height=Math.round(s*r);const g=c.getContext('2d');g.setTransform(r,0,0,r,0,0);ICONS[c.dataset.icon](g,s);}
+// which skin each part of a window wears
+const DRESS=[['.dialog','window'],['.dialog>h2 .xp-x','close'],['.dialog .guide-tabs button','tab'],['.dialog button','button']];
+const sized=new ResizeObserver(list=>{for(const e of list)if(e.target.isConnected)(e.target.dataset.skin?paint:paintIcon)(e.target);});
+function dress(root){for(const [sel,skin] of DRESS)for(const el of root.querySelectorAll(sel))if(!el.dataset.skin){el.dataset.skin=skin;sized.observe(el);}
+ for(const c of root.querySelectorAll('canvas[data-icon]'))if(!c.dataset.painted){c.dataset.painted='1';sized.observe(c);}}
+// a press, and a mouse passing over, repaint the part they touch
+let held=null,over=null;const repaint=el=>{if(el?.isConnected&&el.dataset.skin)paint(el);};
+const partAt=e=>e.target.closest?.('[data-skin=button],[data-skin=close],[data-skin=tab]')??null;
+addEventListener('pointerdown',e=>{const was=held;held=partAt(e);repaint(was);repaint(held);});
+for(const t of ['pointerup','pointercancel'])addEventListener(t,()=>{const was=held;held=null;repaint(was);});
+addEventListener('pointerover',e=>{if(e.pointerType!=='mouse')return;const was=over;over=partAt(e);if(was!==over){repaint(was);repaint(over);}});
+const modal=document.getElementById('modal-root');new MutationObserver(()=>dress(modal)).observe(modal,{childList:true,subtree:true});
+
+Object.defineProperty(exports,"dress",{enumerable:true,get:()=>dress});
 },
 "icons.js":function(require,exports){
 const {TOWER,ENEMIES}=require("data.js");
