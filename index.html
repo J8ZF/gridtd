@@ -533,6 +533,9 @@ canvas.skin{position:absolute;z-index:-1;pointer-events:none}
 #modal-root .dialog button[data-skin]:disabled{color:#7c8698}
 #modal-root .dialog .xp-x{width:24px;min-width:24px;height:24px;min-height:24px}
 #modal-root .dialog .xp-x i{visibility:hidden}
+/* the screens' close buttons are painted too: the old button and its × are not drawn under them */
+main .bar .xp-x[data-skin]{background:none;border:0;border-radius:0}
+main .bar .xp-x[data-skin] i{visibility:hidden}
 #modal-root .dialog .guide-tabs button[data-skin]{padding:4px 9px}
 #modal-root .dialog .guide-tabs{background:rgba(238,244,252,.9)} /* stays readable while the guide scrolls under it */
 .xp-qicon{width:34px;height:34px}
@@ -5483,9 +5486,9 @@ const GLASS={
  wash:[[0,'rgba(246,251,255,.45)'],[1,'rgba(226,238,252,.55)']], // the window's body, top to bottom
  // the title bar: the main menu's 플레이 blue (XP.css's title bar), let through a little
  title:[[0,'rgba(9,151,255,.82)'],[.08,'rgba(0,83,238,.82)'],[.4,'rgba(0,80,238,.78)'],[.88,'rgba(0,102,255,.74)'],[.95,'rgba(0,91,255,.8)'],[1,'rgba(0,61,215,.85)']],
- // the close button, shaped and lit like XP's own (from the top left), in a cool red
- close:{base:[[0,'rgba(240,138,148,.92)'],[.45,'rgba(226,57,75,.9)'],[1,'rgba(179,18,42,.92)']],hover:[[0,'rgba(255,156,166,.94)'],[.45,'rgba(240,74,92,.92)'],[1,'rgba(200,29,54,.94)']],
-  pressed:[[0,'rgba(122,18,32,.9)'],[1,'rgba(79,10,18,.9)']]},
+ // the close button, shaped and lit like XP's own (from the top left), in a raspberry red
+ close:{base:[[0,'rgba(240,136,170,.92)'],[.45,'rgba(220,52,104,.9)'],[1,'rgba(166,16,70,.92)']],hover:[[0,'rgba(252,154,186,.94)'],[.45,'rgba(234,70,122,.92)'],[1,'rgba(186,28,86,.94)']],
+  pressed:[[0,'rgba(116,14,52,.9)'],[1,'rgba(74,8,34,.9)']]},
  tabTop:'#0053ee',
  card:[[0,'rgba(252,254,255,.72)'],[1,'rgba(238,245,253,.6)']], // a card on a screen's picture: lighter, so plain dark text reads on it
  blue:'#0053ee', // the play blue, flat: a switch turned on
