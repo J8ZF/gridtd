@@ -5559,6 +5559,7 @@ const GLASS={
  card:[[0,'rgba(252,254,255,.72)'],[1,'rgba(238,245,253,.6)']], // a card on a screen's picture: lighter, so plain dark text reads on it
  blue:'#0053ee', // the play blue, flat: a switch turned on
  doom:'rgba(220,52,104,.9)', // the hardest difficulty's mark, the close button's raspberry
+ stand:{floor:'#dde7f1',shade:'#ccd6e4',line:'#bfcddf'}, // the inventory's stand, solid: what its glass, shadow and lines showed
 };
 const grad=(g,x0,y0,x1,y1,stops)=>{const gr=g.createLinearGradient(x0,y0,x1,y1);for(const [o,c] of stops)gr.addColorStop(o,c);return gr;};
 // a box with its corners cut at 45°, c = [top left, top right, bottom right, bottom left]; cut twice, a corner gets two
@@ -5630,13 +5631,14 @@ const SKINS={
  slab:{pad:10,draw(g,w,h,el){const c=[8,0,8,0];g.save();g.fillStyle=SHADE;shape(g,7,8,w,h,c);g.fill();g.globalCompositeOperation='destination-out';shape(g,0,0,w,h,c);g.fill();g.restore();
   g.save();shape(g,0,0,w,h,c);g.clip();g.fillStyle=grad(g,0,0,0,h,GLASS.card);g.fillRect(0,0,w,h);if(state(el)==='pressed'){g.fillStyle='rgba(10,40,110,.1)';g.fillRect(0,0,w,h);}g.restore();rim(g,0,0,w,h,c);
   corner(g,el,c[0]);if(el.classList.contains('on')){shape(g,.75,.75,w-1.5,h-1.5,c);g.strokeStyle=GLASS.blue;g.lineWidth=1.5;g.stroke();}}},
- // the picked tower's stand: glass ruled in a grid whose cells do not fit the window, so its edges cut them part way on
- // every side, the tower's flat shadow on it; cut and shadowed like a slot
+ // the picked tower's stand, in solid colours so nothing shows through anything: the floor, the tower's shadow (its own
+ // shape, cut away where the tower stands), and over both a grid whose cells do not fit the window, so its edges cut
+ // them part way on every side; cut and shadowed like a slot
  stand:{pad:10,draw(g,w,h,el){const c=[8,0,8,0],s=w*.22,o=-s*.35;
   g.save();g.fillStyle=SHADE;shape(g,7,8,w,h,c);g.fill();g.globalCompositeOperation='destination-out';shape(g,0,0,w,h,c);g.fill();g.restore();
-  g.save();shape(g,0,0,w,h,c);g.clip();g.fillStyle='rgba(255,255,255,.55)';g.fillRect(0,0,w,h);
-  g.beginPath();for(let x=o;x<w;x+=s)if(x>0){g.moveTo(x,0);g.lineTo(x,h);}for(let y=o;y<h;y+=s)if(y>0){g.moveTo(0,y);g.lineTo(w,y);}g.strokeStyle='rgba(30,60,120,.16)';g.lineWidth=1;g.stroke();
-  const t=shadowOf(el);if(t)g.drawImage(t,w*.045,h*.055,w,h);g.restore();
+  g.save();shape(g,0,0,w,h,c);g.clip();g.fillStyle=GLASS.stand.floor;g.fillRect(0,0,w,h);
+  const t=shadowOf(el);if(t)g.drawImage(t,0,0,w,h);
+  g.beginPath();for(let x=o;x<w;x+=s)if(x>0){g.moveTo(x,0);g.lineTo(x,h);}for(let y=o;y<h;y+=s)if(y>0){g.moveTo(0,y);g.lineTo(w,y);}g.strokeStyle=GLASS.stand.line;g.lineWidth=1;g.stroke();g.restore();
   rim(g,0,0,w,h,c);}},
  // a tab: the chosen one brighter, with a blue line along its top
  tab:{draw(g,w,h,el){const on=el.classList.contains('active');shape(g,.5,.5,w-1,h-1,[3,3,0,0]);
@@ -5647,13 +5649,15 @@ const SKINS={
 // a tower's colour in the triangle over a frame's cut top left corner (cut px), as on the main menu's deck
 function corner(g,el,cut){const col=el.style.getPropertyValue('--color');if(!col||el.classList.contains('empty'))return;const E=2,k=cut-2+E;
  g.beginPath();g.moveTo(-E,-E);g.lineTo(-E+k+E,-E);g.lineTo(-E,-E+k+E);g.closePath();g.fillStyle=col;g.fill();}
-// a tower picture's flat shadow: its shape filled with the shadow's tint, at the picture's size; made once a picture has
-// loaded, then the stand is painted again
+// a tower picture's flat shadow on the stand: its shape moved down and right, filled with the stand's shade, with the
+// picture's own shape cut out of it (so the two never overlap); made once a picture has loaded, then the stand is
+// painted again
 const shadows=new Map();
 function shadowOf(el){const art=el.querySelector('.inv-hero-art'),w=el.offsetWidth,h=el.offsetHeight;if(!art||!w||!h)return null;
  const key=(art.tagName==='IMG'?art.src:art.outerHTML)+w+'x'+h;if(shadows.has(key))return shadows.get(key);shadows.set(key,null);
  const img=new Image();img.onload=()=>{const r=R(),c=document.createElement('canvas');c.width=Math.round(w*r);c.height=Math.round(h*r);const q=c.getContext('2d');
-  q.drawImage(img,0,0,c.width,c.height);q.globalCompositeOperation='source-in';q.fillStyle=SHADE;q.fillRect(0,0,c.width,c.height);shadows.set(key,c);if(el.isConnected)paint(el);};
+  q.drawImage(img,c.width*.045,c.height*.055,c.width,c.height);q.globalCompositeOperation='source-in';q.fillStyle=GLASS.stand.shade;q.fillRect(0,0,c.width,c.height);
+  q.globalCompositeOperation='destination-out';q.drawImage(img,0,0,c.width,c.height);shadows.set(key,c);if(el.isConnected)paint(el);};
  img.src=art.tagName==='IMG'?art.src:'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(new XMLSerializer().serializeToString(art));return null;}
 // a part's state: pressed under a finger, hover under a mouse, default for the window's main button, disabled
 function state(el){return el.disabled?'disabled':el===held?'pressed':el===over?'hover':el.matches('.xp-yes,.primary')?'default':'';}
