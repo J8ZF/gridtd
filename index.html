@@ -5592,14 +5592,18 @@ const UI_RES=1.5,R=()=>Math.min(UI_RES,devicePixelRatio||1);
 const SHADE='rgba(70,78,104,.17)';
 const GLASS={
  wash:[[0,'rgba(252,254,255,.74)'],[1,'rgba(238,245,253,.66)']], // the window's body, top to bottom: light, so plain dark text reads on it
- // the title bar: the main menu's 플레이 blue (XP.css's title bar), let through a little
- title:[[0,'rgba(9,151,255,.82)'],[.08,'rgba(0,83,238,.82)'],[.4,'rgba(0,80,238,.78)'],[.88,'rgba(0,102,255,.74)'],[.95,'rgba(0,91,255,.8)'],[1,'rgba(0,61,215,.85)']],
+ // the title bar: XP.css's (Luna's) stops as they are, checked against a photo of XP - a light line along the top, deep
+ // blue, a brighter blue low down, a hard dark line at the bottom - all let through alike
+ title:[[0,'rgba(9,151,255,.84)'],[.08,'rgba(0,83,238,.84)'],[.4,'rgba(0,80,238,.84)'],[.88,'rgba(0,102,255,.84)'],[.93,'rgba(0,102,255,.84)'],[.95,'rgba(0,91,255,.84)'],[.96,'rgba(0,61,215,.84)'],[1,'rgba(0,61,215,.84)']],
+ // the title bar as laid out on the screen: the inventory's tier band (the play blue, lighter and clearer toward the
+ // right), with the gloss and the edge it had before
+ band:[[0,'rgba(0,83,238,1)'],[.35,'rgba(0,83,238,.9)'],[1,'rgba(40,120,255,.62)']],
+ titleGloss:[[0,'rgba(178,224,255,1)'],[.45,'rgba(130,195,255,.7)'],[1,'rgba(90,165,255,.3)']], // the title bar's rim, top to bottom
+ titleEdge:'rgba(0,45,160,.42)',
  // the close button, shaped and lit like XP's own (from the top left), in a raspberry red
  close:{base:[[0,'rgba(240,136,170,.92)'],[.45,'rgba(220,52,104,.9)'],[1,'rgba(166,16,70,.92)']],hover:[[0,'rgba(252,154,186,.94)'],[.45,'rgba(234,70,122,.92)'],[1,'rgba(186,28,86,.94)']],
   pressed:[[0,'rgba(116,14,52,.9)'],[1,'rgba(74,8,34,.9)']]},
  tabTop:'#0053ee',
- titleGloss:[[0,'rgba(178,224,255,1)'],[.45,'rgba(130,195,255,.7)'],[1,'rgba(90,165,255,.3)']], // the title bar's rim, top to bottom
- titleEdge:'rgba(0,45,160,.42)',
  darkBar:[[0,'rgba(20,52,130,.9)'],[1,'rgba(9,30,88,.92)']], // a dark top bar, top to bottom
  card:[[0,'rgba(252,254,255,.72)'],[1,'rgba(238,245,253,.6)']],
  // on a screen laid over the grid map: the cards thinner and bluer (the grid shows through them), the things on them a
@@ -5621,10 +5625,9 @@ function shape(g,x,y,w,h,c,twice=false){const k=1-Math.SQRT1_2,mid=(cx,cy,dx,dy,
  g.moveTo(x+c[0],y);g.lineTo(x+w-c[1],y);mid(x+w,y,-1,1,c[1]);g.lineTo(x+w,y+c[1]);g.lineTo(x+w,y+h-c[2]);mid(x+w,y+h,-1,-1,c[2]);g.lineTo(x+w-c[2],y+h);
  g.lineTo(x+c[3],y+h);mid(x,y+h,1,-1,c[3]);g.lineTo(x,y+h-c[3]);g.lineTo(x,y+c[0]);mid(x,y,1,1,c[0]);g.closePath();}
 const all=n=>[n,n,n,n];
-// a pane's rim: light along the top and left, a touch of shade along the bottom and right. Over a window's blue title
-// bar (its top T px) white would stand apart from the blue, so there the rim is the bar's own: a pale blue gloss along
-// its top, fading down its sides, inside a deep blue edge
-function rim(g,x,y,w,h,c,twice,T=0,gloss=GLASS.titleGloss,edge=GLASS.titleEdge){g.save();shape(g,x,y,w,h,c,twice);g.clip();
+// a pane's rim: light along the top and left, a touch of shade along the bottom and right. Over a dark pane's top T px
+// white would stand apart, so there the rim is the given gloss (a gradient down) inside the given edge
+function rim(g,x,y,w,h,c,twice,T=0,gloss,edge){g.save();shape(g,x,y,w,h,c,twice);g.clip();
  if(T){g.save();g.beginPath();g.rect(x,y,w,T);g.clip();
   g.lineWidth=2;shape(g,x+1,y+1,w-2,h-2,c,twice);g.strokeStyle=grad(g,0,y,0,y+T,gloss);g.stroke();
   g.lineWidth=1;shape(g,x+.5,y+.5,w-1,h-1,c,twice);g.strokeStyle=edge;g.stroke();g.restore();
@@ -5633,17 +5636,23 @@ function rim(g,x,y,w,h,c,twice,T=0,gloss=GLASS.titleGloss,edge=GLASS.titleEdge){
  g.lineWidth=1;shape(g,x+.5,y+.5,w-1,h-1,c,twice);g.strokeStyle=grad(g,x,y,x+w,y+h,[[0,'rgba(255,255,255,.5)'],[.6,'rgba(40,70,130,.18)'],[1,'rgba(20,40,90,.38)']]);g.stroke();g.restore();}
 
 const SKINS={
- // a window: the icy wash, the blue title bar with its gloss, the rim; the game's flat shadow only outside the pane
- // (under it, it would show through)
- window:{pad:10,draw(g,w,h,el){const T=el.querySelector(':scope>h2')?.offsetHeight??0,c=[9,9,0,0];
+ // a window: the blue title bar (the tier band's blue, glossed over its top half, light caught under it, edged in a
+ // pale blue gloss), and its blue carried on as a 3 px frame down both sides and along the bottom round the icy wash,
+ // taking the title's colour across (deep on the left, lighter and clearer to the right) and shaded as XP's is. The
+ // game's flat shadow only outside the pane (under it, it would show through)
+ window:{pad:10,draw(g,w,h,el){const T=el.querySelector(':scope>h2')?.offsetHeight??0,c=[9,9,0,0],F=FRAME;
   g.save();g.fillStyle=SHADE;shape(g,7,8,w,h,c,true);g.fill();g.globalCompositeOperation='destination-out';g.fillStyle='#000';shape(g,0,0,w,h,c,true);g.fill();g.restore();
   g.save();shape(g,0,0,w,h,c,true);g.clip();
-  g.fillStyle=grad(g,0,T,0,h,GLASS.wash);g.fillRect(0,0,w,h);
-  g.fillStyle=grad(g,0,0,0,T,GLASS.title);g.fillRect(0,0,w,T);
+  g.fillStyle=grad(g,0,T,0,h,GLASS.wash);g.fillRect(0,T,w,h-T);
+  g.fillStyle=grad(g,0,0,w,0,GLASS.band);g.fillRect(0,0,w,T);
   g.fillStyle=grad(g,0,0,0,T*.55,[[0,'rgba(255,255,255,.45)'],[1,'rgba(255,255,255,0)']]);g.fillRect(0,0,w,T*.55); // the title's gloss
   g.fillStyle=grad(g,0,T,0,T+16,[[0,'rgba(255,255,255,.55)'],[1,'rgba(255,255,255,0)']]);g.fillRect(0,T,w,16); // light caught under the title
   g.fillStyle='rgba(0,40,140,.35)';g.fillRect(0,T-1,w,1);g.restore();
-  rim(g,0,0,w,h,c,true,T);}},
+  rim(g,0,0,w,h,c,true,T,GLASS.titleGloss,GLASS.titleEdge);g.save();shape(g,0,0,w,h,c,true);g.clip();
+  const frame=[[0,T,3,h-T],[w-3,T,3,h-T],[0,h-3,w,3]];for(const r of frame)g.clearRect(...r);
+  g.fillStyle=grad(g,0,0,w,0,GLASS.band);for(const r of frame)g.fillRect(...r);
+  for(const [col,rects] of F)for(const r of rects(w,h,T)){g.fillStyle=col;g.fillRect(...r);}
+  g.restore();}},
  // XP's close button: a white rim and a white X on glossy red
  close:{draw(g,w,h,el){const s=state(el),k=w/21;shape(g,.5,.5,w-1,h-1,all(3*k));
   g.fillStyle=grad(g,0,0,w,h,GLASS.close[s==='pressed'?'pressed':s==='hover'?'hover':'base']);g.fill();
@@ -5726,6 +5735,10 @@ function shadowOf(el){const art=el.querySelector('.inv-hero-art'),w=el.offsetWid
   q.drawImage(img,c.width*.045,c.height*.055,c.width,c.height);q.globalCompositeOperation='source-in';q.fillStyle=GLASS.stand.shade;q.fillRect(0,0,c.width,c.height);
   q.globalCompositeOperation='destination-out';q.drawImage(img,0,0,c.width,c.height);shadows.set(key,c);if(el.isConnected)paint(el);};
  img.src=art.tagName==='IMG'?art.src:'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(new XMLSerializer().serializeToString(art));return null;}
+// the shading laid over a window's frame, as XP's (XP.css's) is lit: down the left its outer line a little dark and the
+// next one light, down the right and along the bottom its outer line darkest and the next one dark
+const FRAME=[['rgba(0,20,90,.18)',(w,h,T)=>[[0,T,1,h-T]]],['rgba(255,255,255,.18)',(w,h,T)=>[[1,T,1,h-T-2]]],
+ ['rgba(0,20,90,.3)',(w,h,T)=>[[w-2,T,1,h-T],[0,h-2,w,1]]],['rgba(0,20,90,.5)',(w,h,T)=>[[w-1,T,1,h-T],[0,h-1,w,1]]]];
 // a part's state: pressed under a finger, hover under a mouse, default for the window's main button, disabled
 function state(el){return el.disabled?'disabled':el===held?'pressed':el===over?'hover':el.matches('.xp-yes,.primary')?'default':'';}
 
