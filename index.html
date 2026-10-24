@@ -5561,11 +5561,10 @@ function lay(el){const img=ready[PICS[el.dataset.backdrop]],w=el.clientWidth,h=e
 // the grid map laid over a screen's picture, under its glass: the main menu's floor laid straight (a baseplate's
 // pattern) - blocks of 4×4 tiles, the joints showing between them, wider round each block than inside it, each block
 // darkened at its own strength so the blocks differ in shade (the joints white lines, the tiles a navy shade darker
-// than the picture); drawn at one canvas pixel per CSS pixel (as the board is) and
-// drifting left to right. Whole pixels throughout, so every line is as sharp as the next: TILE px tiles, GAP px between
+// than the picture); drawn once, still, at one canvas pixel per CSS pixel (as the board is). Whole pixels throughout, so every line is as sharp as the next: TILE px tiles, GAP px between
 // them, EDGE px round a block (the joint between two blocks only a pixel wider than inside one); a block comes to 129
 // px, the menu floor's on a phone
-const GRIDDED=new Set(['inventory']),TILE=31,GAP=1,EDGE=1,BLOCKS=6,DRIFT=9; // px, blocks before it repeats, px a second
+const GRIDDED=new Set(['inventory']),TILE=31,GAP=1,EDGE=1,BLOCKS=6; // px, blocks before it repeats
 const B=4*TILE+3*GAP+2*EDGE;
 let seed=7;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
 function pattern(rows){const w=B*BLOCKS,c=document.createElement('canvas');c.width=w;c.height=rows*B;const g=c.getContext('2d');seed=7;
@@ -5575,13 +5574,8 @@ function pattern(rows){const w=B*BLOCKS,c=document.createElement('canvas');c.wid
    g.clearRect(px,py,TILE,TILE);g.fillStyle=`rgba(${GRID.tile},${a})`;g.fillRect(px,py,TILE,TILE);}}
  return c;}
 const GRID={joint:'rgba(240,246,255,.2)',tile:'8,26,72',strength:[.04,.1,.16,.22,.28,.34,.4,.46]}; // white joints; the tiles a navy shade, darker than the picture, each block its own
-const grids=new Set();
 function gridOn(el){let c=el.querySelector(':scope>canvas.gridmap');if(!c){c=document.createElement('canvas');c.className='gridmap';c.setAttribute('aria-hidden','true');el.querySelector(':scope>canvas.backdrop').after(c);}
- c.width=el.clientWidth;c.height=el.clientHeight;c.pattern=pattern(Math.ceil(c.height/B)+1);grids.add(c);if(grids.size===1)requestAnimationFrame(drift);}
-function drift(now){for(const c of grids){if(!c.isConnected){grids.delete(c);continue;}if(document.hidden)continue;
-  const g=c.getContext('2d'),p=c.pattern,x=(now/1000*DRIFT)%p.width;g.clearRect(0,0,c.width,c.height);
-  for(let o=x-p.width;o<c.width;o+=p.width)g.drawImage(p,Math.round(o),0);}
- if(grids.size)requestAnimationFrame(drift);}
+ c.width=el.clientWidth;c.height=el.clientHeight;const p=pattern(Math.ceil(c.height/B)+1),g=c.getContext('2d');for(let o=0;o<c.width;o+=p.width)g.drawImage(p,o,0);}
 const sized=new ResizeObserver(list=>{for(const e of list)if(e.target.isConnected)lay(e.target);});
 // each screen as it is drawn
 new MutationObserver(()=>{for(const el of document.querySelectorAll('#app>main.screen:not([data-backdrop])')){const name=Object.keys(PICS).find(n=>el.classList.contains(n));if(name){el.dataset.backdrop=name;if(GRIDDED.has(name))el.dataset.grid='1';sized.observe(el);}}})
