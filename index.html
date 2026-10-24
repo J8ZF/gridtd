@@ -555,6 +555,8 @@ button[data-skin]:active:not(:disabled){filter:none}
 .screen .card{--muted:#45526b;--line:rgba(30,60,120,.16);color:var(--text);margin-bottom:14px;padding:0 14px;text-shadow:0 0 var(--text-blur) currentColor}
 .screen .card::before{content:"";position:absolute;inset:0;z-index:-2;clip-path:polygon(6px 0,calc(100% - 6px) 0,100% 6px,100% calc(100% - 6px),calc(100% - 6px) 100%,6px 100%,0 calc(100% - 6px),0 6px);-webkit-backdrop-filter:blur(5px) saturate(1.7) brightness(1.05);backdrop-filter:blur(5px) saturate(1.7) brightness(1.05)}
 .screen .card[data-dock="1"]::before{clip-path:polygon(6px 0,calc(100% - 6px) 0,100% 6px,100% 100%,0 100%,0 6px)}
+.screen .card.square::before{clip-path:none}
+.screen .card.dark{--text:#fff;--muted:#bccae0;--line:rgba(255,255,255,.16);--cash:#72e872;--accent:#8fc1ff;color:var(--text)}
 .screen .card .setting-row{box-sizing:border-box;min-height:56px;padding:12px 0;font-size:15px}
 .screen .card .setting-row p{font-size:12px}
 .screen .card>:last-child,.screen .card>.setting-row:last-child{border-bottom:0}
@@ -1049,7 +1051,7 @@ function invLoadoutHTML(){return `<div class="inv-loadout-wrap" data-key="${prof
 function invBadge(id){return profile.loadout.includes(id)?`<i class="inv-badge eq">${icon('check')}</i>`:invOwned(id)?'':`<i class="inv-badge">${icon('lock')}</i>`;}
 function invCellHTML(x){const o=invOwned(x.id),e=profile.loadout.includes(x.id),v=TOWER[invShow(x.id)];return button('inv-pick',`${towerIcon(v.id,'tower-icon deck-art')}<span class="inv-name">${v.name}</span>${invBadge(x.id)}`,`inv-cell ${x.id===invSel?'on':''} ${o?'':'locked'}`,`style="--color:${v.color}" data-kind="${x.id}" aria-label="${v.name}${e?' 장착됨':o?'':' 잠김'}"`);}
 function inventory(){fitLoadout(profile);if(!TOWER[invSel])invSel=profile.loadout.find(Boolean)??TOWERS[0].id;
- setScreen('inventory',header('인벤토리','home','',true)+`<section class="inv-top card">${invLoadoutHTML()}${invPickHTML()}</section>${invMore?`<div class="inv-detail card" data-kind="${invSel}"><div class="inv-detail-body">${invDetails(invSel)}</div></div>`:''}<div class="scroll inv-list">${[1,2,3,4].map(tier=>{const list=TOWERS.filter(x=>x.tier===tier);return `<div class="card inv-tier"><div class="section-label"><span>티어 ${tier}</span></div><div class="inv-grid">${list.map(invCellHTML).join('')}</div></div>`;}).join('')}</div>`);fitInv();document.fonts?.ready?.then(fitInv);}
+ setScreen('inventory',header('인벤토리','home','',true)+`<section class="inv-top card">${invLoadoutHTML()}${invPickHTML()}</section>${invMore?`<div class="inv-detail card square dark" data-kind="${invSel}"><div class="inv-detail-body">${invDetails(invSel)}</div></div>`:''}<div class="scroll inv-list">${[1,2,3,4].map(tier=>{const list=TOWERS.filter(x=>x.tier===tier);return `<div class="card inv-tier"><div class="section-label"><span>티어 ${tier}</span></div><div class="inv-grid">${list.map(invCellHTML).join('')}</div></div>`;}).join('')}</div>`);fitInv();document.fonts?.ready?.then(fitInv);}
 addEventListener('resize',()=>{if(screen==='inventory')fitInv();});
 function fitInv(){for(const el of document.querySelectorAll('.inv-title strong'))fitLine(el,18,12);for(const el of document.querySelectorAll('.inv-name'))fitLine(el,11,8);}
 // ---- Modules ----------------------------------------------------------------------------
@@ -1350,7 +1352,7 @@ function confirmBuy(id){const t=TOWER[id];if(!canBuyTower(profile,id))return;if(
 function refreshInventory(){save();const top=$('.inventory .inv-top');if(screen!=='inventory'||!top){inventory();return;}
  top.querySelector('.inv-pick').outerHTML=invPickHTML();
  const key=profile.loadout.join(',');const lo=top.querySelector('.inv-loadout-wrap');if(lo.dataset.key!==key)lo.outerHTML=invLoadoutHTML();else for(const el of lo.querySelectorAll('.inv-slot[data-kind]'))el.classList.toggle('on',el.dataset.kind===invSel);
- const det=$('.inv-detail');if(invMore){const html=`<div class="inv-detail card" data-kind="${invSel}"><div class="inv-detail-body">${invDetails(invSel)}</div></div>`;if(!det)top.insertAdjacentHTML('afterend',html);else if(det.dataset.kind!==invSel)det.outerHTML=html;}else det?.remove();
+ const det=$('.inv-detail');if(invMore){const html=`<div class="inv-detail card square dark" data-kind="${invSel}"><div class="inv-detail-body">${invDetails(invSel)}</div></div>`;if(!det)top.insertAdjacentHTML('afterend',html);else if(det.dataset.kind!==invSel)det.outerHTML=html;}else det?.remove();
  for(const el of document.querySelectorAll('.inv-cell')){const id=el.dataset.kind,o=invOwned(id);el.classList.toggle('on',id===invSel);el.classList.toggle('locked',!o);const want=invBadge(id),badge=el.querySelector('.inv-badge');if((badge?.outerHTML??'')!==want){badge?.remove();if(want)el.insertAdjacentHTML('beforeend',want);}el.setAttribute('aria-label',`${TOWER[invShow(id)].name}${profile.loadout.includes(id)?' 장착됨':o?'':' 잠김'}`);}
  const w=$('.inventory .wallet');if(w)w.innerHTML=`${icon('coin')}${wallet()}`;fitInv();}
 function unequip(id){const index=profile.loadout.indexOf(id);if(index===-1)return;profile.loadout[index]=null;refreshInventory();}
@@ -5559,10 +5561,13 @@ const GLASS={
  titleGloss:[[0,'rgba(178,224,255,1)'],[.45,'rgba(130,195,255,.7)'],[1,'rgba(90,165,255,.3)']], // the title bar's rim, top to bottom
  titleEdge:'rgba(0,45,160,.42)',
  darkBar:[[0,'rgba(20,52,130,.9)'],[1,'rgba(9,30,88,.92)']], // a dark top bar, top to bottom
- card:[[0,'rgba(252,254,255,.72)'],[1,'rgba(238,245,253,.6)']], // a card on a screen's picture: lighter, so plain dark text reads on it
+ card:[[0,'rgba(252,254,255,.72)'],[1,'rgba(238,245,253,.6)']],
+ dark:[[0,'rgba(18,50,120,.93)'],[1,'rgba(9,32,86,.95)']], // a dark card, the dark bar's navy, top to bottom // a card on a screen's picture: lighter, so plain dark text reads on it
  blue:'#0053ee', // the play blue, flat: a switch turned on
  doom:'rgba(220,52,104,.9)', // the hardest difficulty's mark, the close button's raspberry
  ridge:['rgba(255,255,255,.85)','#c9d5e6','#a9b7cd'], // the thin raised ridge under a card docked over a scrolling list, a line each, top to bottom: dark bluish whites
+ ridgeDark:['rgba(80,130,215,.32)','#13306a','#081a45'], // the same under a dark card: a dim blue gleam over navy
+ darkGloss:[[0,'rgba(95,145,225,.42)'],[.5,'rgba(65,110,200,.18)'],[1,'rgba(50,90,180,.06)']],darkEdge:'rgba(0,18,60,.6)', // a dark card's rim: a dim blue gloss, a deep edge
  stand:{floor:'#dde7f1',shade:'#ccd6e4',line:'#bfcddf'}, // the inventory's stand, solid: what its glass, shadow and lines showed
 };
 const grad=(g,x0,y0,x1,y1,stops)=>{const gr=g.createLinearGradient(x0,y0,x1,y1);for(const [o,c] of stops)gr.addColorStop(o,c);return gr;};
@@ -5575,10 +5580,10 @@ const all=n=>[n,n,n,n];
 // a pane's rim: light along the top and left, a touch of shade along the bottom and right. Over a window's blue title
 // bar (its top T px) white would stand apart from the blue, so there the rim is the bar's own: a pale blue gloss along
 // its top, fading down its sides, inside a deep blue edge
-function rim(g,x,y,w,h,c,twice,T=0){g.save();shape(g,x,y,w,h,c,twice);g.clip();
+function rim(g,x,y,w,h,c,twice,T=0,gloss=GLASS.titleGloss,edge=GLASS.titleEdge){g.save();shape(g,x,y,w,h,c,twice);g.clip();
  if(T){g.save();g.beginPath();g.rect(x,y,w,T);g.clip();
-  g.lineWidth=2;shape(g,x+1,y+1,w-2,h-2,c,twice);g.strokeStyle=grad(g,0,y,0,y+T,GLASS.titleGloss);g.stroke();
-  g.lineWidth=1;shape(g,x+.5,y+.5,w-1,h-1,c,twice);g.strokeStyle=GLASS.titleEdge;g.stroke();g.restore();
+  g.lineWidth=2;shape(g,x+1,y+1,w-2,h-2,c,twice);g.strokeStyle=grad(g,0,y,0,y+T,gloss);g.stroke();
+  g.lineWidth=1;shape(g,x+.5,y+.5,w-1,h-1,c,twice);g.strokeStyle=edge;g.stroke();g.restore();
   g.beginPath();g.rect(x,y+T,w,h-T);g.clip();}
  g.lineWidth=2;shape(g,x+1,y+1,w-2,h-2,c,twice);g.strokeStyle=grad(g,x,y,x+w*.4,y+h,[[0,'rgba(255,255,255,.95)'],[.5,'rgba(255,255,255,.35)'],[1,'rgba(255,255,255,.12)']]);g.stroke();
  g.lineWidth=1;shape(g,x+.5,y+.5,w-1,h-1,c,twice);g.strokeStyle=grad(g,x,y,x+w,y+h,[[0,'rgba(255,255,255,.5)'],[.6,'rgba(40,70,130,.18)'],[1,'rgba(20,40,90,.38)']]);g.stroke();g.restore();}
@@ -5622,10 +5627,12 @@ const SKINS={
   shape(g,0,0,w,h,c);g.fillStyle='rgba(248,251,255,.9)';g.fill();rim(g,0,0,w,h,c);}},
  // a card of glass laid on a screen's picture: the window's wash and rim, cut once, the flat shadow outside it
  // a card docked over a scrolling list (the list's top edge meets its bottom) is square at the bottom, where a raised
- // ridge, light over dark, parts it from what scrolls under it
- card:{pad:8,draw(g,w,h,el){const dock=el.dataset.dock==='1',c=dock?[6,6,0,0]:all(6);g.save();g.fillStyle=SHADE;shape(g,5,6,w,h,c);g.fill();g.globalCompositeOperation='destination-out';shape(g,0,0,w,h,c);g.fill();g.restore();
-  g.save();shape(g,0,0,w,h,c);g.clip();g.fillStyle=grad(g,0,0,0,h,GLASS.card);g.fillRect(0,0,w,h);if(state(el)==='pressed'){g.fillStyle='rgba(10,40,110,.1)';g.fillRect(0,0,w,h);}g.restore();rim(g,0,0,w,h,c);
-  if(dock)GLASS.ridge.forEach((col,i)=>{g.fillStyle=col;g.fillRect(0,h-GLASS.ridge.length+i,w,1);});
+ // ridge, light over dark, parts it from what scrolls under it; a square card (the inventory's details) is cut nowhere;
+ // a dark card is the dark bar's navy glass, rimmed like a title bar (a pale blue gloss) and ridged in navy
+ card:{pad:8,draw(g,w,h,el){const dock=el.dataset.dock==='1',r=el.classList.contains('square')?0:6,c=[r,r,dock?0:r,dock?0:r];g.save();g.fillStyle=SHADE;shape(g,5,6,w,h,c);g.fill();g.globalCompositeOperation='destination-out';shape(g,0,0,w,h,c);g.fill();g.restore();
+  const dark=el.classList.contains('dark'),ridge=dark?GLASS.ridgeDark:GLASS.ridge;
+  g.save();shape(g,0,0,w,h,c);g.clip();g.fillStyle=grad(g,0,0,0,h,dark?GLASS.dark:GLASS.card);g.fillRect(0,0,w,h);if(state(el)==='pressed'){g.fillStyle='rgba(10,40,110,.1)';g.fillRect(0,0,w,h);}g.restore();rim(g,0,0,w,h,c,false,dark?h:0,GLASS.darkGloss,GLASS.darkEdge);
+  if(dock)ridge.forEach((col,i)=>{g.fillStyle=col;g.fillRect(0,h-ridge.length+i,w,1);});
   // a card that is a choice can be marked: the hardest in the close button's raspberry, the one to play next in blue
   const ring=el.classList.contains('doom')?GLASS.doom:el.classList.contains('map-next')?GLASS.blue:null;if(ring){shape(g,.75,.75,w-1.5,h-1.5,c);g.strokeStyle=ring;g.lineWidth=1.5;g.stroke();}}},
  // a switch: a cut bar, filled with the play blue when on, its white knob slid to that side
