@@ -654,6 +654,12 @@ button[data-skin]:active:not(:disabled){filter:none}
 .screen.inventory .inv-act.unequip-button{background:var(--start-red);text-shadow:0 0 var(--text-blur) currentColor,1px 1px var(--text-blur) rgba(80,0,30,.8)}
 .screen.inventory .inv-act.unequip-button:active:not(:disabled){background:var(--start-red);filter:brightness(.85);box-shadow:var(--press)}
 .screen.inventory .inv-act.credit-off,.screen.inventory .inv-act:disabled{background:linear-gradient(180deg,#a3b1c8,#8797b3 50%,#7a8aa7);color:rgba(255,255,255,.92)}
+/* on the blue top card they are ringed in white, 1.5 px, following the cut (a ring: the outer cut and, wound inside it, the
+   same cut 1.5 px in), else the blue one would sink into the card */
+.screen.inventory .inv-top.blue .inv-act{position:relative;isolation:isolate}
+.screen.inventory .inv-top.blue .inv-act::before{content:"";position:absolute;inset:0;z-index:-1;background:#fff;pointer-events:none;
+ clip-path:polygon(evenodd,3px 0,calc(100% - 3px) 0,100% 3px,100% calc(100% - 3px),calc(100% - 3px) 100%,3px 100%,0 calc(100% - 3px),0 3px,3px 0,
+  3.62px 1.5px,calc(100% - 3.62px) 1.5px,calc(100% - 1.5px) 3.62px,calc(100% - 1.5px) calc(100% - 3.62px),calc(100% - 3.62px) calc(100% - 1.5px),3.62px calc(100% - 1.5px),1.5px calc(100% - 3.62px),1.5px 3.62px,3.62px 1.5px)}
 /* a line icon once crushed (ui-parts.js): shown through its low-res mask, its own lines hidden */
 svg[data-crushed]>*{visibility:hidden}
 /* 5.0 coloured buttons, lit as XP's start button is: a dark line along the top, a soft shine across the upper left
