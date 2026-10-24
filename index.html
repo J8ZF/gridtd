@@ -5770,6 +5770,12 @@ const SKINS={
   const blue=el.classList.contains('blue'),dark=blue||el.classList.contains('dark'),ridge=GLASS.ridge;
   g.save();shape(g,0,0,w,h,c);g.clip();g.fillStyle=blue?grad(g,0,0,w,0,GLASS.blueCard):grad(g,0,0,0,h,dark?GLASS.dark:el.closest('[data-grid]')?GLASS.pane:GLASS.card);g.fillRect(0,0,w,h);if(state(el)==='pressed'){g.fillStyle='rgba(10,40,110,.1)';g.fillRect(0,0,w,h);}g.restore();rim(g,0,0,w,h,c,false,dark?h:0,GLASS.darkGloss,GLASS.darkEdge);
   if(dock)ridge.forEach((col,i)=>{g.fillStyle=col;g.fillRect(0,h-ridge.length+i,w,1);});
+  // a tier of the inventory's list wears a window's frame under its band: the band's blue carried on 3 px down both sides
+  // and along the bottom (deep on the left, lighter and clearer to the right), following the cut corners, shaded as XP's
+  if(el.classList.contains('inv-tier')){const T=el.querySelector(':scope>.section-label')?.offsetHeight??0,ci=c[2]-3*(Math.SQRT2-1);
+   g.save();g.beginPath();g.rect(0,T,w,h-T);g.clip();shape(g,0,0,w,h,c);g.moveTo(3,T-1);g.lineTo(w-3,T-1);g.lineTo(w-3,h-3-ci);g.lineTo(w-3-ci,h-3);g.lineTo(3+ci,h-3);g.lineTo(3,h-3-ci);g.closePath();
+   g.globalCompositeOperation='destination-out';g.fill('evenodd');g.globalCompositeOperation='source-over';g.fillStyle=grad(g,0,0,w,0,GLASS.band);g.fill('evenodd');
+   shape(g,0,0,w,h,c);g.clip();for(const [col,rects] of FRAME)for(const r of rects(w,h,T)){g.fillStyle=col;g.fillRect(...r);}g.restore();}
   // a card that is a choice can be marked: the hardest in the close button's raspberry, the one to play next in blue
   const ring=el.classList.contains('doom')?GLASS.doom:el.classList.contains('map-next')?GLASS.blue:null;if(ring){shape(g,.75,.75,w-1.5,h-1.5,c);g.strokeStyle=ring;g.lineWidth=1.5;g.stroke();}}},
  // a switch: a cut bar, filled with the play blue when on, its white knob slid to that side
