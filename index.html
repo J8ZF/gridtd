@@ -549,13 +549,14 @@ button[data-skin]:active:not(:disabled){filter:none}
 .xp-qicon{width:34px;height:34px}
 /* 5.0 screen pictures (backdrop.js) and the glass laid on them: the bars and the cards blur what shows through */
 .screen[data-backdrop]{position:relative;isolation:isolate}
-.screen>canvas.backdrop{position:absolute;left:0;top:0;width:100%;height:100%;z-index:-1;pointer-events:none}
+.screen>canvas.backdrop,.screen>canvas.gridmap{position:absolute;left:0;top:0;width:100%;height:100%;z-index:-1;pointer-events:none}
 .screen[data-backdrop]>.bar.xp-title,.screen[data-backdrop]>.xp-status{-webkit-backdrop-filter:blur(5px) saturate(1.7) brightness(1.05);backdrop-filter:blur(5px) saturate(1.7) brightness(1.05)}
 .screen .scroll:has(>.card){padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px))} /* no status line under it to keep clear of the phone's bottom edge */
 .screen .card{--muted:#45526b;--line:rgba(30,60,120,.16);color:var(--text);margin-bottom:14px;padding:0 14px;text-shadow:0 0 var(--text-blur) currentColor}
 .screen .card::before{content:"";position:absolute;inset:0;z-index:-2;clip-path:polygon(6px 0,calc(100% - 6px) 0,100% 6px,100% calc(100% - 6px),calc(100% - 6px) 100%,6px 100%,0 calc(100% - 6px),0 6px);-webkit-backdrop-filter:blur(5px) saturate(1.7) brightness(1.05);backdrop-filter:blur(5px) saturate(1.7) brightness(1.05)}
 .screen .card[data-dock="1"]::before{clip-path:polygon(6px 0,calc(100% - 6px) 0,100% 6px,100% 100%,0 100%,0 6px)}
 .screen .card.square::before{clip-path:none}
+.screen[data-grid] .card::before{-webkit-backdrop-filter:blur(1.5px) saturate(1.3);backdrop-filter:blur(1.5px) saturate(1.3)} /* the grid map stays legible through them */
 .screen .card.dark{--text:#fff;--muted:#bccae0;--line:rgba(255,255,255,.16);--cash:#72e872;--accent:#8fc1ff;color:var(--text)}
 .screen .card .setting-row{box-sizing:border-box;min-height:56px;padding:12px 0;font-size:15px}
 .screen .card .setting-row p{font-size:12px}
@@ -593,12 +594,29 @@ button[data-skin]:active:not(:disabled){filter:none}
 .screen.inventory .inv-list{padding:14px 16px 22px}
 .screen.inventory .inv-tier{padding:0 12px 12px}
 .screen.inventory .inv-tier>.section-label{margin:0;padding:10px 0 8px;font-size:13px;color:#0053ee}
+/* on the grid: each tier's name on a band of the play blue, lighter and clearer toward the right end, a navy line under it,
+   cut at the top like its card */
+.screen[data-grid] .inv-tier>.section-label{margin:0 -12px 10px;padding:0 12px;height:26px;color:#fff;
+ background:linear-gradient(rgba(8,26,72,.55),rgba(8,26,72,.55)) 0 100%/100% 1px no-repeat,linear-gradient(90deg,#0053ee,rgba(0,83,238,.9) 35%,rgba(40,120,255,.62));
+ clip-path:polygon(6px 0,calc(100% - 6px) 0,100% 6px,100% 100%,0 100%,0 6px)}
+/* the picked tower's name dark and plain, its colour in a small square before it, a short bar of the play blue under the line */
+.screen[data-grid] .inv-title{position:relative;align-items:center;padding-bottom:7px}
+.screen[data-grid] .inv-title::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,#0053ee,rgba(0,83,238,0))}
+.screen[data-grid] .inv-title strong{color:var(--text);font-size:17px;display:flex;align-items:center;gap:7px}
+.screen[data-grid] .inv-title strong::before{content:"";flex:none;width:9px;height:9px;background:var(--color);box-shadow:0 0 0 1px rgba(8,26,72,.35)}
+.screen[data-grid] .inv-title span{color:var(--text)}
+.screen[data-grid] .inv-desc{color:var(--text);font-size:13px}
 /* the slots and the towers, as on the main menu's deck (ui-parts.js paints the glass, the colour triangle, the ring round
    the picked one): square, the tower at its own centre at the deck's size, free to stand out of its slot */
 .screen.inventory .inv-slot,.screen.inventory .inv-cell,.screen.inventory .inv-slot:active:not(:disabled),.screen.inventory .inv-cell:active:not(:disabled){background:none;border:0;border-radius:0;box-shadow:none;filter:none;overflow:visible}
 .screen.inventory .inv-slot{aspect-ratio:1/1}
 .screen.inventory .inv-loadout{gap:9px} /* as on the main menu's deck: wider than a slot's shadow reaches */
 .screen.inventory .inv-slot .deck-art,.screen.inventory .inv-cell .deck-art{position:absolute;left:50%;top:50%;width:111%;height:111%;max-width:none;margin:0;transform:translate(-50%,-50%)}
+/* on the grid: a tower's name in white on a dark blue that rises from the bottom of its tile and fades out */
+.screen[data-grid] .inv-cell .inv-name{position:absolute;left:0;right:0;bottom:0;padding:5px 2px 1px;text-align:center;font-weight:400;color:#fff;-webkit-text-stroke:0;
+ background:linear-gradient(to top,rgba(8,30,86,.9),rgba(8,30,86,.86) 20%,rgba(8,30,86,.74) 40%,rgba(8,30,86,.58) 55%,rgba(8,30,86,.38) 70%,rgba(8,30,86,.2) 82%,rgba(8,30,86,.07) 92%,rgba(8,30,86,0))}
+.screen[data-grid] .inv-cell.locked .inv-name{color:rgba(255,255,255,.78)}
+.screen[data-grid] .inv-cell .inv-name{left:1px;right:1px;bottom:1px}.screen[data-grid] .inv-cell.on .inv-name{left:2px;right:2px;bottom:2px} /* inside the tile's rim, and the picked one's ring */
 .screen.inventory .inv-slot.empty{color:#7a808c}
 .screen.inventory .inv-slot.empty svg{width:30%;height:30%}
 .screen.inventory .inv-more-btn[data-skin]{background:none;border:0;border-radius:0;box-shadow:none;color:var(--text);font-weight:400;font-style:normal}
@@ -5537,10 +5555,36 @@ const ready={};for(const [name,src] of Object.entries(ART)){const img=new Image(
 function lay(el){const img=ready[PICS[el.dataset.backdrop]],w=el.clientWidth,h=el.clientHeight;if(!img||!w||!h)return;
  let c=el.querySelector(':scope>canvas.backdrop');if(!c){c=document.createElement('canvas');c.className='backdrop';c.setAttribute('aria-hidden','true');el.prepend(c);}
  const cw=Math.max(1,Math.round(w*BG_RES)),ch=Math.max(1,Math.round(h*BG_RES)),s=Math.max(cw/img.width,ch/img.height);c.width=cw;c.height=ch;
- const g=c.getContext('2d');g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';g.drawImage(img,(cw-img.width*s)/2,(ch-img.height*s)/2,img.width*s,img.height*s);}
+ const g=c.getContext('2d');g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';g.drawImage(img,(cw-img.width*s)/2,(ch-img.height*s)/2,img.width*s,img.height*s);
+ if(GRIDDED.has(el.dataset.backdrop))gridOn(el);}
+
+// the grid map laid over a screen's picture, under its glass: the main menu's floor laid straight (a baseplate's
+// pattern) - blocks of 4×4 tiles, the joints showing between them, wider round each block than inside it, each block
+// darkened at its own strength so the blocks differ in shade (the joints white lines, the tiles a navy shade darker
+// than the picture); drawn at one canvas pixel per CSS pixel (as the board is) and
+// drifting left to right. Whole pixels throughout, so every line is as sharp as the next: TILE px tiles, GAP px between
+// them, EDGE px round a block (the joint between two blocks only a pixel wider than inside one); a block comes to 129
+// px, the menu floor's on a phone
+const GRIDDED=new Set(['inventory']),TILE=31,GAP=1,EDGE=1,BLOCKS=6,DRIFT=9; // px, blocks before it repeats, px a second
+const B=4*TILE+3*GAP+2*EDGE;
+let seed=7;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
+function pattern(rows){const w=B*BLOCKS,c=document.createElement('canvas');c.width=w;c.height=rows*B;const g=c.getContext('2d');seed=7;
+ for(let j=0;j<rows;j++)for(let i=0;i<BLOCKS;i++){const x=i*B,y=j*B,a=GRID.strength[Math.floor(rnd()*GRID.strength.length)];
+  g.fillStyle=GRID.joint;g.fillRect(x,y,B,B);
+  for(let ty=0;ty<4;ty++)for(let tx=0;tx<4;tx++){const px=x+EDGE+tx*(TILE+GAP),py=y+EDGE+ty*(TILE+GAP);
+   g.clearRect(px,py,TILE,TILE);g.fillStyle=`rgba(${GRID.tile},${a})`;g.fillRect(px,py,TILE,TILE);}}
+ return c;}
+const GRID={joint:'rgba(240,246,255,.2)',tile:'8,26,72',strength:[.04,.1,.16,.22,.28,.34,.4,.46]}; // white joints; the tiles a navy shade, darker than the picture, each block its own
+const grids=new Set();
+function gridOn(el){let c=el.querySelector(':scope>canvas.gridmap');if(!c){c=document.createElement('canvas');c.className='gridmap';c.setAttribute('aria-hidden','true');el.querySelector(':scope>canvas.backdrop').after(c);}
+ c.width=el.clientWidth;c.height=el.clientHeight;c.pattern=pattern(Math.ceil(c.height/B)+1);grids.add(c);if(grids.size===1)requestAnimationFrame(drift);}
+function drift(now){for(const c of grids){if(!c.isConnected){grids.delete(c);continue;}if(document.hidden)continue;
+  const g=c.getContext('2d'),p=c.pattern,x=(now/1000*DRIFT)%p.width;g.clearRect(0,0,c.width,c.height);
+  for(let o=x-p.width;o<c.width;o+=p.width)g.drawImage(p,Math.round(o),0);}
+ if(grids.size)requestAnimationFrame(drift);}
 const sized=new ResizeObserver(list=>{for(const e of list)if(e.target.isConnected)lay(e.target);});
 // each screen as it is drawn
-new MutationObserver(()=>{for(const el of document.querySelectorAll('#app>main.screen:not([data-backdrop])')){const name=Object.keys(PICS).find(n=>el.classList.contains(n));if(name){el.dataset.backdrop=name;sized.observe(el);}}})
+new MutationObserver(()=>{for(const el of document.querySelectorAll('#app>main.screen:not([data-backdrop])')){const name=Object.keys(PICS).find(n=>el.classList.contains(n));if(name){el.dataset.backdrop=name;if(GRIDDED.has(name))el.dataset.grid='1';sized.observe(el);}}})
  .observe(document.getElementById('app'),{childList:true});
 },
 "ui-parts.js":function(require,exports){
@@ -5563,6 +5607,11 @@ const GLASS={
  titleEdge:'rgba(0,45,160,.42)',
  darkBar:[[0,'rgba(20,52,130,.9)'],[1,'rgba(9,30,88,.92)']], // a dark top bar, top to bottom
  card:[[0,'rgba(252,254,255,.72)'],[1,'rgba(238,245,253,.6)']],
+ // on a screen laid over the grid map: the cards thinner and bluer (the grid shows through them), the things on them a
+ // nearly solid brighter white (so they stand off the card)
+ pane:[[0,'rgba(236,243,252,.5)'],[1,'rgba(222,233,248,.44)']],
+ item:[[0,'rgba(252,254,255,.94)'],[1,'rgba(236,243,252,.92)']],
+ buttonWhite:[[0,'rgba(255,255,255,.9)'],[1,'rgba(205,222,246,.92)']], // a button's, white to a pale sky blue
  dark:[[0,'rgba(18,50,120,.93)'],[1,'rgba(9,32,86,.95)']], // a dark card, the dark bar's navy, top to bottom // a card on a screen's picture: lighter, so plain dark text reads on it
  blue:'#0053ee', // the play blue, flat: a switch turned on
  doom:'rgba(220,52,104,.9)', // the hardest difficulty's mark, the close button's raspberry
@@ -5610,6 +5659,7 @@ const SKINS={
  // gloss turned to the bottom, a disabled one faint
  button:{draw(g,w,h,el){const s=state(el);shape(g,.5,.5,w-1,h-1,all(3));
   g.fillStyle=s==='disabled'?'rgba(255,255,255,.35)':'rgba(255,255,255,.62)';g.fill();
+  if(s!=='disabled'&&el.closest('[data-grid]')){g.fillStyle=grad(g,0,0,0,h,GLASS.buttonWhite);g.fill();} // on the grid a white of its own, apart from the cards' and the items'
   if(s==='pressed'||s==='default'||s==='hover'){g.fillStyle=s==='pressed'?'rgba(10,40,110,.16)':s==='default'?'rgba(0,83,238,.14)':'rgba(255,255,255,.3)';g.fill();}
   if(s!=='disabled'){g.fillStyle=grad(g,0,0,0,h,s==='pressed'?[[0,'rgba(255,255,255,0)'],[.55,'rgba(255,255,255,0)'],[1,'rgba(255,255,255,.45)']]:[[0,'rgba(255,255,255,.7)'],[.5,'rgba(255,255,255,.15)'],[.51,'rgba(255,255,255,0)'],[1,'rgba(255,255,255,.2)']]);g.fill();}
   g.strokeStyle=s==='default'?'rgba(0,70,210,.75)':s==='disabled'?'rgba(30,60,120,.2)':'rgba(30,60,120,.45)';g.lineWidth=1;g.stroke();
@@ -5631,7 +5681,7 @@ const SKINS={
  // a dark card is the dark bar's navy glass, rimmed like a title bar (a dim blue gloss)
  card:{pad:8,draw(g,w,h,el){const dock=el.dataset.dock==='1',r=el.classList.contains('square')?0:6,c=[r,r,dock?0:r,dock?0:r];g.save();g.fillStyle=SHADE;shape(g,5,6,w,h,c);g.fill();g.globalCompositeOperation='destination-out';g.fillStyle='#000';shape(g,0,0,w,h,c);g.fill();g.restore();
   const dark=el.classList.contains('dark'),ridge=GLASS.ridge;
-  g.save();shape(g,0,0,w,h,c);g.clip();g.fillStyle=grad(g,0,0,0,h,dark?GLASS.dark:GLASS.card);g.fillRect(0,0,w,h);if(state(el)==='pressed'){g.fillStyle='rgba(10,40,110,.1)';g.fillRect(0,0,w,h);}g.restore();rim(g,0,0,w,h,c,false,dark?h:0,GLASS.darkGloss,GLASS.darkEdge);
+  g.save();shape(g,0,0,w,h,c);g.clip();g.fillStyle=grad(g,0,0,0,h,dark?GLASS.dark:el.closest('[data-grid]')?GLASS.pane:GLASS.card);g.fillRect(0,0,w,h);if(state(el)==='pressed'){g.fillStyle='rgba(10,40,110,.1)';g.fillRect(0,0,w,h);}g.restore();rim(g,0,0,w,h,c,false,dark?h:0,GLASS.darkGloss,GLASS.darkEdge);
   if(dock)ridge.forEach((col,i)=>{g.fillStyle=col;g.fillRect(0,h-ridge.length+i,w,1);});
   // a card that is a choice can be marked: the hardest in the close button's raspberry, the one to play next in blue
   const ring=el.classList.contains('doom')?GLASS.doom:el.classList.contains('map-next')?GLASS.blue:null;if(ring){shape(g,.75,.75,w-1.5,h-1.5,c);g.strokeStyle=ring;g.lineWidth=1.5;g.stroke();}}},
@@ -5643,7 +5693,7 @@ const SKINS={
  // the tower's colour in a triangle over the cut corner (2 px off the frame, reaching 2 px past it; none when empty), a
  // blue ring round the picked one
  slab:{pad:10,draw(g,w,h,el){const c=[8,0,8,0];g.save();g.fillStyle=SHADE;shape(g,7,8,w,h,c);g.fill();g.globalCompositeOperation='destination-out';g.fillStyle='#000';shape(g,0,0,w,h,c);g.fill();clearBeside(g,el);g.restore();
-  g.save();shape(g,0,0,w,h,c);g.clip();g.fillStyle=grad(g,0,0,0,h,GLASS.card);g.fillRect(0,0,w,h);if(state(el)==='pressed'){g.fillStyle='rgba(10,40,110,.1)';g.fillRect(0,0,w,h);}g.restore();rim(g,0,0,w,h,c);
+  g.save();shape(g,0,0,w,h,c);g.clip();g.fillStyle=grad(g,0,0,0,h,el.closest('[data-grid]')?GLASS.item:GLASS.card);g.fillRect(0,0,w,h);if(state(el)==='pressed'){g.fillStyle='rgba(10,40,110,.1)';g.fillRect(0,0,w,h);}g.restore();rim(g,0,0,w,h,c);
   corner(g,el,c[0]);if(el.classList.contains('on')){shape(g,.75,.75,w-1.5,h-1.5,c);g.strokeStyle=GLASS.blue;g.lineWidth=1.5;g.stroke();}}},
  // the picked tower's stand, in solid colours so nothing shows through anything: the floor, the tower's shadow (its own
  // shape, cut away where the tower stands), and over both a grid whose cells do not fit the window, so its edges cut
@@ -5656,7 +5706,7 @@ const SKINS={
   rim(g,0,0,w,h,c);}},
  // a tower in the inventory's lists: a plain square of glass with its rim (no colour, no cut, no shadow), a blue ring
  // round the picked one
- tile:{draw(g,w,h,el){const c=all(0);g.fillStyle=grad(g,0,0,0,h,GLASS.card);g.fillRect(0,0,w,h);if(state(el)==='pressed'){g.fillStyle='rgba(10,40,110,.1)';g.fillRect(0,0,w,h);}rim(g,0,0,w,h,c);
+ tile:{draw(g,w,h,el){const c=all(0);g.fillStyle=grad(g,0,0,0,h,el.closest('[data-grid]')?GLASS.item:GLASS.card);g.fillRect(0,0,w,h);if(state(el)==='pressed'){g.fillStyle='rgba(10,40,110,.1)';g.fillRect(0,0,w,h);}rim(g,0,0,w,h,c);
   if(el.classList.contains('on')){g.strokeStyle=GLASS.blue;g.lineWidth=1.5;g.strokeRect(.75,.75,w-1.5,h-1.5);}}},
  // a tab: the chosen one brighter, with a blue line along its top
  tab:{draw(g,w,h,el){const on=el.classList.contains('active');shape(g,.5,.5,w-1,h-1,[3,3,0,0]);
