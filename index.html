@@ -5670,11 +5670,10 @@ const GLASS={
  ridge:['rgba(255,255,255,.85)','#c9d5e6','#a9b7cd'], // the thin raised ridge under a card docked over a scrolling list, a line each, top to bottom: dark bluish whites
  darkGloss:[[0,'rgba(95,145,225,.42)'],[.5,'rgba(65,110,200,.18)'],[1,'rgba(50,90,180,.06)']],darkEdge:'rgba(0,18,60,.6)', // a dark card's rim: a dim blue gloss, a deep edge
  stand:{floor:'#dde7f1',shade:'#ccd6e4',line:'#bfcddf'}, // the inventory's stand, solid: what its glass, shadow and lines showed
- // a tower in the inventory's lists, on the grid: a double frame of polished silver - an outer band lit from the top left,
- // a groove, an inner band lit from the bottom right, so it reads as two raised rims - each line dark and sharp; how far
- // in the well starts, its fill (top to bottom) and the line round it
- tile:{metal:{outer:[[0,'#ffffff'],[.22,'#d3d9e1'],[.48,'#f5f7fa'],[.74,'#a3adba'],[1,'#e2e6ec']],inner:[[0,'#9ba5b3'],[.45,'#e9edf2'],[.7,'#c3cad4'],[1,'#ffffff']],
-  line:'#4c5769',groove:'#5c6779',band:3},inset:6,edge:'#1f2a3f',
+ // a tower in the inventory's lists, on the grid: a double frame in colour, no lines - its frame (white down to a pale
+ // blue) laid on a darker silver band (outer, band px wide, light down to dark) so it stands apart; how far in the well
+ // starts and its fill (top to bottom)
+ tile:{frame:[[0,'rgba(255,255,255,.97)'],[1,'rgba(192,211,239,.96)']],outer:[[0,'#b4bcc8'],[.5,'#7e8898'],[1,'#566072']],band:2,inset:6,
   well:(g,el,y0,y1)=>grad(g,0,y0,0,y1,[[0,'#2a4f9c'],[1,'#0c2360']])}, // a blue deepening to the slots' navy
 };
 const grad=(g,x0,y0,x1,y1,stops)=>{const gr=g.createLinearGradient(x0,y0,x1,y1);for(const [o,c] of stops)gr.addColorStop(o,c);return gr;};
@@ -5772,10 +5771,9 @@ const SKINS={
   g.beginPath();for(let x=o;x<w;x+=s)if(x>0){g.moveTo(x,0);g.lineTo(x,h);}for(let y=o;y<h;y+=s)if(y>0){g.moveTo(0,y);g.lineTo(w,y);}g.strokeStyle=GLASS.stand.line;g.lineWidth=1;g.stroke();g.restore();
   rim(g,0,0,w,h,c);}},
  // a tower in the inventory's lists: a square with its rim (no cut, no shadow), a blue ring round the picked one. On the
- // grid its double silver frame (GLASS.tile.metal) round a well filled with GLASS.tile.well, every line drawn sharp
- tile:{draw(g,w,h,el){const c=all(0),T=GLASS.tile,M=T.metal,i=T.inset,o=M.band,grid=el.closest('[data-grid]');
-  if(grid){g.fillStyle=grad(g,0,0,w,h,M.outer);g.fillRect(0,0,w,h);g.fillStyle=grad(g,0,0,w,h,M.inner);g.fillRect(o+1,o+1,w-2*o-2,h-2*o-2);g.fillStyle=T.well(g,el,i,h-i);g.fillRect(i,i,w-2*i,h-2*i);
-   g.lineWidth=1;for(const [d,col] of [[0,M.line],[o,M.groove],[i,T.edge]]){g.strokeStyle=col;g.strokeRect(d+.5,d+.5,w-2*d-1,h-2*d-1);}}
+ // grid its frame on a darker silver band (GLASS.tile) round a well filled with GLASS.tile.well, all in colour, no lines
+ tile:{draw(g,w,h,el){const c=all(0),T=GLASS.tile,i=T.inset,o=T.band,grid=el.closest('[data-grid]');
+  if(grid){g.fillStyle=grad(g,0,0,0,h,T.outer);g.fillRect(0,0,w,h);g.fillStyle=grad(g,0,o,0,h-o,T.frame);g.fillRect(o,o,w-2*o,h-2*o);g.fillStyle=T.well(g,el,i,h-i);g.fillRect(i,i,w-2*i,h-2*i);}
   else{g.fillStyle=grad(g,0,0,0,h,GLASS.card);g.fillRect(0,0,w,h);}
   if(state(el)==='pressed'){g.fillStyle='rgba(10,40,110,.1)';g.fillRect(0,0,w,h);}if(!grid)rim(g,0,0,w,h,c);
   if(el.classList.contains('on')){g.strokeStyle=GLASS.blue;g.lineWidth=1.5;g.strokeRect(.75,.75,w-1.5,h-1.5);}}},
