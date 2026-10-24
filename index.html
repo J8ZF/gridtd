@@ -544,6 +544,8 @@ canvas.skin{position:absolute;z-index:-1;pointer-events:none}
 #modal-root .dialog button[data-skin]{background:none;border:0;border-radius:0;box-shadow:none;color:var(--text);font-style:normal;font-weight:400;text-shadow:inherit}
 #modal-root .dialog button[data-skin]:disabled{color:#7c8698}
 #modal-root .dialog .xp-x{width:24px;min-width:24px;height:24px;min-height:24px}
+/* the save-loading window writes in the code typeface, as the save code itself is */
+#modal-root .dialog:has(#import-code){font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
 #modal-root .dialog .xp-x i{visibility:hidden}
 /* the screens' close buttons are painted too: the old button and its × are not drawn under them */
 main .bar .xp-x[data-skin]{background:none;border:0;border-radius:0;box-shadow:none}
