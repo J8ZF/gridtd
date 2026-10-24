@@ -599,11 +599,10 @@ button[data-skin]:active:not(:disabled){filter:none}
 .screen[data-grid] .inv-tier>.section-label{margin:0 -12px 10px;padding:0 12px;height:26px;color:#fff;
  background:linear-gradient(rgba(8,26,72,.55),rgba(8,26,72,.55)) 0 100%/100% 1px no-repeat,linear-gradient(90deg,#0053ee,rgba(0,83,238,.9) 35%,rgba(40,120,255,.62));
  clip-path:polygon(6px 0,calc(100% - 6px) 0,100% 6px,100% 100%,0 100%,0 6px)}
-/* the picked tower's name dark and plain, its colour in a small square before it, a short bar of the play blue under the line */
+/* the picked tower's name dark and plain, a short bar of the play blue under the line */
 .screen[data-grid] .inv-title{position:relative;align-items:center;padding-bottom:7px}
 .screen[data-grid] .inv-title::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,#0053ee,rgba(0,83,238,0))}
 .screen[data-grid] .inv-title strong{color:var(--text);font-size:17px;display:flex;align-items:center;gap:7px}
-.screen[data-grid] .inv-title strong::before{content:"";flex:none;width:9px;height:9px;background:var(--color);box-shadow:0 0 0 1px rgba(8,26,72,.35)}
 .screen[data-grid] .inv-title span{color:var(--text)}
 .screen[data-grid] .inv-desc{color:var(--text);font-size:13px}
 /* the slots and the towers, as on the main menu's deck (ui-parts.js paints the glass, the colour triangle, the ring round
