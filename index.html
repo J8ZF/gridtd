@@ -554,6 +554,7 @@ button[data-skin]:active:not(:disabled){filter:none}
 .screen .scroll:has(>.card){padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px))} /* no status line under it to keep clear of the phone's bottom edge */
 .screen .card{--muted:#45526b;--line:rgba(30,60,120,.16);color:var(--text);margin-bottom:14px;padding:0 14px;text-shadow:0 0 var(--text-blur) currentColor}
 .screen .card::before{content:"";position:absolute;inset:0;z-index:-2;clip-path:polygon(6px 0,calc(100% - 6px) 0,100% 6px,100% calc(100% - 6px),calc(100% - 6px) 100%,6px 100%,0 calc(100% - 6px),0 6px);-webkit-backdrop-filter:blur(5px) saturate(1.7) brightness(1.05);backdrop-filter:blur(5px) saturate(1.7) brightness(1.05)}
+.screen .card[data-dock="1"]::before{clip-path:polygon(6px 0,calc(100% - 6px) 0,100% 6px,100% 100%,0 100%,0 6px)}
 .screen .card .setting-row{box-sizing:border-box;min-height:56px;padding:12px 0;font-size:15px}
 .screen .card .setting-row p{font-size:12px}
 .screen .card>:last-child,.screen .card>.setting-row:last-child{border-bottom:0}
@@ -5561,6 +5562,7 @@ const GLASS={
  card:[[0,'rgba(252,254,255,.72)'],[1,'rgba(238,245,253,.6)']], // a card on a screen's picture: lighter, so plain dark text reads on it
  blue:'#0053ee', // the play blue, flat: a switch turned on
  doom:'rgba(220,52,104,.9)', // the hardest difficulty's mark, the close button's raspberry
+ ridge:['rgba(255,255,255,.85)','#c9d5e6','#a9b7cd'], // the thin raised ridge under a card docked over a scrolling list, a line each, top to bottom: dark bluish whites
  stand:{floor:'#dde7f1',shade:'#ccd6e4',line:'#bfcddf'}, // the inventory's stand, solid: what its glass, shadow and lines showed
 };
 const grad=(g,x0,y0,x1,y1,stops)=>{const gr=g.createLinearGradient(x0,y0,x1,y1);for(const [o,c] of stops)gr.addColorStop(o,c);return gr;};
@@ -5619,8 +5621,11 @@ const SKINS={
  pane:{pad:8,draw(g,w,h){const c=all(4);g.save();g.fillStyle=SHADE;shape(g,5,6,w,h,c);g.fill();g.globalCompositeOperation='destination-out';shape(g,0,0,w,h,c);g.fill();g.restore();
   shape(g,0,0,w,h,c);g.fillStyle='rgba(248,251,255,.9)';g.fill();rim(g,0,0,w,h,c);}},
  // a card of glass laid on a screen's picture: the window's wash and rim, cut once, the flat shadow outside it
- card:{pad:8,draw(g,w,h,el){const c=all(6);g.save();g.fillStyle=SHADE;shape(g,5,6,w,h,c);g.fill();g.globalCompositeOperation='destination-out';shape(g,0,0,w,h,c);g.fill();g.restore();
+ // a card docked over a scrolling list (the list's top edge meets its bottom) is square at the bottom, where a raised
+ // ridge, light over dark, parts it from what scrolls under it
+ card:{pad:8,draw(g,w,h,el){const dock=el.dataset.dock==='1',c=dock?[6,6,0,0]:all(6);g.save();g.fillStyle=SHADE;shape(g,5,6,w,h,c);g.fill();g.globalCompositeOperation='destination-out';shape(g,0,0,w,h,c);g.fill();g.restore();
   g.save();shape(g,0,0,w,h,c);g.clip();g.fillStyle=grad(g,0,0,0,h,GLASS.card);g.fillRect(0,0,w,h);if(state(el)==='pressed'){g.fillStyle='rgba(10,40,110,.1)';g.fillRect(0,0,w,h);}g.restore();rim(g,0,0,w,h,c);
+  if(dock)GLASS.ridge.forEach((col,i)=>{g.fillStyle=col;g.fillRect(0,h-GLASS.ridge.length+i,w,1);});
   // a card that is a choice can be marked: the hardest in the close button's raspberry, the one to play next in blue
   const ring=el.classList.contains('doom')?GLASS.doom:el.classList.contains('map-next')?GLASS.blue:null;if(ring){shape(g,.75,.75,w-1.5,h-1.5,c);g.strokeStyle=ring;g.lineWidth=1.5;g.stroke();}}},
  // a switch: a cut bar, filled with the play blue when on, its white knob slid to that side
@@ -5714,6 +5719,8 @@ const DRESS=[['.dialog','window'],['.dialog>h2 .xp-x','close'],['.dialog .guide-
 const sized=new ResizeObserver(list=>{for(const e of list)if(e.target.isConnected)(e.target.dataset.skin?paint:e.target.dataset.led?paintLED:paintIcon)(e.target);});
 function dress(root){for(const [sel,skin] of DRESS)for(const el of root.querySelectorAll(sel)){if(!el.dataset.skin){el.dataset.skin=skin;sized.observe(el);}
   else if(!el.querySelector(':scope>canvas.skin'))paint(el);} // its content was rewritten, the canvas with it
+ // which card is docked over a scrolling list changes as cards come and go (the inventory's details)
+ for(const el of root.querySelectorAll('[data-skin=card]')){const d=el.nextElementSibling?.classList.contains('scroll')?'1':'0';if(el.dataset.dock!==d){el.dataset.dock=d;paint(el);}}
  for(const c of root.querySelectorAll('canvas[data-icon],canvas[data-led]'))if(!c.dataset.painted){c.dataset.painted='1';sized.observe(c);}}
 // a press, and a mouse passing over, repaint the part they touch
 let held=null,over=null;const repaint=el=>{if(el?.isConnected&&el.dataset.skin)paint(el);};
