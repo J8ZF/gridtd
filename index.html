@@ -812,8 +812,7 @@ button[data-skin]:active:not(:disabled){filter:none}
 /* the chosen piece's selling, docked under the list */
 .screen.modules .mod-sellbar{flex:none;margin:0 16px calc(10px + env(safe-area-inset-bottom,0px));padding:8px 10px;gap:6px;background:none;border:0}
 .screen.modules .mod-sellbar[hidden]{display:none}
-.screen.modules .mod-sell-name{display:flex;align-items:center;gap:6px;min-width:0}
-.screen.modules .mod-sell-name strong{min-width:0;font-size:14px;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.screen.modules .mod-sell-info strong{font-size:14px}
 .screen.modules .mod-sell-info small{color:#45526b}
 .screen.modules .mod-sellbar button{height:36px;min-height:36px;padding:0 12px;font-size:13px}
 /* the presets: each picture on the board's navy (an empty one a dashed outline only); 불러오기 over 저장 */
@@ -1564,7 +1563,7 @@ function refreshGacha(){const pull=$('.mod-pull');if(!pull)return;const cost=pul
  list.innerHTML=!ids.length?'<p class="mod-empty">비어 있음</p>':[...MODS.GRADES].reverse().map(g=>{const ms=MODS.BY_GRADE[g.id].filter(m=>st.owned[m.id]>0);if(!ms.length)return '';
   return `<section class="card banded mod-grade-card"><div class="section-label"><span>${swatch(g)}${g.name}</span></div><div class="mod-items">${ms.map(m=>button('mod-row',`<span class="mod-well"><img class="mod-row-art" src="${pieceImage(m.id)}" alt=""></span><span class="mod-item-text"><strong>${m.name}</strong><small>${modText(m)}</small></span><span class="mod-count"><b>×${st.owned[m.id]}</b></span>`,`mod-item${sellSel===m.id?' on':''}${isOpal(g)?' opal':''}`,`data-kind="${m.id}" style="--g:${g.color}"`)).join('')}</div></section>`;}).join('');
  list.scrollTop=sc;
- const bar=$('.mod-sellbar');if(sellSel&&st.owned[sellSel]>0){const g=gradeOf(sellSel),spare=spareCount(sellSel);bar.hidden=false;bar.innerHTML=`<div class="mod-sell-info"><span class="mod-sell-name"><strong>${MODS.MODULE[sellSel].name}</strong>${gradeChip(g)}</span><small>판매 ${g.points} 포인트 · 남은 ${Math.max(0,spare)}개</small></div>${button('mod-sell','1개 판매','',spare>0?'':'disabled')}${button('mod-sell-all','모두 판매','',spare>1?'':'disabled')}`;}else{bar.hidden=true;bar.innerHTML='';}
+ const bar=$('.mod-sellbar');if(sellSel&&st.owned[sellSel]>0){const g=gradeOf(sellSel),spare=spareCount(sellSel);bar.hidden=false;bar.innerHTML=`<div class="mod-sell-info"><strong>${MODS.MODULE[sellSel].name}</strong><small>판매 ${g.points} 포인트 · 남은 ${Math.max(0,spare)}개</small></div>${button('mod-sell','1개 판매','',spare>0?'':'disabled')}${button('mod-sell-all','모두 판매','',spare>1?'':'disabled')}`;}else{bar.hidden=true;bar.innerHTML='';}
  syncClear();const w=$('.xp-status .wallet');if(w)w.innerHTML=icon('coin')+wallet();}
 function expandCell(i){const st=modState();closeDialog();if(!MODS.buyable(st.cells,i))return;const cost=MODS.cellCost(st.cells.length)*100;if(!profile.cheats.coins&&profile.coins<cost){warn('크레딧이 부족합니다.');return;}
  if(!profile.cheats.coins)profile.coins-=cost;st.cells.push(i);sound('upgrade');save();refreshModules();}
