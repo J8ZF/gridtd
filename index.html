@@ -597,6 +597,7 @@ button[data-skin]:active:not(:disabled){filter:none}
    the picked one): square, the tower at its own centre at the deck's size, free to stand out of its slot */
 .screen.inventory .inv-slot,.screen.inventory .inv-cell,.screen.inventory .inv-slot:active:not(:disabled),.screen.inventory .inv-cell:active:not(:disabled){background:none;border:0;border-radius:0;box-shadow:none;filter:none;overflow:visible}
 .screen.inventory .inv-slot{aspect-ratio:1/1}
+.screen.inventory .inv-loadout{gap:9px} /* as on the main menu's deck: wider than a slot's shadow reaches */
 .screen.inventory .inv-slot .deck-art,.screen.inventory .inv-cell .deck-art{position:absolute;left:50%;top:50%;width:111%;height:111%;max-width:none;margin:0;transform:translate(-50%,-50%)}
 .screen.inventory .inv-slot.empty{color:#7a808c}
 .screen.inventory .inv-slot.empty svg{width:30%;height:30%}
@@ -5591,7 +5592,7 @@ const SKINS={
  // a window: the icy wash, the blue title bar with its gloss, the rim; the game's flat shadow only outside the pane
  // (under it, it would show through)
  window:{pad:10,draw(g,w,h,el){const T=el.querySelector(':scope>h2')?.offsetHeight??0,c=[9,9,0,0];
-  g.save();g.fillStyle=SHADE;shape(g,7,8,w,h,c,true);g.fill();g.globalCompositeOperation='destination-out';shape(g,0,0,w,h,c,true);g.fill();g.restore();
+  g.save();g.fillStyle=SHADE;shape(g,7,8,w,h,c,true);g.fill();g.globalCompositeOperation='destination-out';g.fillStyle='#000';shape(g,0,0,w,h,c,true);g.fill();g.restore();
   g.save();shape(g,0,0,w,h,c,true);g.clip();
   g.fillStyle=grad(g,0,T,0,h,GLASS.wash);g.fillRect(0,0,w,h);
   g.fillStyle=grad(g,0,0,0,T,GLASS.title);g.fillRect(0,0,w,T);
@@ -5622,13 +5623,13 @@ const SKINS={
   g.fillStyle=grad(g,0,0,0,h,[[0,'rgba(255,255,255,.78)'],[1,'rgba(255,255,255,.5)']]);g.fillRect(0,0,w,h);
   g.fillStyle='rgba(255,255,255,.95)';g.fillRect(0,top?1:0,w,1);g.fillStyle='rgba(30,60,120,.22)';g.fillRect(0,top?0:h-1,w,1);}},
  // a small glass pane on its own (the toast): the wash, the rim, the flat shadow outside it
- pane:{pad:8,draw(g,w,h){const c=all(4);g.save();g.fillStyle=SHADE;shape(g,5,6,w,h,c);g.fill();g.globalCompositeOperation='destination-out';shape(g,0,0,w,h,c);g.fill();g.restore();
+ pane:{pad:8,draw(g,w,h){const c=all(4);g.save();g.fillStyle=SHADE;shape(g,5,6,w,h,c);g.fill();g.globalCompositeOperation='destination-out';g.fillStyle='#000';shape(g,0,0,w,h,c);g.fill();g.restore();
   shape(g,0,0,w,h,c);g.fillStyle='rgba(248,251,255,.9)';g.fill();rim(g,0,0,w,h,c);}},
  // a card of glass laid on a screen's picture: the window's wash and rim, cut once, the flat shadow outside it
  // a card docked over a scrolling list (the list's top edge meets its bottom) is square at the bottom, where a raised
  // ridge, light over dark, parts it from what scrolls under it; a square card (the inventory's details) is cut nowhere;
  // a dark card is the dark bar's navy glass, rimmed like a title bar (a dim blue gloss)
- card:{pad:8,draw(g,w,h,el){const dock=el.dataset.dock==='1',r=el.classList.contains('square')?0:6,c=[r,r,dock?0:r,dock?0:r];g.save();g.fillStyle=SHADE;shape(g,5,6,w,h,c);g.fill();g.globalCompositeOperation='destination-out';shape(g,0,0,w,h,c);g.fill();g.restore();
+ card:{pad:8,draw(g,w,h,el){const dock=el.dataset.dock==='1',r=el.classList.contains('square')?0:6,c=[r,r,dock?0:r,dock?0:r];g.save();g.fillStyle=SHADE;shape(g,5,6,w,h,c);g.fill();g.globalCompositeOperation='destination-out';g.fillStyle='#000';shape(g,0,0,w,h,c);g.fill();g.restore();
   const dark=el.classList.contains('dark'),ridge=GLASS.ridge;
   g.save();shape(g,0,0,w,h,c);g.clip();g.fillStyle=grad(g,0,0,0,h,dark?GLASS.dark:GLASS.card);g.fillRect(0,0,w,h);if(state(el)==='pressed'){g.fillStyle='rgba(10,40,110,.1)';g.fillRect(0,0,w,h);}g.restore();rim(g,0,0,w,h,c,false,dark?h:0,GLASS.darkGloss,GLASS.darkEdge);
   if(dock)ridge.forEach((col,i)=>{g.fillStyle=col;g.fillRect(0,h-ridge.length+i,w,1);});
@@ -5641,14 +5642,14 @@ const SKINS={
  // a tower's slot, as on the main menu's deck: glass cut at the top left and the bottom right, the flat shadow outside it,
  // the tower's colour in a triangle over the cut corner (2 px off the frame, reaching 2 px past it; none when empty), a
  // blue ring round the picked one
- slab:{pad:10,draw(g,w,h,el){const c=[8,0,8,0];g.save();g.fillStyle=SHADE;shape(g,7,8,w,h,c);g.fill();g.globalCompositeOperation='destination-out';shape(g,0,0,w,h,c);g.fill();g.restore();
+ slab:{pad:10,draw(g,w,h,el){const c=[8,0,8,0];g.save();g.fillStyle=SHADE;shape(g,7,8,w,h,c);g.fill();g.globalCompositeOperation='destination-out';g.fillStyle='#000';shape(g,0,0,w,h,c);g.fill();clearBeside(g,el);g.restore();
   g.save();shape(g,0,0,w,h,c);g.clip();g.fillStyle=grad(g,0,0,0,h,GLASS.card);g.fillRect(0,0,w,h);if(state(el)==='pressed'){g.fillStyle='rgba(10,40,110,.1)';g.fillRect(0,0,w,h);}g.restore();rim(g,0,0,w,h,c);
   corner(g,el,c[0]);if(el.classList.contains('on')){shape(g,.75,.75,w-1.5,h-1.5,c);g.strokeStyle=GLASS.blue;g.lineWidth=1.5;g.stroke();}}},
  // the picked tower's stand, in solid colours so nothing shows through anything: the floor, the tower's shadow (its own
  // shape, cut away where the tower stands), and over both a grid whose cells do not fit the window, so its edges cut
  // them part way on every side; cut and shadowed like a slot
  stand:{pad:10,draw(g,w,h,el){const c=[8,0,8,0],s=w*.22,o=-s*.35;
-  g.save();g.fillStyle=SHADE;shape(g,7,8,w,h,c);g.fill();g.globalCompositeOperation='destination-out';shape(g,0,0,w,h,c);g.fill();g.restore();
+  g.save();g.fillStyle=SHADE;shape(g,7,8,w,h,c);g.fill();g.globalCompositeOperation='destination-out';g.fillStyle='#000';shape(g,0,0,w,h,c);g.fill();clearBeside(g,el);g.restore();
   g.save();shape(g,0,0,w,h,c);g.clip();g.fillStyle=GLASS.stand.floor;g.fillRect(0,0,w,h);
   const t=shadowOf(el);if(t)g.drawImage(t,0,0,w,h);
   g.beginPath();for(let x=o;x<w;x+=s)if(x>0){g.moveTo(x,0);g.lineTo(x,h);}for(let y=o;y<h;y+=s)if(y>0){g.moveTo(0,y);g.lineTo(w,y);}g.strokeStyle=GLASS.stand.line;g.lineWidth=1;g.stroke();g.restore();
@@ -5663,6 +5664,10 @@ const SKINS={
   if(on){g.save();shape(g,.5,.5,w-1,h,[3,3,0,0]);g.clip();g.fillStyle=GLASS.tabTop;g.fillRect(0,0,w,2.5);g.restore();}
   rim(g,1,1,w-2,h-1,[2,2,0,0]);}},
 };
+// a shadow falls only where nothing else stands, as on the main menu (its shadows are cut out under every panel): the
+// painted parts beside a part, which are glass and would let it show through, are cut out of its shadow
+function clearBeside(g,el){for(const s of el.parentElement?.children??[])if(s!==el&&s.dataset.skin){
+ shape(g,s.offsetLeft-el.offsetLeft,s.offsetTop-el.offsetTop,s.offsetWidth,s.offsetHeight,s.dataset.skin==='slab'||s.dataset.skin==='stand'?[8,0,8,0]:all(0));g.fill();}}
 // a tower's colour in the triangle over a frame's cut top left corner (cut px), as on the main menu's deck
 function corner(g,el,cut){const col=el.style.getPropertyValue('--color');if(!col||el.classList.contains('empty'))return;const E=2,k=cut-2+E;
  g.beginPath();g.moveTo(-E,-E);g.lineTo(-E+k+E,-E);g.lineTo(-E,-E+k+E);g.closePath();g.fillStyle=col;g.fill();}
