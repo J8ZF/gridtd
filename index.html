@@ -549,9 +549,9 @@ main .bar .xp-x[data-skin]{background:none;border:0;border-radius:0;box-shadow:n
 main .bar .xp-x[data-skin] i{visibility:hidden}
 /* a dark top bar writes in white */
 .bar.xp-title.dark{color:#fff}
-/* white writing in a coloured frame (a dark bar's title, a tier band) takes the dark drop shadow the windows' titles and
-   the coloured buttons have, so it stands off its colour */
-.bar.xp-title.dark h2,.screen[data-grid] .inv-tier>.section-label{text-shadow:0 0 var(--text-blur) currentColor,1px 1px var(--text-blur) rgba(0,20,90,.8)}
+/* white writing in a coloured frame (a dark bar's title, a tier band, a tower's tags) takes the dark drop shadow the
+   windows' titles and the coloured buttons have, so it stands off its colour */
+.bar.xp-title.dark h2,.screen[data-grid] .inv-tier>.section-label,.screen.inventory .inv-tags span{text-shadow:0 0 var(--text-blur) currentColor,1px 1px var(--text-blur) rgba(0,20,90,.8)}
 .bar.xp-title.dark .xp-extra{color:rgba(255,255,255,.75)}
 /* a painted part shows its own pressed look, not the old button's brightening */
 button[data-skin]:active:not(:disabled){filter:none}
@@ -651,7 +651,7 @@ button[data-skin]:active:not(:disabled){filter:none}
 .screen.inventory .inv-slot.empty{color:#7a808c}
 .screen.inventory .inv-slot.empty svg{width:30%;height:30%}
 .screen.inventory .inv-more-btn[data-skin]{background:none;border:0;border-radius:0;box-shadow:none;color:var(--text);font-weight:400;font-style:normal}
-/* the picked tower stands on a grid (painted by ui-parts.js); its tags dark navy on white */
+/* the picked tower stands on a grid (painted by ui-parts.js); its tags white on the dark bar's navy */
 .screen.inventory .inv-hero{background:none;border:0;overflow:visible}
 /* its picture is drawn with room round the square (art.js's HERO_REACH, 1.12: 6% of the square each way, the square's
    edges 5.36% in from the picture's) and fades out toward the four sides as the stand's grid does, softly (eased in and
@@ -663,7 +663,7 @@ button[data-skin]:active:not(:disabled){filter:none}
  -webkit-mask-image:linear-gradient(90deg,var(--fade)),linear-gradient(var(--fade));-webkit-mask-composite:source-in;
  mask-image:linear-gradient(90deg,var(--fade)),linear-gradient(var(--fade));mask-composite:intersect}
 .screen.inventory .inv-tags{left:10px;top:6px}
-.screen.inventory .inv-tags span{font-size:12px;color:#0b2a6b;background:#fff;border:0;padding:3px 5px;text-shadow:0 0 var(--text-blur) currentColor} /* a tower's tags: dark navy on white */
+.screen.inventory .inv-tags span{font-size:12px;color:#fff;background:#0b2a6b;border:0;padding:3px 5px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.4)} /* a 1 px white stroke inside, 40%, so it holds its edge on the blue card */
 /* its buttons: the big size (40 px), side by side at one width, one cut; 더보기 glass, the actions in the main menu's
    플레이 gradient (equip and buy) or the same gradient in raspberry (unequip), turned over while pressed */
 .screen.inventory .inv-actions{grid-template-columns:1fr 1fr}
