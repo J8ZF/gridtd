@@ -220,7 +220,8 @@ button{border:1px solid #7f9db9;border-radius:0;background:var(--btn);color:var(
 button:active:not(:disabled){background:var(--btn-down);box-shadow:inset 0 1px 2px rgba(20,40,90,.25)}
 button:disabled{opacity:1;color:#9aa3b2;background:linear-gradient(180deg,#f3f5f8,#e9edf3);box-shadow:none}
 button:focus-visible{outline:1px dotted var(--text);outline-offset:-4px}
-button.primary,.inv-act.equip-button,button.equip-button{background:var(--go);border-color:#003dd7;color:#fff;font-style:normal;font-weight:700;text-shadow:0 0 var(--text-blur) currentColor,1px 1px var(--text-blur) rgba(0,20,90,.8);box-shadow:inset 0 1px 0 rgba(255,255,255,.5)}
+button.primary,.inv-act.equip-button,button.equip-button{background:var(--start);border-color:#003dd7;color:#fff;font-style:normal;font-weight:700;text-shadow:0 0 var(--text-blur) currentColor,1px 1px var(--text-blur) rgba(0,20,90,.8);box-shadow:inset 0 1px 0 rgba(255,255,255,.5)}
+button.primary:active:not(:disabled){background:var(--start-down)}
 button.primary:disabled{background:linear-gradient(180deg,#e4eaf3,#d6dfec);color:#8f9aac;text-shadow:0 0 var(--text-blur) currentColor;box-shadow:none}
 button.danger{color:var(--red)}
 button.unequip-button,.inv-act.unequip-button{background:var(--stop);border-color:#8a0e20;color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.45)}
@@ -503,7 +504,7 @@ img.tower-icon,img.enemy-icon{flex-shrink:0}
 .h5 .h5-menu button,.h5 .h5-menu button:active:not(:disabled){all:unset;box-sizing:border-box;display:flex;align-items:center;gap:9px;height:38px;padding:0 11px;cursor:pointer;
  font:400 14px/1 "Gulim Game",sans-serif;color:var(--h5-ink);text-shadow:0 0 var(--text-blur) currentColor}
 .h5 .h5-menu button+button{border-top:1px solid transparent}
-.h5 .h5-menu .h5-play,.h5 .h5-menu .h5-play:active:not(:disabled){height:44px;margin-bottom:3px;color:#fff;font-size:16px}
+.h5 .h5-menu .h5-play,.h5 .h5-menu .h5-play:active:not(:disabled){height:44px;margin-bottom:3px;color:#fff;font-size:16px;text-shadow:0 0 var(--text-blur) currentColor,1px 1px var(--text-blur) rgba(0,20,90,.8)}
 .h5 .h5-menu .h5-play+button{border-top:0}
 .h5 .h5-menu button:focus-visible{outline:1px dotted currentColor;outline-offset:-3px}
 .h5-menu svg{width:13px;height:13px;flex:none;color:var(--h5-blue);visibility:hidden}
@@ -612,7 +613,7 @@ button[data-skin]:active:not(:disabled){filter:none}
 .screen.inventory .inv-loadout{gap:9px} /* as on the main menu's deck: wider than a slot's shadow reaches */
 .screen.inventory .inv-slot .deck-art,.screen.inventory .inv-cell .deck-art{position:absolute;left:50%;top:50%;width:111%;height:111%;max-width:none;margin:0;transform:translate(-50%,-50%)}
 /* on the grid: a tower's name in white on a dark blue that rises from the bottom of its tile and fades out */
-.screen[data-grid] .inv-cell .inv-name{position:absolute;left:0;right:0;bottom:0;padding:5px 2px 1px;text-align:center;font-weight:400;color:#fff;-webkit-text-stroke:0;
+.screen[data-grid] .inv-cell .inv-name{position:absolute;left:0;right:0;bottom:0;padding:5px 0 1px;text-align:center;font-weight:400;color:#fff;-webkit-text-stroke:0;
  background:linear-gradient(to top,rgba(8,30,86,.9),rgba(8,30,86,.86) 20%,rgba(8,30,86,.74) 40%,rgba(8,30,86,.58) 55%,rgba(8,30,86,.38) 70%,rgba(8,30,86,.2) 82%,rgba(8,30,86,.07) 92%,rgba(8,30,86,0))}
 .screen[data-grid] .inv-cell.locked .inv-name{color:rgba(255,255,255,.78)}
 .screen[data-grid] .inv-cell .inv-name{left:1px;right:1px;bottom:1px}.screen[data-grid] .inv-cell.on .inv-name{left:2px;right:2px;bottom:2px} /* inside the tile's rim, and the picked one's ring */
@@ -627,21 +628,25 @@ button[data-skin]:active:not(:disabled){filter:none}
    플레이 gradient (equip and buy) or the same gradient in raspberry (unequip), turned over while pressed */
 .screen.inventory .inv-actions{grid-template-columns:1fr 1fr}
 .screen.inventory .inv-actions button{height:40px;min-height:40px;font-size:14px;font-weight:400;font-style:normal}
-.screen.inventory .inv-act,.screen.inventory .inv-act:active:not(:disabled){border:0;border-radius:0;box-shadow:none;filter:none;color:#fff;text-shadow:0 0 var(--text-blur) currentColor;
+.screen.inventory .inv-act,.screen.inventory .inv-act:active:not(:disabled){border:0;border-radius:0;box-shadow:none;filter:none;color:#fff;text-shadow:0 0 var(--text-blur) currentColor,1px 1px var(--text-blur) rgba(0,20,90,.8);
  clip-path:polygon(3px 0,calc(100% - 3px) 0,100% 3px,100% calc(100% - 3px),calc(100% - 3px) 100%,3px 100%,0 calc(100% - 3px),0 3px)}
-.screen.inventory .inv-act.equip-button,.screen.inventory .inv-act.credit{background:var(--title)}
-.screen.inventory .inv-act.equip-button:active:not(:disabled),.screen.inventory .inv-act.credit:active:not(:disabled){background:linear-gradient(180deg,#003dd7,#0050ee 12%,#0053ee 60%,#0066ff)}
-.screen.inventory .inv-act.unequip-button{background:linear-gradient(180deg,#f0709a,#d0285c 8%,#cc2459 40%,#dc3468 88%,#dc3468 93%,#d22c60 95%,#a8104a 96%,#a8104a)}
-.screen.inventory .inv-act.unequip-button:active:not(:disabled){background:linear-gradient(180deg,#a8104a,#cc2459 12%,#d0285c 60%,#dc3468)}
+.screen.inventory .inv-act.equip-button,.screen.inventory .inv-act.credit{background:var(--start)}
+.screen.inventory .inv-act.equip-button:active:not(:disabled),.screen.inventory .inv-act.credit:active:not(:disabled){background:var(--start-down)}
+.screen.inventory .inv-act.unequip-button{background:var(--start-red);text-shadow:0 0 var(--text-blur) currentColor,1px 1px var(--text-blur) rgba(80,0,30,.8)}
+.screen.inventory .inv-act.unequip-button:active:not(:disabled){background:var(--start-red-down)}
 .screen.inventory .inv-act.credit-off,.screen.inventory .inv-act:disabled{background:linear-gradient(180deg,#a3b1c8,#8797b3 50%,#7a8aa7);color:rgba(255,255,255,.92)}
 /* a line icon once crushed (ui-parts.js): shown through its low-res mask, its own lines hidden */
 svg[data-crushed]>*{visibility:hidden}
+/* 5.0 coloured buttons, lit as XP's start button is: a dark line along the top, a soft shine across the upper left
+   that fades to the right and away above and below, the colour brightening low down and most toward the right, a little darker at the
+   bottom; pressed, the light goes out of it */
+:root{--start:radial-gradient(ellipse 55% 80% at 88% 84%,rgba(70,150,255,.9),rgba(70,150,255,0) 72%),radial-gradient(ellipse 62% 20% at 12% 24%,rgba(255,255,255,.5),rgba(255,255,255,.22) 45%,rgba(255,255,255,0)),linear-gradient(180deg,#0a3d9e,#0a3d9e 3%,#0b5be6 7%,#0050e6 42%,#0058ee 70%,#0d6cff 88%,#0a58e6);--start-down:linear-gradient(180deg,#08307e,#0a45b8 10%,#0050e6 60%,#0a58e6);--start-red:radial-gradient(ellipse 55% 80% at 88% 84%,rgba(255,110,150,.85),rgba(255,110,150,0) 72%),radial-gradient(ellipse 62% 20% at 12% 24%,rgba(255,255,255,.45),rgba(255,255,255,.2) 45%,rgba(255,255,255,0)),linear-gradient(180deg,#8e0f3e,#8e0f3e 3%,#d0285c 7%,#c42155 42%,#cc2459 70%,#e03a6c 88%,#c8285c);--start-red-down:linear-gradient(180deg,#6e0a30,#a3144a 10%,#c42155 60%,#cc2459)}
 /* the credit counters (led() in the page, painted by ui-parts.js) */
 canvas.led{display:block;height:23px}
-/* the reset: white on the 플레이 blue, turned over while pressed */
-.screen .card button.danger{border:0;border-radius:0;background:var(--title);color:#fff;box-shadow:none;font-weight:400;text-shadow:0 0 var(--text-blur) currentColor;
+/* the reset: white on the start-lit blue */
+.screen .card button.danger{border:0;border-radius:0;background:var(--start);color:#fff;box-shadow:none;font-weight:400;text-shadow:0 0 var(--text-blur) currentColor,1px 1px var(--text-blur) rgba(0,20,90,.8);
  clip-path:polygon(3px 0,calc(100% - 3px) 0,100% 3px,100% calc(100% - 3px),calc(100% - 3px) 100%,3px 100%,0 calc(100% - 3px),0 3px)}
-.screen .card button.danger:active:not(:disabled){background:linear-gradient(180deg,#003dd7,#0050ee 12%,#0053ee 60%,#0066ff)}
+.screen .card button.danger:active:not(:disabled){background:var(--start-down)}
 </style>
 <div id="app"></div><div id="modal-root"></div><div id="toast" role="status" aria-live="polite"></div><input id="import-file" type="file" accept="application/json,.json" hidden><script>
 (()=>{
@@ -1073,7 +1078,7 @@ function invCellHTML(x){const o=invOwned(x.id),e=profile.loadout.includes(x.id),
 function inventory(){fitLoadout(profile);if(!TOWER[invSel])invSel=profile.loadout.find(Boolean)??TOWERS[0].id;
  setScreen('inventory',header('인벤토리','home','',true)+`<section class="inv-top card">${invLoadoutHTML()}${invPickHTML()}</section>${invMore?`<div class="inv-detail card square dark" data-kind="${invSel}"><div class="inv-detail-body">${invDetails(invSel)}</div></div>`:''}<div class="scroll inv-list">${[1,2,3,4].map(tier=>{const list=TOWERS.filter(x=>x.tier===tier);return `<div class="card inv-tier"><div class="section-label"><span>티어 ${tier}</span></div><div class="inv-grid">${list.map(invCellHTML).join('')}</div></div>`;}).join('')}</div>`);fitInv();document.fonts?.ready?.then(fitInv);}
 addEventListener('resize',()=>{if(screen==='inventory')fitInv();});
-function fitInv(){for(const el of document.querySelectorAll('.inv-title strong'))fitLine(el,18,12);for(const el of document.querySelectorAll('.inv-name'))fitLine(el,11,8);}
+function fitInv(){for(const el of document.querySelectorAll('.inv-title strong'))fitLine(el,18,12);for(const el of document.querySelectorAll('.inv-name'))fitLine(el,11,7.5);}
 // ---- Modules ----------------------------------------------------------------------------
 // The module window has two halves: 장착 (the board, worked like the battle map: drag a piece
 // up from the tray, turn it, set it down; pinch or wheel to zoom, drag to pan) and 뽑기
@@ -1489,7 +1494,9 @@ function selectedPanelHTML(t){const d=TOWER[t.kind],max=t.level>=game.maxLevelOf
  return `<div class="panel-desc"><div class="tower-heading"><div class="heading-main"><strong style="color:${d.color}">${d.name}</strong><span class="level">Lv.${t.level}</span></div><div>${(t.kind==='commander'&&t.level>=3)||(t.kind==='icu'&&t.level>=5)?button('ability',t.kind==='icu'?'레이저':'콜 투 암즈','ability',`id="ability-button" style="--gold:${d.color}"`):''}${button('deselect',icon('close'),'icon','aria-label="선택 해제"')}</div></div><div class="stats tower-stats" id="selected-stats">${towerStats(t)}</div><div class="next-upgrade">${max?'':`<strong class="upgrade-name">${d.upgradeNames[t.level-1]}</strong><span class="upgrade-stats">Lv.${t.level+1} · ${d.notes[t.level-1]}</span>`}${DEALS(t.kind)?`<span class="dealt" id="selected-dealt">${dealtText(t)}</span>`:''}</div></div><div class="panel-row actions"><select id="target-select" aria-label="타겟 우선순위" ${aims?'':'disabled'}>${Object.entries(TARGETS).map(([id,label])=>`<option value="${id}" ${t.target===id?'selected':''}>${label}</option>`).join('')}</select>${button('sell',`<span>판매</span><span class="button-value">${money(game.sellValue(t))}</span>`,'danger')}${button('upgrade',`${icon('upgrade')}<span>${max?'최대 레벨':game.upgradeBlock(t)?'하나만':t.disabled>0?'마비 중':money(cost)}</span>`,'primary',`id="upgrade-button" ${max||t.disabled>0||game.upgradeBlock(t)||!game.canAfford(cost)?'disabled':''}`)}</div>`;}
 function placingPanelHTML(){const d=TOWER[placing.kind],[w,h]=dims(placing.kind,placing.r);
  return `<div class="panel-desc"><div class="tower-heading"><div><strong style="color:${d.color}">${d.name}</strong><span class="level">${w}×${h}</span></div><span class="cash">${money(game.buildCost(placing.kind))}</span></div><div class="stats">${levelLine(placing.kind,1)}</div><div class="place-warn" id="placement-hint"></div></div><div class="panel-row placement-actions">${button('deselect','취소')}${button('rotate',`${icon('restore')}<span>회전</span>`,'',`id="rotate-button" aria-label="90도 회전"`)}${button('confirm-place',`${icon('check')}<span>설치</span>`,'primary','id="confirm-place-button"')}</div>`;}
-function fitLine(el,max=11.5,min=9){const r=document.createRange(),over=()=>{r.selectNodeContents(el);return r.getBoundingClientRect().width>el.getBoundingClientRect().width+.5;};let f=max;el.style.fontSize=f+'px';while(over()&&f>min){f-=.5;el.style.fontSize=f+'px';}}
+// shrinks a line's writing (max to min px) until it fits the room inside its box: its width less its padding and border,
+// so a name keeps fitting however its box is restyled
+function fitLine(el,max=11.5,min=9){const r=document.createRange(),over=()=>{r.selectNodeContents(el);const s=getComputedStyle(el),room=el.getBoundingClientRect().width-parseFloat(s.paddingLeft)-parseFloat(s.paddingRight)-parseFloat(s.borderLeftWidth)-parseFloat(s.borderRightWidth);return r.getBoundingClientRect().width>room+.5;};let f=max;el.style.fontSize=f+'px';while(over()&&f>min){f-=.5;el.style.fontSize=f+'px';}}
 function renderControls(force=false){if(screen!=='battle')return;const t=game.towers.find(t=>t.id===selected),key=[selected,t?.level,t?.target,t?.disabled>0,placing?.kind,placing?.mode,placing?.r,game.started,game.paused,game.phase,game.wave,game.ended].join(':');
  if(force||key!==controlSignature){controlSignature=key;const box=$('#tower-controls');box.dataset.mode=t?'tower':placing&&TOWER[placing.kind]?'place':'standby';box.innerHTML=t?selectedPanelHTML(t):placing&&TOWER[placing.kind]?placingPanelHTML():standbyHTML();}
  const confirm=$('#confirm-place-button');if(confirm){const p=placing,pend=p?.mode==='pending';confirm.disabled=!pend||!p.ok||!game.canPlace(p.kind,p.x,p.y,p.r)||!game.canAfford(game.buildCost(p.kind))||!game.canBuild(p.kind);$('#rotate-button').disabled=!pend||!TOWER[p.kind].turns;const hint=$('#placement-hint');if(hint){const msg=placementHint();if(hint.textContent!==msg)hint.textContent=msg;}}
@@ -5484,8 +5491,12 @@ function drawUI(){if(!view||!root?.isConnected)return;const u=root.querySelector
  q.fillStyle=v('--h5-shade');for(const [r,c,el] of slabs){if(el.classList.contains('h5-top'))continue;cut(q,r.x+7,r.y+8,r.width,r.height,c);q.fill();}
  q.globalCompositeOperation='destination-out';q.fillStyle='#000';for(const [r,c] of slabs){cut(q,r.x,r.y,r.width,r.height,c);q.fill();}q.globalCompositeOperation='source-over';
  for(const [r,c] of slabs){cut(q,r.x+.5,r.y+.5,r.width-1,r.height-1,c-.5);q.strokeStyle=v('--h5-line');q.lineWidth=1;q.stroke();}
- const play=box(root.querySelector('.h5-play')),bar=q.createLinearGradient(0,play.y,0,play.bottom);for(const [o,c] of XP.title)bar.addColorStop(o,c);
- cut(q,play.x,play.y,play.width,play.height,7);q.fillStyle=bar;q.fill();
+ // 플레이, lit as XP's start button is (and the coloured buttons elsewhere): the blue down it, a glow low on the right,
+ // a soft shine across its upper left
+ const play=box(root.querySelector('.h5-play')),{x:px,y:py,width:pw,height:ph}=play,bar=q.createLinearGradient(0,py,0,py+ph);for(const [o,c] of XP.start)bar.addColorStop(o,c);
+ q.save();cut(q,px,py,pw,ph,7);q.clip();q.fillStyle=bar;q.fillRect(px,py,pw,ph);
+ q.save();q.translate(px+pw*.88,py+ph*.84);q.scale(pw*.55,ph*.8);const glow=q.createRadialGradient(0,0,0,0,0,1);glow.addColorStop(0,'rgba(70,150,255,.9)');glow.addColorStop(.72,'rgba(70,150,255,0)');q.fillStyle=glow;q.fillRect(-2,-2,4,4);q.restore();
+ q.save();q.translate(px+pw*.12,py+ph*.24);q.scale(pw*.62,ph*.2);const shine=q.createRadialGradient(0,0,0,0,0,1);shine.addColorStop(0,'rgba(255,255,255,.5)');shine.addColorStop(.45,'rgba(255,255,255,.22)');shine.addColorStop(1,'rgba(255,255,255,0)');q.fillStyle=shine;q.fillRect(-2,-2,4,4);q.restore();q.restore();
  q.fillStyle=v('--h5-line');for(const b of [...root.querySelectorAll('.h5-menu button')].slice(2)){const r=box(b);q.fillRect(r.x,r.y,r.width,1);}
  for(const b of root.querySelectorAll('.h5-top button')){const r=box(b);cut(q,r.x+.5,r.y+.5,r.width-1,r.height-1,cutOf(b));q.strokeStyle=v('--h5-line');q.lineWidth=1;q.stroke();}
  // each tower's colour: a triangle in the corner cut off its frame, 2 px off the frame's edge and reaching E px past
@@ -5504,7 +5515,7 @@ function drawUI(){if(!view||!root?.isConnected)return;const u=root.querySelector
 const GLASS={sigma:2,color:.25,button:.45,tint:[230,240,255],res:1};
 // Windows XP (Luna), as XP.css (MIT) measured it: 플레이 wears the window title bar's blue; the other buttons and the tower
 // slots the Start menu's white to light blue, over the glass (at GLASS.button), turned upside down while pressed
-const XP={title:[[0,'#0997ff'],[.08,'#0053ee'],[.4,'#0050ee'],[.88,'#0066ff'],[.93,'#0066ff'],[.95,'#005bff'],[.96,'#003dd7'],[1,'#003dd7']],button:['#ffffff','#d3e5fa']};
+const XP={start:[[0,'#0a3d9e'],[.03,'#0a3d9e'],[.07,'#0b5be6'],[.42,'#0050e6'],[.7,'#0058ee'],[.88,'#0d6cff'],[1,'#0a58e6']],button:['#ffffff','#d3e5fa']};
 const LIN=new Float32Array(256).map((_,i)=>{const c=i/255;return c<=.04045?c/12.92:((c+.055)/1.055)**2.4;});
 const SRGB=new Uint8ClampedArray(4096).map((_,i)=>{const c=i/4095;return 255*(c<=.0031308?c*12.92:1.055*c**(1/2.4)-.055)+.5;});
 const glass={el:null,panes:[]};
