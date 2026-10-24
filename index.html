@@ -5593,13 +5593,17 @@ const GRIDDED=new Set(['inventory','settings','maps','difficulty']),TILE=31,GAP=
 const B=4*TILE+3*GAP+2*EDGE;
 let seed=7;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
 function pattern(rows,tone){const w=B*BLOCKS,c=document.createElement('canvas');c.width=w;c.height=rows*B;const g=c.getContext('2d');seed=7;
- for(let j=0;j<rows;j++)for(let i=0;i<BLOCKS;i++){const x=i*B,y=j*B,a=GRID.strength[Math.floor(rnd()*GRID.strength.length)];
-  const s=GRID.strength,t=(a-s[0])/(s[s.length-1]-s[0]);if(tone.under){g.fillStyle=`rgba(${tone.tile},${a*tone.under})`;g.fillRect(x,y,B,B);}g.fillStyle=`rgba(${tone.joint},${GRID.lines[0]+(GRID.lines[1]-GRID.lines[0])*t})`;g.fillRect(x,y,B,B);
+ const s=tone.strength??GRID.strength,l=tone.lines??GRID.lines;
+ for(let j=0;j<rows;j++)for(let i=0;i<BLOCKS;i++){const x=i*B,y=j*B,a=s[Math.floor(rnd()*s.length)];
+  const t=(a-s[0])/(s[s.length-1]-s[0]);if(tone.under){g.fillStyle=`rgba(${tone.tile},${a*tone.under})`;g.fillRect(x,y,B,B);}g.fillStyle=`rgba(${tone.joint},${l[0]+(l[1]-l[0])*t})`;g.fillRect(x,y,B,B);
   for(let ty=0;ty<4;ty++)for(let tx=0;tx<4;tx++){const px=x+EDGE+tx*(TILE+GAP),py=y+EDGE+ty*(TILE+GAP);
    g.clearRect(px,py,TILE,TILE);g.fillStyle=`rgba(${tone.tile},${a})`;g.fillRect(px,py,TILE,TILE);}}
  return c;}
-const GRID={shift:[.4,.3],lines:[.28,.07],strength:[.04,.1,.16,.22,.28,.34,.4,.46], // white joints, as strong as lines[0] in the lightest block down to lines[1] in the darkest; the tiles darker than the picture, each block its own
- tone:{grove:{joint:'240,246,255',tile:'8,26,72'},sky:{joint:'236,248,255',tile:'12,58,138',under:.5},blossom:{joint:'236,250,255',tile:'28,110,210',under:.5}}}; // per picture: the grove's a navy, the sky's a deeper sky blue, the blossom's a clear azure, its sky's own; the joints each a white tinted to match. On the bright pictures the joints take under of their block's shade too, else a dark block's lines stand out bright
+const GRID={shift:[.4,.3],lines:[.28,.07],strength:[.04,.1,.16,.22,.28,.34,.4,.46], // unless a tone has its own: white joints, as strong as lines[0] in the lightest block down to lines[1] in the darkest; the tiles darker than the picture, each block its own
+ tone:{grove:{joint:'240,246,255',tile:'8,26,72'},sky:LIGHT('20,80,170'),blossom:LIGHT('30,100,190')}}; // per picture: the grove's tiles a navy, darker than the picture, the joints a white tinted to match; the sky's and the blossom's lightened (LIGHT)
+// the grid lightening the picture instead: the tiles a bluish white veil, each block its own, the joints taking under of
+// it and a thin line of the picture's blue on top, stronger as the block lightens - graph paper, so dark writing reads on the cards over it
+function LIGHT(line){return {tile:'242,248,255',joint:line,under:.55,strength:[.16,.22,.28,.34,.4,.46,.52,.58],lines:[.1,.22]};}
 function gridOn(el){let c=el.querySelector(':scope>canvas.gridmap');if(!c){c=document.createElement('canvas');c.className='gridmap';c.setAttribute('aria-hidden','true');el.querySelector(':scope>canvas.backdrop').after(c);}
  c.width=el.clientWidth;c.height=el.clientHeight;const ox=-Math.round(B*GRID.shift[0]),oy=-Math.round(B*GRID.shift[1]),p=pattern(Math.ceil((c.height-oy)/B)+1,GRID.tone[PICS[el.dataset.backdrop]]),g=c.getContext('2d');
  for(let o=ox;o<c.width;o+=p.width)g.drawImage(p,o,oy);}
