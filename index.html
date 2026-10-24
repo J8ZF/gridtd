@@ -565,11 +565,12 @@ button[data-skin]:active:not(:disabled){filter:none}
 /* the dark top bar keeps its navy and lets the picture show through: its glass turns what lies behind into a dark navy
    print of it (grey, its contrast eased, darkened, then tinted blue), and the bar's own navy lies half over that */
 .screen[data-backdrop]>.bar.xp-title.dark{-webkit-backdrop-filter:blur(1.5px) grayscale(1) contrast(.8) brightness(.5) sepia(1) hue-rotate(185deg) saturate(3.5);backdrop-filter:blur(1.5px) grayscale(1) contrast(.8) brightness(.5) sepia(1) hue-rotate(185deg) saturate(3.5)}
-/* and under it a divider between the bar and what lies below: 2 px of a bright blue lightening to a sky blue and fading out
-   toward the right; the bar stands over the screen so what scrolls up passes under it */
+/* and under it a divider between the bar and what lies below: 2 px of silver, a bright line over a darker one as a metal
+   edge is lit, fading out toward the right; the bar stands over the screen so what scrolls up passes under it */
 .screen[data-backdrop]>.bar.xp-title.dark{z-index:1}
 .screen[data-backdrop]>.bar.xp-title.dark::after{content:"";position:absolute;left:0;right:0;top:100%;height:2px;pointer-events:none;
- background:linear-gradient(90deg,#1f7bff,#5fb4ff 45%,rgba(150,210,255,.5) 75%,rgba(150,210,255,0))}
+ background:linear-gradient(#f3f6fa,#f3f6fa) 0 0/100% 1px no-repeat,linear-gradient(#98a2b1,#98a2b1) 0 100%/100% 1px no-repeat;
+ -webkit-mask-image:linear-gradient(90deg,#000,#000 35%,rgba(0,0,0,.45) 72%,transparent);mask-image:linear-gradient(90deg,#000,#000 35%,rgba(0,0,0,.45) 72%,transparent)}
 .screen .scroll:has(>.card){padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px))} /* no status line under it to keep clear of the phone's bottom edge */
 .screen .card{--muted:#45526b;--line:rgba(30,60,120,.16);color:var(--text);margin-bottom:14px;padding:0 14px;text-shadow:0 0 var(--text-blur) currentColor}
 .screen .card::before{content:"";position:absolute;inset:0;z-index:-2;clip-path:polygon(6px 0,calc(100% - 6px) 0,100% 6px,100% calc(100% - 6px),calc(100% - 6px) 100%,6px 100%,0 calc(100% - 6px),0 6px);-webkit-backdrop-filter:blur(5px) saturate(1.7) brightness(1.05);backdrop-filter:blur(5px) saturate(1.7) brightness(1.05)}
