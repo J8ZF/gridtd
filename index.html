@@ -6002,7 +6002,7 @@ const LOWRES=new Map();
 function rasterize(key,svg,px){return new Promise(done=>{const img=new Image();img.onload=()=>{try{const c=document.createElement('canvas');c.width=c.height=px;const g=c.getContext('2d');g.imageSmoothingEnabled=true;g.drawImage(img,0,0,px,px);LOWRES.set(key,c.toDataURL());}catch{}done();};img.onerror=()=>done();img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg.includes('xmlns=')?svg:svg.replace('<svg ','<svg xmlns="http://www.w3.org/2000/svg" '));});}
 // the codex draws each enemy at its size in battle, a cell of the board CODEX_CELL px: its 36-unit box comes to
 // codexSize(kind) px (board.js's UNIT cells a unit, times its scale), baked at the interface's resolution
-const CODEX_CELL=15;
+const CODEX_CELL=8; // about 1.7 times the board's when the whole map is in view (4.6 px a cell on a phone)
 function codexSize(kind){const {enemyScale,UNIT}=require('board.js');return 36*UNIT*enemyScale({kind})*CODEX_CELL;}
 function preloadIcons(){const art=require('art.js'),jobs=[];for(const k of Object.keys(TOWER)){const svg=art.iconSVG(k);if(svg){jobs.push(rasterize('t:'+k,svg,30));jobs.push(rasterize('T:'+k,svg,64));jobs.push(rasterize('H:'+k,art.iconSVG(k,true),Math.round(89*art.HERO_REACH)));jobs.push(rasterize('w:'+k,art.iconSVG(k,false,1.5),45));}}for(const k of Object.keys(ENEMIES)){jobs.push(rasterize('e:'+k,enemyIcon(k,'x',true),24));jobs.push(rasterize('E:'+k,enemyIcon(k,'x',true),Math.round(codexSize(k)*1.5)));}return Promise.all(jobs);}
 // the 64 px tower icon for module pieces (null until rasterized)
