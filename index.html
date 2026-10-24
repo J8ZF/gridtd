@@ -223,7 +223,7 @@ button:active:not(:disabled){background:var(--btn-down);box-shadow:inset 0 1px 2
 button:disabled{opacity:1;color:#9aa3b2;background:linear-gradient(180deg,#f3f5f8,#e9edf3);box-shadow:none}
 button:focus-visible{outline:1px dotted var(--text);outline-offset:-4px}
 button.primary,.inv-act.equip-button,button.equip-button{background:var(--start);border-color:#003dd7;color:#fff;font-style:normal;font-weight:700;text-shadow:0 0 var(--text-blur) currentColor,1px 1px var(--text-blur) rgba(0,20,90,.8);box-shadow:inset 0 1px 0 rgba(255,255,255,.5)}
-button.primary:active:not(:disabled){background:var(--start-down)}
+button.primary:active:not(:disabled){background:var(--start);filter:brightness(.85);box-shadow:var(--press)}
 button.primary:disabled{background:linear-gradient(180deg,#e4eaf3,#d6dfec);color:#8f9aac;text-shadow:0 0 var(--text-blur) currentColor;box-shadow:none}
 button.danger{color:var(--red)}
 button.unequip-button,.inv-act.unequip-button{background:var(--stop);border-color:#8a0e20;color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.45)}
@@ -509,6 +509,7 @@ img.tower-icon,img.enemy-icon{flex-shrink:0}
 .h5 .h5-menu button,.h5 .h5-menu button:active:not(:disabled){all:unset;box-sizing:border-box;display:flex;align-items:center;gap:9px;height:38px;padding:0 11px;cursor:pointer;
  font:400 14px/1 "Gulim Game",sans-serif;color:var(--h5-ink);text-shadow:0 0 var(--text-blur) currentColor}
 .h5 .h5-menu button+button{border-top:1px solid transparent}
+.h5 .h5-menu .h5-play:active:not(:disabled){color:#d9d9d9} /* its writing dims with it */
 .h5 .h5-menu .h5-play,.h5 .h5-menu .h5-play:active:not(:disabled){height:44px;margin-bottom:3px;color:#fff;font-size:16px;text-shadow:0 0 var(--text-blur) currentColor,1px 1px var(--text-blur) rgba(0,20,90,.8)}
 .h5 .h5-menu .h5-play+button{border-top:0}
 .h5 .h5-menu button:focus-visible{outline:1px dotted currentColor;outline-offset:-3px}
@@ -639,22 +640,23 @@ button[data-skin]:active:not(:disabled){filter:none}
 .screen.inventory .inv-act,.screen.inventory .inv-act:active:not(:disabled){border:0;border-radius:0;box-shadow:none;filter:none;color:#fff;text-shadow:0 0 var(--text-blur) currentColor,1px 1px var(--text-blur) rgba(0,20,90,.8);
  clip-path:polygon(3px 0,calc(100% - 3px) 0,100% 3px,100% calc(100% - 3px),calc(100% - 3px) 100%,3px 100%,0 calc(100% - 3px),0 3px)}
 .screen.inventory .inv-act.equip-button,.screen.inventory .inv-act.credit{background:var(--start)}
-.screen.inventory .inv-act.equip-button:active:not(:disabled),.screen.inventory .inv-act.credit:active:not(:disabled){background:var(--start-down)}
+.screen.inventory .inv-act.equip-button:active:not(:disabled),.screen.inventory .inv-act.credit:active:not(:disabled){background:var(--start);filter:brightness(.85);box-shadow:var(--press)}
 .screen.inventory .inv-act.unequip-button{background:var(--start-red);text-shadow:0 0 var(--text-blur) currentColor,1px 1px var(--text-blur) rgba(80,0,30,.8)}
-.screen.inventory .inv-act.unequip-button:active:not(:disabled){background:var(--start-red-down)}
+.screen.inventory .inv-act.unequip-button:active:not(:disabled){background:var(--start-red);filter:brightness(.85);box-shadow:var(--press)}
 .screen.inventory .inv-act.credit-off,.screen.inventory .inv-act:disabled{background:linear-gradient(180deg,#a3b1c8,#8797b3 50%,#7a8aa7);color:rgba(255,255,255,.92)}
 /* a line icon once crushed (ui-parts.js): shown through its low-res mask, its own lines hidden */
 svg[data-crushed]>*{visibility:hidden}
 /* 5.0 coloured buttons, lit as XP's start button is: a dark line along the top, a soft shine across the upper left
    that fades to the right and away above and below, the colour brightening low down and most toward the right, a little darker at the
-   bottom; pressed, the light goes out of it */
-:root{--start:radial-gradient(ellipse 55% 80% at 88% 84%,rgba(70,150,255,.9),rgba(70,150,255,0) 72%),radial-gradient(ellipse 62% 20% at 12% 24%,rgba(255,255,255,.5),rgba(255,255,255,.22) 45%,rgba(255,255,255,0)),linear-gradient(180deg,#0a3d9e,#0a3d9e 3%,#0b5be6 7%,#0050e6 42%,#0058ee 70%,#0d6cff 88%,#0a58e6);--start-down:linear-gradient(180deg,#08307e,#0a45b8 10%,#0050e6 60%,#0a58e6);--start-red:radial-gradient(ellipse 55% 80% at 88% 84%,rgba(255,110,150,.85),rgba(255,110,150,0) 72%),radial-gradient(ellipse 62% 20% at 12% 24%,rgba(255,255,255,.45),rgba(255,255,255,.2) 45%,rgba(255,255,255,0)),linear-gradient(180deg,#8e0f3e,#8e0f3e 3%,#d0285c 7%,#c42155 42%,#cc2459 70%,#e03a6c 88%,#c8285c);--start-red-down:linear-gradient(180deg,#6e0a30,#a3144a 10%,#c42155 60%,#cc2459)}
+   bottom; pressed, as the winXP recreation (github.com/ShizukuIchi/winXP) does its Start and taskbar buttons: dimmed to 85%
+   and pushed in, a dark line inside its edge and a darker one down its left */
+:root{--start:radial-gradient(ellipse 55% 80% at 88% 84%,rgba(70,150,255,.9),rgba(70,150,255,0) 72%),radial-gradient(ellipse 62% 20% at 12% 24%,rgba(255,255,255,.5),rgba(255,255,255,.22) 45%,rgba(255,255,255,0)),linear-gradient(180deg,#0a3d9e,#0a3d9e 3%,#0b5be6 7%,#0050e6 42%,#0058ee 70%,#0d6cff 88%,#0a58e6);--start-red:radial-gradient(ellipse 55% 80% at 88% 84%,rgba(255,110,150,.85),rgba(255,110,150,0) 72%),radial-gradient(ellipse 62% 20% at 12% 24%,rgba(255,255,255,.45),rgba(255,255,255,.2) 45%,rgba(255,255,255,0)),linear-gradient(180deg,#8e0f3e,#8e0f3e 3%,#d0285c 7%,#c42155 42%,#cc2459 70%,#e03a6c 88%,#c8285c);--press:inset 0 0 1px 1px rgba(0,0,0,.3),inset 1px 0 1px rgba(0,0,0,.7)}
 /* the credit counters (led() in the page, painted by ui-parts.js) */
 canvas.led{display:block;height:23px}
 /* the reset: white on the start-lit blue */
 .screen .card button.danger{border:0;border-radius:0;background:var(--start);color:#fff;box-shadow:none;font-weight:400;text-shadow:0 0 var(--text-blur) currentColor,1px 1px var(--text-blur) rgba(0,20,90,.8);
  clip-path:polygon(3px 0,calc(100% - 3px) 0,100% 3px,100% calc(100% - 3px),calc(100% - 3px) 100%,3px 100%,0 calc(100% - 3px),0 3px)}
-.screen .card button.danger:active:not(:disabled){background:var(--start-down)}
+.screen .card button.danger:active:not(:disabled){background:var(--start);filter:brightness(.85);box-shadow:var(--press)}
 </style>
 <div id="app"></div><div id="modal-root"></div><div id="toast" role="status" aria-live="polite"></div><input id="import-file" type="file" accept="application/json,.json" hidden><script>
 (()=>{
@@ -5504,7 +5506,10 @@ function drawUI(){if(!view||!root?.isConnected)return;const u=root.querySelector
  const play=box(root.querySelector('.h5-play')),{x:px,y:py,width:pw,height:ph}=play,bar=q.createLinearGradient(0,py,0,py+ph);for(const [o,c] of XP.start)bar.addColorStop(o,c);
  q.save();cut(q,px,py,pw,ph,7);q.clip();q.fillStyle=bar;q.fillRect(px,py,pw,ph);
  q.save();q.translate(px+pw*.88,py+ph*.84);q.scale(pw*.55,ph*.8);const glow=q.createRadialGradient(0,0,0,0,0,1);glow.addColorStop(0,'rgba(70,150,255,.9)');glow.addColorStop(.72,'rgba(70,150,255,0)');q.fillStyle=glow;q.fillRect(-2,-2,4,4);q.restore();
- q.save();q.translate(px+pw*.12,py+ph*.24);q.scale(pw*.62,ph*.2);const shine=q.createRadialGradient(0,0,0,0,0,1);shine.addColorStop(0,'rgba(255,255,255,.5)');shine.addColorStop(.45,'rgba(255,255,255,.22)');shine.addColorStop(1,'rgba(255,255,255,0)');q.fillStyle=shine;q.fillRect(-2,-2,4,4);q.restore();q.restore();
+ q.save();q.translate(px+pw*.12,py+ph*.24);q.scale(pw*.62,ph*.2);const shine=q.createRadialGradient(0,0,0,0,0,1);shine.addColorStop(0,'rgba(255,255,255,.5)');shine.addColorStop(.45,'rgba(255,255,255,.22)');shine.addColorStop(1,'rgba(255,255,255,0)');q.fillStyle=shine;q.fillRect(-2,-2,4,4);q.restore();
+ // pressed: dimmed to 85% and pushed in, as the coloured buttons elsewhere
+ if(pressed?.classList.contains('h5-play')){q.fillStyle='rgba(0,0,0,.15)';q.fillRect(px,py,pw,ph);cut(q,px+.5,py+.5,pw-1,ph-1,6.5);q.strokeStyle='rgba(0,0,0,.3)';q.lineWidth=1;q.stroke();q.fillStyle='rgba(0,0,0,.45)';q.fillRect(px,py,1.5,ph);}
+ q.restore();
  q.fillStyle=v('--h5-line');for(const b of [...root.querySelectorAll('.h5-menu button')].slice(2)){const r=box(b);q.fillRect(r.x,r.y,r.width,1);}
  // each tower's colour: a triangle in the corner cut off its frame, 2 px off the frame's edge and reaching E px past
  // its top and left (none on an empty slot)
@@ -5541,8 +5546,8 @@ function paneTint(s){const k=GLASS.res,t=s.tint??=layer(s.out.width,s.out.height
   gr.addColorStop(0,lowered(top));gr.addColorStop(1,lowered(bottom));q.save();q.clearRect(r.x,r.y,r.width,r.height);q.globalAlpha=GLASS.button;q.fillStyle=gr;q.fillRect(r.x,r.y,r.width,r.height);q.restore();}
  const d=q.getImageData(0,0,t.width,t.height).data;s.T=new Float32Array(d.length);
  for(let i=0;i<d.length;i+=4){s.T[i]=LIN[d[i]];s.T[i+1]=LIN[d[i+1]];s.T[i+2]=LIN[d[i+2]];s.T[i+3]=d[i+3]/255;}}
-function press(el){if(el===pressed||!root?.isConnected)return;pressed=el;for(const s of glass.panes)paneTint(s);}
-addEventListener('pointerdown',e=>press(e.target.closest?.('.h5-menu button:not(.h5-play),.h5-deck .h5-slab')??null));
+function press(el){if(el===pressed||!root?.isConnected)return;const was=pressed;pressed=el;for(const s of glass.panes)paneTint(s);if([was,el].some(b=>b?.classList.contains('h5-play')))drawUI();}
+addEventListener('pointerdown',e=>press(e.target.closest?.('.h5-menu button,.h5-deck .h5-slab')??null));
 for(const t of ['pointerup','pointercancel'])addEventListener(t,()=>press(null));
 function drawGlass(scene){const R=glass.R,g=glass.el?.getContext('2d');if(!g)return;
  g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,glass.el.width,glass.el.height);g.setTransform(R,0,0,R,0,0);
@@ -5579,22 +5584,24 @@ function lay(el){const img=ready[PICS[el.dataset.backdrop]],w=el.clientWidth,h=e
 
 // the grid map laid over a screen's picture, under its glass: the main menu's floor laid straight (a baseplate's
 // pattern) - blocks of 4×4 tiles, the joints showing between them, wider round each block than inside it, each block
-// darkened at its own strength so the blocks differ in shade (the joints white lines, the tiles a navy shade darker
-// than the picture); drawn once, still, at one canvas pixel per CSS pixel (as the board is). Whole pixels throughout, so every line is as sharp as the next: TILE px tiles, GAP px between
+// darkened at its own strength so the blocks differ in shade (the tiles a navy shade darker than the picture, the
+// joints white lines that fade as their block darkens, so a dark block's grid shows less); drawn once, still, at one canvas pixel per CSS pixel (as the board is). Whole pixels throughout, so every line is as sharp as the next: TILE px tiles, GAP px between
 // them, EDGE px round a block (the joint between two blocks only a pixel wider than inside one); a block comes to 129
-// px, the menu floor's on a phone
+// px, the menu floor's on a phone. It is laid GRID.shift of a block up and left of the screen's corner, so the screen's edges
+// cut through blocks part way (two and a half tiles of one at the left, not a whole block)
 const GRIDDED=new Set(['inventory']),TILE=31,GAP=1,EDGE=1,BLOCKS=6; // px, blocks before it repeats
 const B=4*TILE+3*GAP+2*EDGE;
 let seed=7;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
 function pattern(rows){const w=B*BLOCKS,c=document.createElement('canvas');c.width=w;c.height=rows*B;const g=c.getContext('2d');seed=7;
  for(let j=0;j<rows;j++)for(let i=0;i<BLOCKS;i++){const x=i*B,y=j*B,a=GRID.strength[Math.floor(rnd()*GRID.strength.length)];
-  g.fillStyle=GRID.joint;g.fillRect(x,y,B,B);
+  const s=GRID.strength,t=(a-s[0])/(s[s.length-1]-s[0]);g.fillStyle=`rgba(${GRID.joint},${GRID.lines[0]+(GRID.lines[1]-GRID.lines[0])*t})`;g.fillRect(x,y,B,B);
   for(let ty=0;ty<4;ty++)for(let tx=0;tx<4;tx++){const px=x+EDGE+tx*(TILE+GAP),py=y+EDGE+ty*(TILE+GAP);
    g.clearRect(px,py,TILE,TILE);g.fillStyle=`rgba(${GRID.tile},${a})`;g.fillRect(px,py,TILE,TILE);}}
  return c;}
-const GRID={joint:'rgba(240,246,255,.2)',tile:'8,26,72',strength:[.04,.1,.16,.22,.28,.34,.4,.46]}; // white joints; the tiles a navy shade, darker than the picture, each block its own
+const GRID={shift:[.4,.3],joint:'240,246,255',lines:[.28,.07],tile:'8,26,72',strength:[.04,.1,.16,.22,.28,.34,.4,.46]}; // white joints, as strong as lines[0] in the lightest block down to lines[1] in the darkest; the tiles a navy shade, darker than the picture, each block its own
 function gridOn(el){let c=el.querySelector(':scope>canvas.gridmap');if(!c){c=document.createElement('canvas');c.className='gridmap';c.setAttribute('aria-hidden','true');el.querySelector(':scope>canvas.backdrop').after(c);}
- c.width=el.clientWidth;c.height=el.clientHeight;const p=pattern(Math.ceil(c.height/B)+1),g=c.getContext('2d');for(let o=0;o<c.width;o+=p.width)g.drawImage(p,o,0);}
+ c.width=el.clientWidth;c.height=el.clientHeight;const ox=-Math.round(B*GRID.shift[0]),oy=-Math.round(B*GRID.shift[1]),p=pattern(Math.ceil((c.height-oy)/B)+1),g=c.getContext('2d');
+ for(let o=ox;o<c.width;o+=p.width)g.drawImage(p,o,oy);}
 const sized=new ResizeObserver(list=>{for(const e of list)if(e.target.isConnected)lay(e.target);});
 // each screen as it is drawn
 new MutationObserver(()=>{for(const el of document.querySelectorAll('#app>main.screen:not([data-backdrop])')){const name=Object.keys(PICS).find(n=>el.classList.contains(n));if(name){el.dataset.backdrop=name;if(GRIDDED.has(name))el.dataset.grid='1';sized.observe(el);}}})
