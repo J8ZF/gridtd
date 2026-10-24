@@ -707,8 +707,13 @@ button[data-skin]:active:not(:disabled){filter:none}
    canvas and 미발견 for a name */
 .screen.codex .enemy-card{min-height:0;padding:12px}
 .screen.codex .codex-head{display:flex;gap:10px;align-items:flex-start}
-.screen.codex .codex-canvas{flex:none;width:72px;height:72px;display:flex;align-items:center;justify-content:center;overflow:hidden}
-.screen.codex .codex-canvas .enemy-icon{flex:none;margin:0;max-width:none}
+.screen.codex .codex-canvas{flex:none;width:72px;height:72px;display:flex;align-items:center;justify-content:center}
+/* the enemy fades as the inventory's tower does past its square: whole to 16% of the canvas within it (24.5 px from its
+   middle), eased (1, .84, .5, .16, 0) to nothing 6 px past it (42 px), where the grid ends too - so one too big for the
+   canvas fades out short of the writing and the card's edge instead of being cut */
+.screen.codex .codex-canvas .enemy-icon{flex:none;margin:0;max-width:none;
+ -webkit-mask-image:radial-gradient(circle at 50% 50%,#000 24.5px,rgba(0,0,0,.84) 28.9px,rgba(0,0,0,.5) 33.25px,rgba(0,0,0,.16) 37.6px,transparent 42px);
+ mask-image:radial-gradient(circle at 50% 50%,#000 24.5px,rgba(0,0,0,.84) 28.9px,rgba(0,0,0,.5) 33.25px,rgba(0,0,0,.16) 37.6px,transparent 42px)}
 .screen.codex .codex-canvas svg.icon{width:18px;height:18px}
 .screen.codex .codex-stats{min-width:0;display:flex;flex-direction:column;gap:4px;font-size:11px;color:#45526b;overflow-wrap:anywhere}
 .screen.codex .codex-stats h3{font-size:14px;font-weight:400;color:var(--text);margin:2px 0 2px}
@@ -5731,7 +5736,7 @@ const GLASS={
  outline:'rgba(10,26,72,.42)', // the faint band round a settings card // the hardest difficulty's mark, the close button's raspberry
  ridge:['rgba(255,255,255,.85)','#c9d5e6','#a9b7cd'], // the thin raised ridge under a card docked over a scrolling list, a line each, top to bottom: dark bluish whites
  darkGloss:[[0,'rgba(95,145,225,.42)'],[.5,'rgba(65,110,200,.18)'],[1,'rgba(50,90,180,.06)']],darkEdge:'rgba(0,18,60,.6)', // a dark card's rim: a dim blue gloss, a deep edge
- entry:{fill:[[0,'rgba(214,230,252,.58)'],[1,'rgba(194,216,248,.52)']],line:'rgba(40,80,160,.26)',reach:60}, // an enemy's card in the codex: its glass a touch bluer than the other cards', its grid's lines and how far round the enemy they reach (px)
+ entry:{fill:[[0,'rgba(214,230,252,.58)'],[1,'rgba(194,216,248,.52)']],line:'rgba(40,80,160,.26)',inside:.3,reach:6}, // an enemy's card in the codex: its glass a touch bluer than the other cards', its grid's lines, how far within its canvas their fade starts (of its width) and how far past it they reach (px)
  stand:{cell:.22,line:'rgba(255,255,255,.55)',shade:'rgba(0,12,50,.32)',reach:8,inside:.3}, // the inventory's stand on the blue card: its grid's cell (of the square's width), white lines, the tower's shadow a navy; how far past the square it reaches (px) and how far within it the fade starts (of its width)
  // a tower in the inventory's lists, on the grid: made as the blue card's slots are (a see-through frame under the
  // glass rim, a navy well edged inside), turned for a light card - where they lay a pale wash on the blue, it lays a
@@ -5847,13 +5852,14 @@ const SKINS={
   g.globalCompositeOperation='source-over';}},
  // an enemy in the codex: a light card (the glass lit from behind, see the CSS), cut and shadowed as a card, no frame;
  // behind the enemy, a faint grid of the board's cells (icons.js's CODEX_CELL, a cell's middle at the enemy's), fading
- // out in a circle round it: strongest at its middle and fainter all the way out to GLASS.entry.reach px ((1-t²)² of the
- // way), past its canvas and faintly under its writing, so even the biggest enemy has grid all round it
+ // out in a circle round it by the inventory's stand's rule: whole to GLASS.entry.inside of the canvas's width within
+ // it, then eased (1, .84, .5, .16, 0) to nothing GLASS.entry.reach px past it, 4 px short of its writing (10 px off) and
+ // of the card's edge (12 px off); the enemy fades the same way (see the CSS)
  entry:{pad:8,draw(g,w,h,el){const c=all(6),E=GLASS.entry,r=R(),s=require('icons.js').CODEX_CELL,cv=el.querySelector('.codex-canvas');g.save();g.fillStyle=SHADE;shape(g,5,6,w,h,c);g.fill();g.globalCompositeOperation='destination-out';g.fillStyle='#000';shape(g,0,0,w,h,c);g.fill();g.restore();
   g.save();shape(g,0,0,w,h,c);g.clip();g.fillStyle=grad(g,0,0,0,h,E.fill);g.fillRect(0,0,w,h);
-  if(cv){const cx=cv.offsetLeft+cv.offsetWidth/2,cy=cv.offsetTop+cv.offsetHeight/2,L=document.createElement('canvas');L.width=Math.round(w*r);L.height=Math.round(h*r);const q=L.getContext('2d');q.setTransform(r,0,0,r,0,0);
+  if(cv){const cx=cv.offsetLeft+cv.offsetWidth/2,cy=cv.offsetTop+cv.offsetHeight/2,half=cv.offsetWidth/2,R1=half-cv.offsetWidth*E.inside,R2=half+E.reach,L=document.createElement('canvas');L.width=Math.round(w*r);L.height=Math.round(h*r);const q=L.getContext('2d');q.setTransform(r,0,0,r,0,0);
   q.beginPath();for(let x=(cx-s/2)%s;x<w;x+=s){q.moveTo(x,0);q.lineTo(x,h);}for(let y=(cy-s/2)%s;y<h;y+=s){q.moveTo(0,y);q.lineTo(w,y);}q.strokeStyle=E.line;q.lineWidth=1;q.stroke();
-  const fade=q.createRadialGradient(cx,cy,0,cx,cy,E.reach);for(let i=0;i<=10;i++){const t=i/10;fade.addColorStop(t,`rgba(0,0,0,${((1-t*t)**2).toFixed(3)})`);}
+  const fade=q.createRadialGradient(cx,cy,R1,cx,cy,R2);[1,.84,.5,.16,0].forEach((v,i)=>fade.addColorStop(i/4,`rgba(0,0,0,${v})`));
   q.globalCompositeOperation='destination-in';q.fillStyle=fade;q.fillRect(0,0,w,h);
   g.drawImage(L,0,0,w,h);}g.restore();rim(g,0,0,w,h,c);}},
  // a tower in the inventory's lists: a square with its rim (no cut, no shadow), a blue ring round the picked one. On the
