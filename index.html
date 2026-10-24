@@ -5653,6 +5653,10 @@ const SKINS={
   const t=shadowOf(el);if(t)g.drawImage(t,0,0,w,h);
   g.beginPath();for(let x=o;x<w;x+=s)if(x>0){g.moveTo(x,0);g.lineTo(x,h);}for(let y=o;y<h;y+=s)if(y>0){g.moveTo(0,y);g.lineTo(w,y);}g.strokeStyle=GLASS.stand.line;g.lineWidth=1;g.stroke();g.restore();
   rim(g,0,0,w,h,c);}},
+ // a tower in the inventory's lists: a plain square of glass with its rim (no colour, no cut, no shadow), a blue ring
+ // round the picked one
+ tile:{draw(g,w,h,el){const c=all(0);g.fillStyle=grad(g,0,0,0,h,GLASS.card);g.fillRect(0,0,w,h);if(state(el)==='pressed'){g.fillStyle='rgba(10,40,110,.1)';g.fillRect(0,0,w,h);}rim(g,0,0,w,h,c);
+  if(el.classList.contains('on')){g.strokeStyle=GLASS.blue;g.lineWidth=1.5;g.strokeRect(.75,.75,w-1.5,h-1.5);}}},
  // a tab: the chosen one brighter, with a blue line along its top
  tab:{draw(g,w,h,el){const on=el.classList.contains('active');shape(g,.5,.5,w-1,h-1,[3,3,0,0]);
   g.fillStyle=on?'rgba(255,255,255,.6)':'rgba(255,255,255,.22)';g.fill();g.strokeStyle='rgba(30,60,120,.4)';g.lineWidth=1;g.stroke();
@@ -5720,7 +5724,7 @@ function paintIcon(c){const s=c.offsetWidth,r=R();if(!s)return;c.width=c.height=
 // which skin each part of a window wears
 const DRESS=[['.dialog','window'],['.dialog>h2 .xp-x','close'],['.dialog .guide-tabs button','tab'],['.dialog button','button'],
  ['main .bar.xp-title','bar'],['main .xp-status','bar'],['main .bar .xp-x','close'],['main .bar .xp-tool','button'],['#toast','pane'],
- ['main .card','card'],['main .card .switch','toggle'],['main .card .setting-row button:not(.switch,.danger)','button'],['main .inv-more-btn','button'],['main .inv-slot','slab'],['main .inv-cell','slab'],['main .inv-hero','stand'],
+ ['main .card','card'],['main .card .switch','toggle'],['main .card .setting-row button:not(.switch,.danger)','button'],['main .inv-more-btn','button'],['main .inv-slot','slab'],['main .inv-cell','tile'],['main .inv-hero','stand'],
  ['main .map-card','card'],['main .difficulty-card','card'],['main .mod-open button','button']];
 const sized=new ResizeObserver(list=>{for(const e of list)if(e.target.isConnected)(e.target.dataset.skin?paint:e.target.dataset.led?paintLED:paintIcon)(e.target);});
 function dress(root){for(const [sel,skin] of DRESS)for(const el of root.querySelectorAll(sel)){if(!el.dataset.skin){el.dataset.skin=skin;sized.observe(el);}
@@ -5730,7 +5734,7 @@ function dress(root){for(const [sel,skin] of DRESS)for(const el of root.querySel
  for(const c of root.querySelectorAll('canvas[data-icon],canvas[data-led]'))if(!c.dataset.painted){c.dataset.painted='1';sized.observe(c);}}
 // a press, and a mouse passing over, repaint the part they touch
 let held=null,over=null;const repaint=el=>{if(el?.isConnected&&el.dataset.skin)paint(el);};
-const partAt=e=>e.target.closest?.('[data-skin=button],[data-skin=close],[data-skin=tab],button[data-skin=card],button[data-skin=slab]')??null;
+const partAt=e=>e.target.closest?.('[data-skin=button],[data-skin=close],[data-skin=tab],button[data-skin=card],button[data-skin=slab],button[data-skin=tile]')??null;
 addEventListener('pointerdown',e=>{const was=held;held=partAt(e);repaint(was);repaint(held);});
 for(const t of ['pointerup','pointercancel'])addEventListener(t,()=>{const was=held;held=null;repaint(was);});
 addEventListener('pointerover',e=>{if(e.pointerType!=='mouse')return;const was=over;over=partAt(e);if(was!==over){repaint(was);repaint(over);}});
