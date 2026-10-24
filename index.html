@@ -663,6 +663,8 @@ button[data-skin]:active:not(:disabled){filter:none}
 .screen.inventory .inv-top.blue .inv-act::before{content:"";position:absolute;inset:0;z-index:-1;background:#fff;pointer-events:none;
  clip-path:polygon(evenodd,3px 0,calc(100% - 3px) 0,100% 3px,100% calc(100% - 3px),calc(100% - 3px) 100%,3px 100%,0 calc(100% - 3px),0 3px,3px 0,
   3.62px 1.5px,calc(100% - 3.62px) 1.5px,calc(100% - 1.5px) 3.62px,calc(100% - 1.5px) calc(100% - 3.62px),calc(100% - 3.62px) calc(100% - 1.5px),3.62px calc(100% - 1.5px),1.5px calc(100% - 3.62px),1.5px 3.62px,3.62px 1.5px)}
+/* a greyed one (it cannot be equipped, or the credits fall short) is ringed in a light grey-blue of its own grey, not white */
+.screen.inventory .inv-top.blue .inv-act.credit-off::before,.screen.inventory .inv-top.blue .inv-act:disabled::before{background:#c6cedb}
 /* a line icon once crushed (ui-parts.js): shown through its low-res mask, its own lines hidden */
 svg[data-crushed]>*{visibility:hidden}
 /* 5.0 coloured buttons, lit as XP's start button is: a dark line along the top, a soft shine across the upper left
