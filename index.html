@@ -562,6 +562,9 @@ button[data-skin]:active:not(:disabled){filter:none}
 .screen[data-backdrop]{position:relative;isolation:isolate}
 .screen>canvas.backdrop,.screen>canvas.gridmap{position:absolute;left:0;top:0;width:100%;height:100%;z-index:-1;pointer-events:none}
 .screen[data-backdrop]>.bar.xp-title,.screen[data-backdrop]>.xp-status{-webkit-backdrop-filter:blur(5px) saturate(1.7) brightness(1.05);backdrop-filter:blur(5px) saturate(1.7) brightness(1.05)}
+/* the dark top bar keeps its navy and lets the picture show through: its glass turns what lies behind into a dark navy
+   print of it (grey, its contrast eased, darkened, then tinted blue), and the bar's own navy lies half over that */
+.screen[data-backdrop]>.bar.xp-title.dark{-webkit-backdrop-filter:blur(1.5px) grayscale(1) contrast(.8) brightness(.5) sepia(1) hue-rotate(185deg) saturate(3.5);backdrop-filter:blur(1.5px) grayscale(1) contrast(.8) brightness(.5) sepia(1) hue-rotate(185deg) saturate(3.5)}
 .screen .scroll:has(>.card){padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px))} /* no status line under it to keep clear of the phone's bottom edge */
 .screen .card{--muted:#45526b;--line:rgba(30,60,120,.16);color:var(--text);margin-bottom:14px;padding:0 14px;text-shadow:0 0 var(--text-blur) currentColor}
 .screen .card::before{content:"";position:absolute;inset:0;z-index:-2;clip-path:polygon(6px 0,calc(100% - 6px) 0,100% 6px,100% calc(100% - 6px),calc(100% - 6px) 100%,6px 100%,0 calc(100% - 6px),0 6px);-webkit-backdrop-filter:blur(5px) saturate(1.7) brightness(1.05);backdrop-filter:blur(5px) saturate(1.7) brightness(1.05)}
@@ -5655,7 +5658,7 @@ const GLASS={
  close:{base:[[0,'rgba(240,136,170,.92)'],[.45,'rgba(220,52,104,.9)'],[1,'rgba(166,16,70,.92)']],hover:[[0,'rgba(252,154,186,.94)'],[.45,'rgba(234,70,122,.92)'],[1,'rgba(186,28,86,.94)']],
   pressed:[[0,'rgba(116,14,52,.9)'],[1,'rgba(74,8,34,.9)']]},
  tabTop:'#0053ee',
- darkBar:[[0,'rgba(20,52,130,.9)'],[1,'rgba(9,30,88,.92)']], // a dark top bar, top to bottom
+ darkBar:[[0,'rgba(20,52,130,.5)'],[1,'rgba(9,30,88,.58)']], // a dark top bar, top to bottom: half see-through, over the picture its glass has already turned navy (see the CSS)
  card:[[0,'rgba(252,254,255,.72)'],[1,'rgba(238,245,253,.6)']],
  // on a screen laid over the grid map: the cards thinner and bluer (the grid shows through them), the things on them a
  // nearly solid brighter white (so they stand off the card)
