@@ -514,6 +514,7 @@ img.tower-icon,img.enemy-icon{flex-shrink:0}
 .h5 .h5-menu .h5-play+button{border-top:0}
 .h5 .h5-menu button:focus-visible{outline:1px dotted currentColor;outline-offset:-3px}
 .h5-menu svg{width:13px;height:13px;flex:none;color:var(--h5-blue);visibility:hidden}
+.h5-top .h5-icon{width:20px;height:20px;flex:none;margin:0 3px 0 5px;visibility:hidden} /* painted with the menu's marks */
 .h5-menu .h5-play svg{color:#fff}
 .h5-deck{position:absolute;left:18px;right:18px;bottom:22px;z-index:2;max-width:420px}
 .h5-row{display:grid;grid-template-columns:repeat(5,1fr);gap:9px}
@@ -1031,7 +1032,11 @@ function warnTap(e,msg){const id=e.pointerId,x=e.clientX,up=ev=>{if(ev.pointerId
 
 // the game's version, shown on the title screen and in the 정보 window
 const APP_VERSION='4.13.3';
-function home(){fitLoadout(profile);if(cloudWaiting)setTimeout(()=>cloudSync(),0);if(game&&!game.ended){if(game.config.tutorial){game=null;coachStop();}else{game.paused=true;savedRun=game.snapshot();}}save();setScreen('home',`<div class="h5"><canvas class="h5-scene"></canvas><canvas class="h5-glass"></canvas><canvas class="h5-ui"></canvas><div class="h5-title" role="heading" aria-level="1" aria-label="그리드 타워 디펜스"><div class="r1"><span>그</span><span>리</span><span>드</span></div><div class="r2"><span>타</span><span>워</span><span>디</span><span>펜</span><span>스</span></div><p class="ver" data-action="version-tap">버전 ${APP_VERSION}</p></div><header class="h5-top h5-slab" role="menubar">${button('settings','<span>설정(X)</span>','','role="menuitem"')}${button('about','<span>크레딧(C)</span>','','role="menuitem"')}</header><nav class="h5-menu h5-slab" aria-label="메뉴">${button('play',`${icon('play')}<span>플레이</span>`,'h5-play')}${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('codex',`${icon('book')}<span>도감</span>`)}</nav><div class="h5-deck" aria-label="장착한 타워">${homeSlots()}</div></div>`);homeScene.mount(app.querySelector('.h5'));}
+// the old title screen's mark at the left end of the main menu's top bar: a tower on a 3×3 grid, its barrel up, an enemy
+// in the corner, the shapes it was drawn with on its 20 px canvas
+const OLD_ICON='<svg class="h5-icon" viewBox="0 0 20 20" width="20" height="20" aria-hidden="true"><path d="M1.5 1.5V18.5M7.5 1.5V18.5M12.5 1.5V18.5M18.5 1.5V18.5M1.5 1.5H18.5M1.5 7.5H18.5M1.5 12.5H18.5M1.5 18.5H18.5" stroke="#7db2ff" stroke-width="1"/>'
+ +'<rect x="7" y="8" width="6" height="5" fill="#000"/><rect x="8" y="9" width="4" height="3" fill="#c0c0c0"/><path d="M10 9V3.5" stroke="#fff" stroke-width="1.4"/><circle cx="4.5" cy="15.5" r="1.8" fill="#ff4040"/></svg>';
+function home(){fitLoadout(profile);if(cloudWaiting)setTimeout(()=>cloudSync(),0);if(game&&!game.ended){if(game.config.tutorial){game=null;coachStop();}else{game.paused=true;savedRun=game.snapshot();}}save();setScreen('home',`<div class="h5"><canvas class="h5-scene"></canvas><canvas class="h5-glass"></canvas><canvas class="h5-ui"></canvas><div class="h5-title" role="heading" aria-level="1" aria-label="그리드 타워 디펜스"><div class="r1"><span>그</span><span>리</span><span>드</span></div><div class="r2"><span>타</span><span>워</span><span>디</span><span>펜</span><span>스</span></div><p class="ver" data-action="version-tap">버전 ${APP_VERSION}</p></div><header class="h5-top h5-slab" role="menubar">${OLD_ICON}${button('settings','<span>설정(X)</span>','','role="menuitem"')}${button('about','<span>크레딧(C)</span>','','role="menuitem"')}</header><nav class="h5-menu h5-slab" aria-label="메뉴">${button('play',`${icon('play')}<span>플레이</span>`,'h5-play')}${button('inventory',`${icon('inventory')}<span>인벤토리</span>`)}${button('modules',`${icon('module')}<span>모듈</span>`)}${button('codex',`${icon('book')}<span>도감</span>`)}</nav><div class="h5-deck" aria-label="장착한 타워">${homeSlots()}</div></div>`);homeScene.mount(app.querySelector('.h5'));}
 // the equipped towers on the main menu: a see-through slot each (painted by home-scene.js), five to a page
 function homeSlots(){return paged('home',profile.loadout.map((id,i)=>{const t=TOWER[id];return t?button('inventory','','h5-slab',`style="--c:${t.color}" data-kind="${id}" aria-label="${t.name}"`):button('inventory',icon('plus'),'h5-slab empty',`aria-label="빈 슬롯 ${i+1}"`);}),'h5-row');}
 function openDialog(title,body,buttons,kind='dialog'){if(kind!=='result')sound(kind.startsWith('msg')?'question':'open');dialogKind=kind;modal.innerHTML=`<div class="overlay"><section class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><h2><span>${title}</span>${button('dialog-x','<i>×</i>','xp-x','aria-label="닫기"')}</h2><div class="dialog-body">${body}</div><div class="dialog-actions">${buttons}</div></section></div>`;modal.querySelector('.dialog').classList.toggle('msgbox',kind.startsWith('msg'));(modal.querySelector('.xp-yes')??modal.querySelector('.dialog-actions button')??modal.querySelector('button'))?.focus();backNavigation?.sync?.();}
@@ -5422,7 +5427,7 @@ const box=el=>{const o=root.getBoundingClientRect(),r=el.getBoundingClientRect()
 
 function mount(el){root=el;view=null;pressed=null;resized.disconnect();resized.observe(el);turned.disconnect();
  const pager=el.querySelector('.h5-deck .pager');if(pager)turned.observe(pager,{attributes:true,attributeFilter:['style']});
- const marks=[...el.querySelectorAll('.h5-menu svg,.h5-deck svg')];
+ const marks=[...el.querySelectorAll('.h5-top svg,.h5-menu svg,.h5-deck svg')];
  Promise.all(marks.map(s=>load(iconSource(s)))).then(list=>{if(root!==el)return;icons=new Map(marks.map((s,i)=>[s,list[i]]));drawUI();});
  layout();}
 function tick(now){if(view&&root?.isConnected)frame(now);}
@@ -5497,7 +5502,7 @@ function drawUI(){if(!view||!root?.isConnected)return;const u=root.querySelector
  for(const c of [u,glass.el]){c.width=Math.round(W*R);c.height=Math.round(H*R);c.style.width=W+'px';c.style.height=H+'px';}
  const q=u.getContext('2d'),css=getComputedStyle(root),v=n=>css.getPropertyValue(n).trim(),cutOf=el=>parseFloat(getComputedStyle(el).getPropertyValue('--cut'));q.setTransform(R,0,0,R,0,0);
  // only the page of towers that is showing
- const page=box(root.querySelector('.h5-deck .pager-view')??root.querySelector('.h5-deck')),shown=el=>el.closest('.h5-menu')||(r=>r.right>page.x+1&&r.x<page.right-1)(box(el));
+ const page=box(root.querySelector('.h5-deck .pager-view')??root.querySelector('.h5-deck')),shown=el=>el.closest('.h5-menu,.h5-top')||(r=>r.right>page.x+1&&r.x<page.right-1)(box(el));
  const slabs=[...root.querySelectorAll('.h5-slab')].filter(shown).map(el=>[box(el),cutOf(el),el]);
  glassPanes(slabs,R);
  // flat shadows around the panels (not under them, or they would show through the glass; none under the top bar, which
