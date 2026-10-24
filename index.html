@@ -620,6 +620,11 @@ button[data-skin]:active:not(:disabled){filter:none}
 .screen[data-grid] .inv-title strong{color:var(--text);font-size:17px;display:flex;align-items:center;gap:7px}
 .screen[data-grid] .inv-title span{color:var(--text)}
 .screen[data-grid] .inv-desc{color:var(--text);font-size:13px}
+/* the top card in blue (ui-parts.js): its writing white with the dark drop shadow white writing takes on colour, the line
+   under the name white, an empty slot's + pale */
+.screen.inventory .inv-top.blue .inv-title strong,.screen.inventory .inv-top.blue .inv-title span,.screen.inventory .inv-top.blue .inv-desc{color:#fff;text-shadow:0 0 var(--text-blur) currentColor,1px 1px var(--text-blur) rgba(0,20,90,.8)}
+.screen.inventory .inv-top.blue .inv-title::after{background:linear-gradient(90deg,#fff,rgba(255,255,255,0))}
+.screen.inventory .inv-top.blue .inv-slot.empty{color:rgba(255,255,255,.7)}
 /* the slots and the towers, as on the main menu's deck (ui-parts.js paints the glass, the colour triangle, the ring round
    the picked one): square, the tower at its own centre at the deck's size, free to stand out of its slot */
 .screen.inventory .inv-slot,.screen.inventory .inv-cell,.screen.inventory .inv-slot:active:not(:disabled),.screen.inventory .inv-cell:active:not(:disabled){background:none;border:0;border-radius:0;box-shadow:none;filter:none;overflow:visible}
@@ -1095,7 +1100,7 @@ function invLoadoutHTML(){return `<div class="inv-loadout-wrap" data-key="${prof
 function invBadge(id){return profile.loadout.includes(id)?`<i class="inv-badge eq">${icon('check')}</i>`:invOwned(id)?'':`<i class="inv-badge">${icon('lock')}</i>`;}
 function invCellHTML(x){const o=invOwned(x.id),e=profile.loadout.includes(x.id),v=TOWER[invShow(x.id)];return button('inv-pick',`${towerIcon(v.id,'tower-icon deck-art')}<span class="inv-name">${v.name}</span>${invBadge(x.id)}`,`inv-cell ${x.id===invSel?'on':''} ${o?'':'locked'}`,`style="--color:${v.color}" data-kind="${x.id}" aria-label="${v.name}${e?' 장착됨':o?'':' 잠김'}"`);}
 function inventory(){fitLoadout(profile);if(!TOWER[invSel])invSel=profile.loadout.find(Boolean)??TOWERS[0].id;
- setScreen('inventory',header('인벤토리','home','',true)+`<section class="inv-top card">${invLoadoutHTML()}${invPickHTML()}</section>${invMore?`<div class="inv-detail card square dark" data-kind="${invSel}"><div class="inv-detail-body">${invDetails(invSel)}</div></div>`:''}<div class="scroll inv-list">${[1,2,3,4].map(tier=>{const list=TOWERS.filter(x=>x.tier===tier);return `<div class="card inv-tier"><div class="section-label"><span>티어 ${tier}</span></div><div class="inv-grid">${list.map(invCellHTML).join('')}</div></div>`;}).join('')}</div>`);fitInv();document.fonts?.ready?.then(fitInv);}
+ setScreen('inventory',header('인벤토리','home','',true)+`<section class="inv-top card blue">${invLoadoutHTML()}${invPickHTML()}</section>${invMore?`<div class="inv-detail card square dark" data-kind="${invSel}"><div class="inv-detail-body">${invDetails(invSel)}</div></div>`:''}<div class="scroll inv-list">${[1,2,3,4].map(tier=>{const list=TOWERS.filter(x=>x.tier===tier);return `<div class="card inv-tier"><div class="section-label"><span>티어 ${tier}</span></div><div class="inv-grid">${list.map(invCellHTML).join('')}</div></div>`;}).join('')}</div>`);fitInv();document.fonts?.ready?.then(fitInv);}
 addEventListener('resize',()=>{if(screen==='inventory')fitInv();});
 function fitInv(){for(const el of document.querySelectorAll('.inv-title strong'))fitLine(el,18,12);for(const el of document.querySelectorAll('.inv-name'))fitLine(el,11,7.5);}
 // ---- Modules ----------------------------------------------------------------------------
@@ -5646,7 +5651,11 @@ const GLASS={
  pane:[[0,'rgba(236,243,252,.5)'],[1,'rgba(222,233,248,.44)']],
  item:[[0,'rgba(252,254,255,.94)'],[1,'rgba(236,243,252,.92)']],
  buttonWhite:[[0,'rgba(255,255,255,.9)'],[1,'rgba(205,222,246,.92)']], // a button's, white to a pale sky blue
- dark:[[0,'rgba(18,50,120,.93)'],[1,'rgba(9,32,86,.95)']], // a dark card, the dark bar's navy, top to bottom // a card on a screen's picture: lighter, so plain dark text reads on it
+ dark:[[0,'rgba(18,50,120,.93)'],[1,'rgba(9,32,86,.95)']],
+ // a blue card (the inventory's top), left to right: a navy lightening into the play blue; the slots on it glass whose
+ // frame is a pale wash and whose well darkens whatever lies behind it, so each takes its own deeper shade of the card
+ blueCard:[[0,'rgba(8,30,92,.93)'],[.45,'rgba(4,56,170,.92)'],[1,'rgba(0,83,238,.9)']],
+ well:{frame:[[0,'rgba(255,255,255,.34)'],[1,'rgba(255,255,255,.16)']],fill:'rgba(0,10,48,.42)',edge:'rgba(0,8,40,.45)',sheen:'rgba(255,255,255,.09)'}, // a dark card, the dark bar's navy, top to bottom // a card on a screen's picture: lighter, so plain dark text reads on it
  blue:'#0053ee', // the play blue, flat: a switch turned on
  doom:'rgba(220,52,104,.9)', // the hardest difficulty's mark, the close button's raspberry
  ridge:['rgba(255,255,255,.85)','#c9d5e6','#a9b7cd'], // the thin raised ridge under a card docked over a scrolling list, a line each, top to bottom: dark bluish whites
@@ -5719,8 +5728,8 @@ const SKINS={
  // ridge, light over dark, parts it from what scrolls under it; a square card (the inventory's details) is cut nowhere;
  // a dark card is the dark bar's navy glass, rimmed like a title bar (a dim blue gloss)
  card:{pad:8,draw(g,w,h,el){const dock=el.dataset.dock==='1',r=el.classList.contains('square')?0:6,c=[r,r,dock?0:r,dock?0:r];g.save();g.fillStyle=SHADE;shape(g,5,6,w,h,c);g.fill();g.globalCompositeOperation='destination-out';g.fillStyle='#000';shape(g,0,0,w,h,c);g.fill();g.restore();
-  const dark=el.classList.contains('dark'),ridge=GLASS.ridge;
-  g.save();shape(g,0,0,w,h,c);g.clip();g.fillStyle=grad(g,0,0,0,h,dark?GLASS.dark:el.closest('[data-grid]')?GLASS.pane:GLASS.card);g.fillRect(0,0,w,h);if(state(el)==='pressed'){g.fillStyle='rgba(10,40,110,.1)';g.fillRect(0,0,w,h);}g.restore();rim(g,0,0,w,h,c,false,dark?h:0,GLASS.darkGloss,GLASS.darkEdge);
+  const blue=el.classList.contains('blue'),dark=blue||el.classList.contains('dark'),ridge=GLASS.ridge;
+  g.save();shape(g,0,0,w,h,c);g.clip();g.fillStyle=blue?grad(g,0,0,w,0,GLASS.blueCard):grad(g,0,0,0,h,dark?GLASS.dark:el.closest('[data-grid]')?GLASS.pane:GLASS.card);g.fillRect(0,0,w,h);if(state(el)==='pressed'){g.fillStyle='rgba(10,40,110,.1)';g.fillRect(0,0,w,h);}g.restore();rim(g,0,0,w,h,c,false,dark?h:0,GLASS.darkGloss,GLASS.darkEdge);
   if(dock)ridge.forEach((col,i)=>{g.fillStyle=col;g.fillRect(0,h-ridge.length+i,w,1);});
   // a card that is a choice can be marked: the hardest in the close button's raspberry, the one to play next in blue
   const ring=el.classList.contains('doom')?GLASS.doom:el.classList.contains('map-next')?GLASS.blue:null;if(ring){shape(g,.75,.75,w-1.5,h-1.5,c);g.strokeStyle=ring;g.lineWidth=1.5;g.stroke();}}},
@@ -5730,10 +5739,15 @@ const SKINS={
   shape(g,on?w-3-k:3,3,k,k,all(3));g.fillStyle='#fff';g.fill();if(!on){g.strokeStyle='rgba(30,60,120,.35)';g.stroke();}}},
  // a tower's slot, as on the main menu's deck: glass cut at the top left and the bottom right, the flat shadow outside it,
  // the tower's colour in a triangle over the cut corner (2 px off the frame, reaching 2 px past it; none when empty), a
- // blue ring round the picked one
- slab:{pad:10,draw(g,w,h,el){const c=[8,0,8,0];g.save();g.fillStyle=SHADE;shape(g,7,8,w,h,c);g.fill();g.globalCompositeOperation='destination-out';g.fillStyle='#000';shape(g,0,0,w,h,c);g.fill();clearBeside(g,el);g.restore();
-  g.save();shape(g,0,0,w,h,c);g.clip();g.fillStyle=grad(g,0,0,0,h,el.closest('[data-grid]')?GLASS.item:GLASS.card);g.fillRect(0,0,w,h);if(state(el)==='pressed'){g.fillStyle='rgba(10,40,110,.1)';g.fillRect(0,0,w,h);}g.restore();rim(g,0,0,w,h,c);
-  corner(g,el,c[0]);if(el.classList.contains('on')){shape(g,.75,.75,w-1.5,h-1.5,c);g.strokeStyle=GLASS.blue;g.lineWidth=1.5;g.stroke();}}},
+ // blue ring round the picked one. On a blue card: a pale frame round a well that darkens the card behind it, a faint
+ // sheen across its upper left, the ring white
+ slab:{pad:10,draw(g,w,h,el){const c=[8,0,8,0],blue=el.closest('.card.blue'),W=GLASS.well;g.save();g.fillStyle=SHADE;shape(g,7,8,w,h,c);g.fill();g.globalCompositeOperation='destination-out';g.fillStyle='#000';shape(g,0,0,w,h,c);g.fill();clearBeside(g,el);g.restore();
+  g.save();shape(g,0,0,w,h,c);g.clip();
+  if(blue){const i=4,ci=[5,0,5,0];g.fillStyle=grad(g,0,0,0,h,W.frame);g.fillRect(0,0,w,h);shape(g,i,i,w-2*i,h-2*i,ci);g.save();g.clip();g.clearRect(0,0,w,h);g.fillStyle=W.fill;g.fillRect(0,0,w,h);
+   g.beginPath();g.moveTo(0,0);g.lineTo(w*.62,0);g.lineTo(0,h*.62);g.closePath();g.fillStyle=W.sheen;g.fill();g.restore();shape(g,i+.5,i+.5,w-2*i-1,h-2*i-1,ci);g.strokeStyle=W.edge;g.lineWidth=1;g.stroke();}
+  else{g.fillStyle=grad(g,0,0,0,h,el.closest('[data-grid]')?GLASS.item:GLASS.card);g.fillRect(0,0,w,h);}
+  if(state(el)==='pressed'){g.fillStyle='rgba(10,40,110,.1)';g.fillRect(0,0,w,h);}g.restore();rim(g,0,0,w,h,c);
+  corner(g,el,c[0]);if(el.classList.contains('on')){shape(g,.75,.75,w-1.5,h-1.5,c);g.strokeStyle=blue?'#fff':GLASS.blue;g.lineWidth=1.5;g.stroke();}}},
  // the picked tower's stand, in solid colours so nothing shows through anything: the floor, the tower's shadow (its own
  // shape, cut away where the tower stands), and over both a grid whose cells do not fit the window, so its edges cut
  // them part way on every side; cut and shadowed like a slot
