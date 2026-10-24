@@ -635,6 +635,8 @@ button[data-skin]:active:not(:disabled){filter:none}
 .screen.inventory .inv-act.unequip-button{background:linear-gradient(180deg,#f0709a,#d0285c 8%,#cc2459 40%,#dc3468 88%,#dc3468 93%,#d22c60 95%,#a8104a 96%,#a8104a)}
 .screen.inventory .inv-act.unequip-button:active:not(:disabled){background:linear-gradient(180deg,#a8104a,#cc2459 12%,#d0285c 60%,#dc3468)}
 .screen.inventory .inv-act.credit-off,.screen.inventory .inv-act:disabled{background:linear-gradient(180deg,#a3b1c8,#8797b3 50%,#7a8aa7);color:rgba(255,255,255,.92)}
+/* a line icon once crushed (ui-parts.js): shown through its low-res mask, its own lines hidden */
+svg[data-crushed]>*{visibility:hidden}
 /* the credit counters (led() in the page, painted by ui-parts.js) */
 canvas.led{display:block;height:23px}
 /* the reset: white on the 플레이 blue, turned over while pressed */
@@ -5775,12 +5777,25 @@ const DRESS=[['.dialog','window'],['.dialog>h2 .xp-x','close'],['.dialog .guide-
  ['main .bar.xp-title','bar'],['main .xp-status','bar'],['main .bar .xp-x','close'],['main .bar .xp-tool','button'],['#toast','pane'],
  ['main .card','card'],['main .card .switch','toggle'],['main .card .setting-row button:not(.switch,.danger)','button'],['main .inv-more-btn','button'],['main .inv-slot','slab'],['main .inv-cell','tile'],['main .inv-hero','stand'],
  ['main .map-card','card'],['main .difficulty-card','card'],['main .mod-open button','button']];
-const sized=new ResizeObserver(list=>{for(const e of list)if(e.target.isConnected)(e.target.dataset.skin?paint:e.target.dataset.led?paintLED:paintIcon)(e.target);});
+// the line icons (svg.icon, the battle's skill glyphs) are crushed like the rest of the interface: each is drawn at
+// UI_RES in black and shown as a mask over its own colour, so it reads as soft as the painted parts and still takes its
+// colour from the page (a hover, a disabled button). The main menu paints its own
+const masks=new Map(),CRUSH='svg.icon,svg.skill-glyph';
+function crush(svg){const r=svg.getBoundingClientRect(),k=R(),w=Math.round(r.width*k),h=Math.round(r.height*k);if(!w||!h)return;
+ const bare=svg.cloneNode(true);bare.removeAttribute('style');for(const a of [...bare.attributes])if(a.name.startsWith('data-'))bare.removeAttribute(a.name);
+ const src=bare.outerHTML.replace(/currentColor/g,'#000'),key=w+'x'+h+src,show=url=>{if(!svg.isConnected)return;
+  Object.assign(svg.style,{webkitMaskImage:`url("${url}")`,maskImage:`url("${url}")`,webkitMaskSize:'100% 100%',maskSize:'100% 100%',webkitMaskRepeat:'no-repeat',maskRepeat:'no-repeat',backgroundColor:'currentColor'});svg.dataset.crushed='1';};
+ if(masks.has(key)){const u=masks.get(key);if(u)show(u);else masks.get(key+'?').push(show);return;}
+ masks.set(key,null);masks.set(key+'?',[show]);const img=new Image();
+ img.onload=()=>{const c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);const u=c.toDataURL();masks.set(key,u);for(const f of masks.get(key+'?'))f(u);masks.delete(key+'?');};
+ img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(src.includes('xmlns=')?src:src.replace('<svg ','<svg xmlns="http://www.w3.org/2000/svg" '));}
+const sized=new ResizeObserver(list=>{for(const e of list)if(e.target.isConnected)(e.target.dataset.skin?paint:e.target.dataset.led?paintLED:e.target.dataset.crush?crush:paintIcon)(e.target);});
 function dress(root){for(const [sel,skin] of DRESS)for(const el of root.querySelectorAll(sel)){if(!el.dataset.skin){el.dataset.skin=skin;sized.observe(el);}
   else if(!el.querySelector(':scope>canvas.skin'))paint(el);} // its content was rewritten, the canvas with it
  // which card is docked over a scrolling list changes as cards come and go (the inventory's details)
  for(const el of root.querySelectorAll('[data-skin=card]')){const d=el.nextElementSibling?.classList.contains('scroll')?'1':'0';if(el.dataset.dock!==d){el.dataset.dock=d;paint(el);}}
- for(const c of root.querySelectorAll('canvas[data-icon],canvas[data-led]'))if(!c.dataset.painted){c.dataset.painted='1';sized.observe(c);}}
+ for(const c of root.querySelectorAll('canvas[data-icon],canvas[data-led]'))if(!c.dataset.painted){c.dataset.painted='1';sized.observe(c);}
+ for(const s of root.querySelectorAll(CRUSH))if(!s.dataset.crush&&!s.closest('.h5')){s.dataset.crush='1';sized.observe(s);}}
 // a press, and a mouse passing over, repaint the part they touch
 let held=null,over=null;const repaint=el=>{if(el?.isConnected&&el.dataset.skin)paint(el);};
 const partAt=e=>e.target.closest?.('[data-skin=button],[data-skin=close],[data-skin=tab],button[data-skin=card],button[data-skin=slab],button[data-skin=tile]')??null;
