@@ -5661,7 +5661,7 @@ const GLASS={
  // a blue card (the inventory's top), left to right: a navy lightening into the play blue; the slots on it glass whose
  // frame is a pale wash and whose well darkens whatever lies behind it, so each takes its own deeper shade of the card
  blueCard:[[0,'rgba(8,30,92,.93)'],[.45,'rgba(4,56,170,.92)'],[1,'rgba(0,83,238,.9)']],
- well:{frame:[[0,'rgba(255,255,255,.34)'],[1,'rgba(255,255,255,.16)']],fill:'rgba(0,10,48,.42)',edge:'rgba(0,8,40,.45)',sheen:'rgba(255,255,255,.09)'}, // a dark card, the dark bar's navy, top to bottom // a card on a screen's picture: lighter, so plain dark text reads on it
+ well:{frame:[[0,'rgba(255,255,255,.34)'],[1,'rgba(255,255,255,.16)']],fill:'rgba(0,10,48,.42)',edge:'rgba(0,8,40,.45)'}, // a dark card, the dark bar's navy, top to bottom // a card on a screen's picture: lighter, so plain dark text reads on it
  blue:'#0053ee', // the play blue, flat: a switch turned on
  doom:'rgba(220,52,104,.9)', // the hardest difficulty's mark, the close button's raspberry
  ridge:['rgba(255,255,255,.85)','#c9d5e6','#a9b7cd'], // the thin raised ridge under a card docked over a scrolling list, a line each, top to bottom: dark bluish whites
@@ -5745,12 +5745,11 @@ const SKINS={
   shape(g,on?w-3-k:3,3,k,k,all(3));g.fillStyle='#fff';g.fill();if(!on){g.strokeStyle='rgba(30,60,120,.35)';g.stroke();}}},
  // a tower's slot, as on the main menu's deck: glass cut at the top left and the bottom right, the flat shadow outside it,
  // the tower's colour in a triangle over the cut corner (2 px off the frame, reaching 2 px past it; none when empty), a
- // blue ring round the picked one. On a blue card: a pale frame round a well that darkens the card behind it, a faint
- // sheen across its upper left, the ring white
+ // blue ring round the picked one. On a blue card: a pale frame round a well that darkens the card behind it, the ring
+ // white
  slab:{pad:10,draw(g,w,h,el){const c=[8,0,8,0],blue=el.closest('.card.blue'),W=GLASS.well;g.save();g.fillStyle=SHADE;shape(g,7,8,w,h,c);g.fill();g.globalCompositeOperation='destination-out';g.fillStyle='#000';shape(g,0,0,w,h,c);g.fill();clearBeside(g,el);g.restore();
   g.save();shape(g,0,0,w,h,c);g.clip();
-  if(blue){const i=4,ci=[5,0,5,0];g.fillStyle=grad(g,0,0,0,h,W.frame);g.fillRect(0,0,w,h);shape(g,i,i,w-2*i,h-2*i,ci);g.save();g.clip();g.clearRect(0,0,w,h);g.fillStyle=W.fill;g.fillRect(0,0,w,h);
-   g.beginPath();g.moveTo(0,0);g.lineTo(w*.62,0);g.lineTo(0,h*.62);g.closePath();g.fillStyle=W.sheen;g.fill();g.restore();shape(g,i+.5,i+.5,w-2*i-1,h-2*i-1,ci);g.strokeStyle=W.edge;g.lineWidth=1;g.stroke();}
+  if(blue){const i=4,ci=[5,0,5,0];g.fillStyle=grad(g,0,0,0,h,W.frame);g.fillRect(0,0,w,h);shape(g,i,i,w-2*i,h-2*i,ci);g.save();g.clip();g.clearRect(0,0,w,h);g.fillStyle=W.fill;g.fillRect(0,0,w,h);g.restore();shape(g,i+.5,i+.5,w-2*i-1,h-2*i-1,ci);g.strokeStyle=W.edge;g.lineWidth=1;g.stroke();}
   else{g.fillStyle=grad(g,0,0,0,h,el.closest('[data-grid]')?GLASS.item:GLASS.card);g.fillRect(0,0,w,h);}
   if(state(el)==='pressed'){g.fillStyle='rgba(10,40,110,.1)';g.fillRect(0,0,w,h);}g.restore();rim(g,0,0,w,h,c);
   corner(g,el,c[0]);if(el.classList.contains('on')){shape(g,.75,.75,w-1.5,h-1.5,c);g.strokeStyle=blue?'#fff':GLASS.blue;g.lineWidth=1.5;g.stroke();}}},
