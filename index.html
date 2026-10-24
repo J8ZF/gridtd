@@ -5638,17 +5638,16 @@ const SKINS={
  toggle:{draw(g,w,h,el){const on=el.classList.contains('on'),k=h-6;shape(g,.5,.5,w-1,h-1,all(4));
   g.fillStyle=on?GLASS.blue:'rgba(255,255,255,.5)';g.fill();g.strokeStyle=on?'#003dd7':'rgba(30,60,120,.4)';g.lineWidth=1;g.stroke();
   shape(g,on?w-3-k:3,3,k,k,all(3));g.fillStyle='#fff';g.fill();if(!on){g.strokeStyle='rgba(30,60,120,.35)';g.stroke();}}},
- // a tower's slot, as on the main menu's deck: glass cut at the top left and the bottom right, the flat shadow outside it,
- // the tower's colour in a triangle over the cut corner (2 px off the frame, reaching 2 px past it; none when empty), a
- // blue ring round the picked one
- slab:{pad:10,draw(g,w,h,el){const c=[8,0,8,0];g.save();g.fillStyle=SHADE;shape(g,7,8,w,h,c);g.fill();g.globalCompositeOperation='destination-out';shape(g,0,0,w,h,c);g.fill();g.restore();
+ // a tower's slot, as on the main menu's deck: glass cut at the top left and the bottom right (no shadow: it sits on a
+ // card's glass), the tower's colour in a triangle over the cut corner (2 px off the frame, reaching 2 px past it; none
+ // when empty), a blue ring round the picked one
+ slab:{pad:10,draw(g,w,h,el){const c=[8,0,8,0];
   g.save();shape(g,0,0,w,h,c);g.clip();g.fillStyle=grad(g,0,0,0,h,GLASS.card);g.fillRect(0,0,w,h);if(state(el)==='pressed'){g.fillStyle='rgba(10,40,110,.1)';g.fillRect(0,0,w,h);}g.restore();rim(g,0,0,w,h,c);
   corner(g,el,c[0]);if(el.classList.contains('on')){shape(g,.75,.75,w-1.5,h-1.5,c);g.strokeStyle=GLASS.blue;g.lineWidth=1.5;g.stroke();}}},
  // the picked tower's stand, in solid colours so nothing shows through anything: the floor, the tower's shadow (its own
  // shape, cut away where the tower stands), and over both a grid whose cells do not fit the window, so its edges cut
- // them part way on every side; cut and shadowed like a slot
+ // them part way on every side; cut like a slot, and like it without a shadow of its own
  stand:{pad:10,draw(g,w,h,el){const c=[8,0,8,0],s=w*.22,o=-s*.35;
-  g.save();g.fillStyle=SHADE;shape(g,7,8,w,h,c);g.fill();g.globalCompositeOperation='destination-out';shape(g,0,0,w,h,c);g.fill();g.restore();
   g.save();shape(g,0,0,w,h,c);g.clip();g.fillStyle=GLASS.stand.floor;g.fillRect(0,0,w,h);
   const t=shadowOf(el);if(t)g.drawImage(t,0,0,w,h);
   g.beginPath();for(let x=o;x<w;x+=s)if(x>0){g.moveTo(x,0);g.lineTo(x,h);}for(let y=o;y<h;y+=s)if(y>0){g.moveTo(0,y);g.lineTo(w,y);}g.strokeStyle=GLASS.stand.line;g.lineWidth=1;g.stroke();g.restore();
