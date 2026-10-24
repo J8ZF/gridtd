@@ -442,6 +442,13 @@ img.tower-icon,img.enemy-icon{flex-shrink:0}
 .mod-result em{font-style:normal;font-size:11px;color:var(--gold)}
 .mod-result b{font-weight:400;font-variant-numeric:tabular-nums}
 .mod-effects{margin:0 0 6px 18px;font-size:13px;line-height:1.7}
+/* 창세: its pieces' opal in the interface. Its name and label in a deep prism that reads on the light glass, as soft as
+   the rest of the writing (that is a blurred shadow, which cannot take a gradient, so the prism is blurred instead);
+   its stripe and its badge in the opal itself, the stripe's colours stronger as it is thin */
+:root{--opal:linear-gradient(135deg,#f6faff,#cfe4ff 16%,#f4d0f0 32%,#d9d0ff 48%,#c9f3e6 64%,#ffeec4 80%,#f5d2e4 92%,#eaf3ff);--opal-line:linear-gradient(180deg,#a9cfff,#e8b6ec 22%,#c2b4ff 42%,#a6e8d4 62%,#ffdf98 80%,#f0b4d2);--opal-ink:linear-gradient(90deg,#3a64b8,#6c4bb4 35%,#a8457c 68%,#1f7d72)}
+span.opal,strong.opal{width:fit-content;max-width:100%;background:var(--opal-ink);-webkit-background-clip:text;background-clip:text;text-shadow:none;filter:blur(calc(var(--text-blur)/2))}
+.mod-item.opal,.mod-item.opal.on,.mod-result.opal{border-left-color:transparent;background-image:var(--opal-line);background-size:3px 100%;background-repeat:no-repeat;background-origin:border-box;background-clip:border-box}
+.mod-result.opal .mod-grade{background:var(--opal);color:#24324f;box-shadow:inset 0 0 0 1px rgba(60,90,150,.35)}
 /* 4.3: slot pages (6-10 slots) */
 .pager{position:relative;touch-action:pan-y}
 .pager-view{overflow:hidden}
@@ -1188,6 +1195,8 @@ const spareCount=id=>(modState().owned[id]??0)-placedCount(id);
 const atLimit=id=>{const L=MODS.MODULE[id]?.limit;return L!=null&&placedCount(id)>=L;};
 const canPick=id=>spareCount(id)>0&&!atLimit(id);
 const gradeOf=id=>MODS.GRADE[MODS.MODULE[id].grade];
+// 창세 wears its pieces' opal in the interface too (.opal in the CSS)
+const isOpal=g=>g.id==='genesis';
 function modText(m){return m.text+(m.pending?' (효과 준비 중)':'');}
 const pieceSize=(id,r)=>{const cs=MODS.cells(id,r);return [Math.max(...cs.map(c=>c[0]))+1,Math.max(...cs.map(c=>c[1]))+1];};
 // Board effects in short words.
@@ -1210,7 +1219,26 @@ function effectLines(raw){const pct=v=>`${Math.ceil(Math.round(v*1e6)/1e2)/100}%
 // gives (the top piece of a family keeps the grade's grey). Rare pieces take their kind's colour: quiet, a little dark.
 const MOD_PAL={common:{base:'#3d3d3d',mid:'#6e6e6e',hi:'#b4b4b4'},c2:{base:'#333333',mid:'#5b5b5b',hi:'#959595'},c1:{base:'#292929',mid:'#494949',hi:'#777777'},
  money:{base:'#2a4531',mid:'#4d7556',hi:'#8fb898'},blast:{base:'#52301f',mid:'#8a5637',hi:'#c99677'},fire:{base:'#482636',mid:'#7a4a60',hi:'#ba8ba2'},
- mania:{base:'#25354d',mid:'#486183',hi:'#8fa6c6'},unit:{base:'#372f4d',mid:'#62567f',hi:'#a397c4'},base:{base:'#47402a',mid:'#786d49',hi:'#b7ab86'},rare:{base:'#1c3a66',mid:'#3b6fbd',hi:'#8cbcff'},legend:{base:'#5c430e',mid:'#a8801f',hi:'#ffd54f'},myth:{base:'#5e1b17',mid:'#ad3a30',hi:'#ff8474'},genesis:{base:'#1b4b55',mid:'#3c94a3',hi:'#b2edf8'}};
+ mania:{base:'#25354d',mid:'#486183',hi:'#8fa6c6'},unit:{base:'#372f4d',mid:'#62567f',hi:'#a397c4'},base:{base:'#47402a',mid:'#786d49',hi:'#b7ab86'},rare:{base:'#1c3a66',mid:'#3b6fbd',hi:'#8cbcff'},legend:{base:'#5c430e',mid:'#a8801f',hi:'#ffd54f'},myth:{base:'#5e1b17',mid:'#ad3a30',hi:'#ff8474'},
+ // genesis is an opal (see opalFill): its picture a see-through pearl blue the colours play through, holes a milky white,
+ // the edge under it a deep blue shade instead of black's; picked, its inner edge is blue (white would not show on it)
+ genesis:{base:'#eaf2fb',mid:'rgba(64,100,166,.38)',hi:'#ffffff',lo:'rgba(40,72,132,.55)',seam:'rgba(60,92,150,.18)',cut:'rgba(250,252,255,.8)',sel:'#2a72ff',opal:true}};
+// 창세's opal: a blue-cast white, a play of colour across it on the diagonal (sky, lilac, violet, mint, champagne, rose),
+// a milky wash the other way so the colours shift rather than band; the gloss goes on after the picture
+const OPAL=[[0,'#b9d9ff'],[.17,'#f2c4ee'],[.34,'#cfc4ff'],[.5,'#baf0df'],[.66,'#ffe7b0'],[.83,'#f6c2dc'],[1,'#bddbff']];
+const lin=(g,x0,y0,x1,y1,stops)=>{const gr=g.createLinearGradient(x0,y0,x1,y1);for(const [o,c] of stops)gr.addColorStop(o,c);return gr;};
+function opalFill(g,x,y,w,h){g.fillStyle=lin(g,x,y,x,y+h,[[0,'#f9fcff'],[1,'#e0ebf8']]);g.fillRect(x,y,w,h);
+ g.save();g.globalAlpha*=.68;g.fillStyle=lin(g,x,y,x+w,y+h,OPAL);g.fillRect(x,y,w,h);g.restore();
+ g.fillStyle=lin(g,x+w,y,x,y+h,[[0,'rgba(255,255,255,.5)'],[.3,'rgba(255,255,255,0)'],[.55,'rgba(255,255,255,.38)'],[.8,'rgba(255,255,255,0)'],[1,'rgba(255,255,255,.3)']]);g.fillRect(x,y,w,h);}
+const opalGloss=(g,x,y,w,h)=>{g.fillStyle=lin(g,x,y,x,y+h,[[0,'rgba(255,255,255,.55)'],[.45,'rgba(255,255,255,0)'],[.7,'rgba(40,70,130,0)'],[1,'rgba(40,70,130,.14)']]);g.fillRect(x,y,w,h);};
+// and it is domed like a polished stone: along its outer sides a short fall, light off the top and left, shade into the
+// bottom and right (on its white a light edge alone hardly shows)
+function opalDome(g,cs,set,px){const d=px*.24,L='rgba(255,255,255,.75)',D='rgba(40,72,132,.3)';
+ for(const [x,y] of cs){const X=x*px,Y=y*px;
+  if(!set.has(x+','+(y-1))){g.fillStyle=lin(g,0,Y,0,Y+d,[[0,L],[1,'rgba(255,255,255,0)']]);g.fillRect(X,Y,px,d);}
+  if(!set.has((x-1)+','+y)){g.fillStyle=lin(g,X,0,X+d,0,[[0,L],[1,'rgba(255,255,255,0)']]);g.fillRect(X,Y,d,px);}
+  if(!set.has(x+','+(y+1))){g.fillStyle=lin(g,0,Y+px,0,Y+px-d,[[0,D],[1,'rgba(40,72,132,0)']]);g.fillRect(X,Y+px-d,px,d);}
+  if(!set.has((x+1)+','+y)){g.fillStyle=lin(g,X+px,0,X+px-d,0,[[0,D],[1,'rgba(40,72,132,0)']]);g.fillRect(X+px-d,Y,d,px);}}}
 const MCELL=20;
 const star=(g,n,ro,ri,rot=-Math.PI/2)=>{g.beginPath();for(let i=0;i<n*2;i++){const r=i%2?ri:ro,a=rot+i*Math.PI/n;g.lineTo(Math.cos(a)*r,Math.sin(a)*r);}g.closePath();g.fill();};
 const heartPath=g=>{g.beginPath();g.moveTo(0,.38);g.bezierCurveTo(-.5,.02,-.4,-.42,0,-.18);g.bezierCurveTo(.4,-.42,.5,.02,0,.38);g.closePath();};
@@ -1256,21 +1284,22 @@ const FACE_IMG={};let FACE_TINT={};const FACE_TINT_CLEAR=()=>{FACE_TINT={};};
 function towerFace(kind,color){const key=kind+color;if(FACE_TINT[key])return FACE_TINT[key];let img=FACE_IMG[kind];
  if(!img){const src=towerFaceSrc(kind);if(!src)return null;img=FACE_IMG[kind]=new Image();img.onload=()=>{pieceArt.clear();FACE_TINT_CLEAR();refreshModules();};img.src=src;}
  if(!img.complete||!img.naturalWidth)return null;const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');g.drawImage(img,0,0,64,64);g.globalCompositeOperation='color';g.fillStyle=color;g.fillRect(0,0,64,64);g.globalCompositeOperation='destination-in';g.drawImage(img,0,0,64,64);return FACE_TINT[key]=c;}
-// Draw one piece (cells in board units) into g at `px` pixels per cell.
-function drawPiece(g,id,cs,px,o={}){const m=MODS.MODULE[id],P=MOD_PAL[m.pal]??MOD_PAL[m.grade],set=new Set(cs.map(([x,y])=>x+','+y)),n=cs.length;
+// Draw one piece (cells in board units) into g at `px` pixels per cell; o.sel marks the picked one.
+function drawPiece(g,id,cs,px,o={}){const m=MODS.MODULE[id],P=MOD_PAL[m.pal]??MOD_PAL[m.grade],set=new Set(cs.map(([x,y])=>x+','+y)),n=cs.length,edge=o.sel?P.sel??'#ffffff':o.edge;
  const xs=cs.map(c=>c[0]),ys=cs.map(c=>c[1]),minx=Math.min(...xs),miny=Math.min(...ys),w=Math.max(...xs)-minx+1,h=Math.max(...ys)-miny+1;
  g.save();g.globalAlpha=o.alpha??1;g.beginPath();for(const [x,y] of cs)g.rect(x*px,y*px,px,px);g.save();g.clip();
- g.fillStyle=P.base;g.fillRect(minx*px,miny*px,w*px,h*px);
- g.fillStyle='rgba(255,255,255,.07)';for(const [x,y] of cs){if(set.has((x+1)+','+y))g.fillRect((x+1)*px-1,y*px+px*.2,1,px*.6);if(set.has(x+','+(y+1)))g.fillRect(x*px+px*.2,(y+1)*px-1,px*.6,1);}
+ if(P.opal)opalFill(g,minx*px,miny*px,w*px,h*px);else{g.fillStyle=P.base;g.fillRect(minx*px,miny*px,w*px,h*px);}
+ g.fillStyle=P.seam??'rgba(255,255,255,.07)';for(const [x,y] of cs){if(set.has((x+1)+','+y))g.fillRect((x+1)*px-1,y*px+px*.2,1,px*.6);if(set.has(x+','+(y+1)))g.fillRect(x*px+px*.2,(y+1)*px-1,px*.6,1);}
  // the picture sits on the piece's heaviest point, nudged onto a cell of the piece
  let cx=xs.reduce((a,v)=>a+v,0)/n+.5,cy=ys.reduce((a,v)=>a+v,0)/n+.5;if(!set.has(Math.floor(cx)+','+Math.floor(cy))){const near=cs.reduce((b,c)=>Math.hypot(c[0]+.5-cx,c[1]+.5-cy)<Math.hypot(b[0]+.5-cx,b[1]+.5-cy)?c:b);cx=near[0]+.5;cy=near[1]+.5;}
  const S=Math.max(1.05,Math.min(Math.sqrt(n)*1.05,Math.min(w,h)*1.35))*px;g.save();g.translate(cx*px,cy*px);g.scale(S,S);g.fillStyle=g.strokeStyle=P.mid;
- if(TOWER[m.icon]){const f=towerFace(m.icon,P.hi);if(f)g.drawImage(f,-.4,-.4,.8,.8);}else PICTO[m.icon]?.(g,P.base);g.restore();
+ if(TOWER[m.icon]){const f=towerFace(m.icon,P.hi);if(f)g.drawImage(f,-.4,-.4,.8,.8);}else PICTO[m.icon]?.(g,P.cut??P.base);g.restore();
+ if(P.opal){opalGloss(g,minx*px,miny*px,w*px,h*px);opalDome(g,cs,set,px);}
  g.restore();
  for(const [x,y] of cs){const X=x*px,Y=y*px,t=!set.has(x+','+(y-1)),b=!set.has(x+','+(y+1)),l=!set.has((x-1)+','+y),r=!set.has((x+1)+','+y);
   g.fillStyle='#000';if(t)g.fillRect(X,Y,px,1);if(b)g.fillRect(X,Y+px-1,px,1);if(l)g.fillRect(X,Y,1,px);if(r)g.fillRect(X+px-1,Y,1,px);
-  g.fillStyle=o.edge??P.hi;if(t)g.fillRect(X+(l?1:0),Y+1,px-(l?1:0)-(r?1:0),1);if(l)g.fillRect(X+1,Y+(t?1:0),1,px-(t?1:0)-(b?1:0));
-  g.fillStyle=o.edge??'rgba(0,0,0,.45)';if(b)g.fillRect(X+(l?1:0),Y+px-2,px-(l?1:0)-(r?1:0),1);if(r)g.fillRect(X+px-2,Y+(t?1:0),1,px-(t?1:0)-(b?1:0));}
+  g.fillStyle=edge??P.hi;if(t)g.fillRect(X+(l?1:0),Y+1,px-(l?1:0)-(r?1:0),1);if(l)g.fillRect(X+1,Y+(t?1:0),1,px-(t?1:0)-(b?1:0));
+  g.fillStyle=edge??P.lo??'rgba(0,0,0,.45)';if(b)g.fillRect(X+(l?1:0),Y+px-2,px-(l?1:0)-(r?1:0),1);if(r)g.fillRect(X+px-2,Y+(t?1:0),1,px-(t?1:0)-(b?1:0));}
  g.restore();}
 // Tray and list pictures of each piece.
 const pieceArt=new Map();
@@ -1294,7 +1323,7 @@ function renderModOff(){const N=MODS.BOARD,px=MCELL,st=modState();modOff??=docum
   else if(MODS.buyable(st.cells,i)){g.fillStyle='#0d0d0d';g.fillRect(X+1,Y+1,px-2,px-2);g.fillStyle='#3c3c3c';g.fillRect(X+px/2-1,Y+px*.3,2,px*.4);g.fillRect(X+px*.3,Y+px/2-1,px*.4,2);}}
  const sel=modSel?.mode==='placed'?modSel.index:-1;
  const amp=MODS.boosts(st.placed);
- st.placed.forEach((p,k)=>{const cs=MODS.cells(p.id,p.r).map(([dx,dy])=>[p.x+dx,p.y+dy]);drawPiece(g,p.id,cs,px,k===sel?{edge:'#ffffff'}:{});
+ st.placed.forEach((p,k)=>{const cs=MODS.cells(p.id,p.r).map(([dx,dy])=>[p.x+dx,p.y+dy]);drawPiece(g,p.id,cs,px,k===sel?{sel:true}:{});
   if(amp[k]>1){const top=Math.min(...cs.map(c=>c[1])),xs=cs.filter(c=>c[1]===top).map(c=>c[0]).sort((a,b)=>a-b);g.fillStyle='#ffd84a';
    for(let i=0;i<xs.length;){let j=i;while(j+1<xs.length&&xs[j+1]===xs[j]+1)j++;g.fillRect(xs[i]*px+3,top*px+2,(xs[j]-xs[i]+1)*px-6,2);i=j+1;}}});
  if(modSel&&(modSel.mode==='pending'||(modSel.mode==='drag'&&modSel.shown))){const cs=MODS.cells(modSel.id,modSel.r).map(([dx,dy])=>[modSel.x+dx,modSel.y+dy]);drawPiece(g,modSel.id,cs,px,{alpha:.78,edge:modSel.ok?'#5fd35f':'#ff5a4a'});
@@ -1367,11 +1396,11 @@ function modulesScreen(tab=modTab){modTab=tab;if(modSel?.mode==='placed'&&!modSt
  const tabs=`<div class="mod-top">${button('mod-tab','장착',modTab==='equip'?'active':'','data-kind="equip"')}${button('mod-tab','뽑기',modTab==='gacha'?'active':'','data-kind="gacha"')}<i class="mod-top-gap"></i>${button('mod-presets','프리셋')}${button('mod-clear','일괄 해제','',modState().placed.length?'':'disabled')}</div>`;
  if(modTab==='equip'){setScreen('modules',header('모듈')+tabs+`<div class="board-wrap mod-stage"><canvas id="mod-board" class="board" aria-label="모듈 판. 아래 모듈을 끌어 올려 끼웁니다."></canvas></div><footer class="battle-footer mod-footer"><div class="tower-controls" id="mod-controls"></div><div id="mod-tray" class="mod-tray"></div></footer>`);
   const cv=$('#mod-board');modView=null;modOff=null;modObserver?.disconnect();modObserver=new ResizeObserver(()=>{modFit();drawModBoard();});modObserver.observe(cv);modFit();bindModBoard(cv);refreshModPanel();refreshTray();redrawModules();}
- else{modSel=null;setScreen('modules',header('모듈')+tabs+`<div class="mod-gacha"><fieldset class="xp-group mod-pullbox"><legend>뽑기 · ${icon('coin')} ${money(MODS.PULL_COST*100)}</legend><div class="mod-rates">${MODS.rates().map(g=>`<span style="color:${g.color}">${g.name} ${Math.round(g.rate*1e4)/100}%</span>`).join('')}</div><div class="mod-pull"></div><div class="mod-shopbar"></div></fieldset><div class="scroll mod-list" aria-label="보관함"></div><div class="mod-sellbar"></div></div>`);refreshGacha();}}
+ else{modSel=null;setScreen('modules',header('모듈')+tabs+`<div class="mod-gacha"><fieldset class="xp-group mod-pullbox"><legend>뽑기 · ${icon('coin')} ${money(MODS.PULL_COST*100)}</legend><div class="mod-rates">${MODS.rates().map(g=>`<span${isOpal(g)?' class="opal"':''} style="color:${g.color}">${g.name} ${Math.round(g.rate*1e4)/100}%</span>`).join('')}</div><div class="mod-pull"></div><div class="mod-shopbar"></div></fieldset><div class="scroll mod-list" aria-label="보관함"></div><div class="mod-sellbar"></div></div>`);refreshGacha();}}
 function refreshModules(){if(screen!=='modules')return;if(modTab==='equip'){refreshModPanel();refreshTray();redrawModules();}else refreshGacha();const w=$('.xp-status .wallet');if(w)w.innerHTML=icon('coin')+wallet();}
 // The footer panel: board effects; the piece in hand; a piece on the board.
 function refreshModPanel(info=null){const box=$('#mod-controls');if(!box)return;const st=modState();let html;
- const head=(id,meta)=>{const m=MODS.MODULE[id],g=gradeOf(id);return `<div class="panel-desc"><div class="tower-heading"><div class="heading-main"><strong style="color:${g.color}">${m.name}</strong><span class="level">${g.name}</span><div class="stats"><span>${meta}</span></div></div></div><div class="next-upgrade"><span class="upgrade-stats">${modText(m)}</span></div></div>`;};
+ const head=(id,meta)=>{const m=MODS.MODULE[id],g=gradeOf(id);return `<div class="panel-desc"><div class="tower-heading"><div class="heading-main"><strong${isOpal(g)?' class="opal"':''} style="color:${g.color}">${m.name}</strong><span class="level">${g.name}</span><div class="stats"><span>${meta}</span></div></div></div><div class="next-upgrade"><span class="upgrade-stats">${modText(m)}</span></div></div>`;};
  if(modSel&&(modSel.mode==='pending'||modSel.mode==='drag')){const id=modSel.id;box.dataset.mode='place';html=head(id,`${MODS.size(id)}칸 · 남은 ${Math.max(0,spareCount(id))}개`)+`<div class="panel-row placement-actions">${button('mod-cancel','취소')}${button('mod-rotate',`${icon('restore')}<span>회전</span>`)}${button('mod-install',`${icon('check')}<span>설치</span>`,'primary',modSel.mode==='pending'&&modSel.ok?'':'disabled')}</div>`;}
  else if(modSel?.mode==='placed'&&st.placed[modSel.index]){const id=st.placed[modSel.index].id;box.dataset.mode='tower';html=head(id,`${MODS.size(id)}칸 · 장착 ${placedCount(id)}개`)+`<div class="panel-row placement-actions">${button('mod-close','닫기','span2')}${button('mod-remove','회수','danger')}</div>`;}
  else if(info&&MODS.MODULE[info]){box.dataset.mode='tower';html=head(info,`${MODS.size(info)}칸 · ${MODS.MODULE[info].limit&&placedCount(info)>=MODS.MODULE[info].limit?`최대 ${MODS.MODULE[info].limit}개`:'모두 장착됨'}`)+`<div class="panel-row placement-actions mod-one">${button('mod-close','닫기')}</div>`;}
@@ -1387,22 +1416,22 @@ function refreshGacha(){const pull=$('.mod-pull');if(!pull)return;const cost=pul
  const sb=$('.mod-shopbar');if(sb)sb.innerHTML=button('mod-shop',`<span>포인트 교환</span><span class="button-value">${(modState().points??0).toLocaleString('en-US')} 포인트</span>`,'mod-shop-btn');
  const st=modState(),list=$('.mod-list'),sc=list.scrollTop,ids=Object.keys(st.owned).filter(id=>st.owned[id]>0);
  list.innerHTML=!ids.length?'<p class="mod-empty">비어 있음</p>':[...MODS.GRADES].reverse().map(g=>{const ms=MODS.BY_GRADE[g.id].filter(m=>st.owned[m.id]>0);if(!ms.length)return '';
-  return `<div class="section-label" style="color:${g.color}"><span>${g.name}</span></div><div class="mod-items">${ms.map(m=>{const used=placedCount(m.id);return button('mod-row',`<img class="mod-row-art" src="${pieceImage(m.id)}" alt=""><span class="mod-item-text"><strong>${m.name}</strong><small>${modText(m)}</small></span><span class="mod-count">×${st.owned[m.id]}${used?`<small>장착 ${used}</small>`:''}</span>`,`mod-item${sellSel===m.id?' on':''}`,`data-kind="${m.id}" style="--g:${g.color}"`);}).join('')}</div>`;}).join('');
+  return `<div class="section-label" style="color:${g.color}"><span${isOpal(g)?' class="opal"':''}>${g.name}</span></div><div class="mod-items">${ms.map(m=>{const used=placedCount(m.id);return button('mod-row',`<img class="mod-row-art" src="${pieceImage(m.id)}" alt=""><span class="mod-item-text"><strong>${m.name}</strong><small>${modText(m)}</small></span><span class="mod-count">×${st.owned[m.id]}${used?`<small>장착 ${used}</small>`:''}</span>`,`mod-item${sellSel===m.id?' on':''}${isOpal(g)?' opal':''}`,`data-kind="${m.id}" style="--g:${g.color}"`);}).join('')}</div>`;}).join('');
  list.scrollTop=sc;
- const bar=$('.mod-sellbar');if(sellSel&&st.owned[sellSel]>0){const g=gradeOf(sellSel),spare=spareCount(sellSel);bar.hidden=false;bar.innerHTML=`<div class="mod-sell-info"><strong style="color:${g.color}">${MODS.MODULE[sellSel].name}</strong><small>판매 ${g.points} 포인트 · 남은 ${Math.max(0,spare)}개</small></div>${button('mod-sell','1개 판매','',spare>0?'':'disabled')}${button('mod-sell-all','모두 판매','',spare>1?'':'disabled')}`;}else{bar.hidden=true;bar.innerHTML='';}
+ const bar=$('.mod-sellbar');if(sellSel&&st.owned[sellSel]>0){const g=gradeOf(sellSel),spare=spareCount(sellSel);bar.hidden=false;bar.innerHTML=`<div class="mod-sell-info"><strong${isOpal(g)?' class="opal"':''} style="color:${g.color}">${MODS.MODULE[sellSel].name}</strong><small>판매 ${g.points} 포인트 · 남은 ${Math.max(0,spare)}개</small></div>${button('mod-sell','1개 판매','',spare>0?'':'disabled')}${button('mod-sell-all','모두 판매','',spare>1?'':'disabled')}`;}else{bar.hidden=true;bar.innerHTML='';}
  syncClear();const w=$('.xp-status .wallet');if(w)w.innerHTML=icon('coin')+wallet();}
 function expandCell(i){const st=modState();closeDialog();if(!MODS.buyable(st.cells,i))return;const cost=MODS.cellCost(st.cells.length)*100;if(!profile.cheats.coins&&profile.coins<cost){warn('크레딧이 부족합니다.');return;}
  if(!profile.cheats.coins)profile.coins-=cost;st.cells.push(i);sound('upgrade');save();refreshModules();}
 function sellModules(id,count){const n=Math.min(count,spareCount(id));if(n<=0)return;const st=modState();st.owned[id]-=n;if(st.owned[id]<=0){delete st.owned[id];sellSel=null;}st.points=(st.points??0)+gradeOf(id).points*n;sound('sell');save();refreshModules();}
 // Points shop: any myth or genesis piece, chosen, for points from selling.
-function shopRows(){const pts=modState().points??0,gs=['myth','genesis'].filter(gid=>MODS.BY_GRADE[gid].length);if(!gs.length)return '<p class="mod-empty">비어 있음</p>';return gs.map(gid=>{const g=MODS.GRADE[gid];return `<div class="section-label" style="color:${g.color}"><span>${g.name} · ${g.swap.toLocaleString('en-US')} 포인트</span></div><div class="mod-items">${MODS.BY_GRADE[gid].map(m=>`<div class="mod-item mod-shop-item" style="--g:${g.color}"><img class="mod-row-art" src="${pieceImage(m.id)}" alt=""><span class="mod-item-text"><strong>${m.name}</strong><small>${modText(m)}</small></span>${button('shop-buy','교환','',`data-kind="${m.id}"${pts>=g.swap?'':' disabled'}`)}</div>`).join('')}</div>`;}).join('');}
+function shopRows(){const pts=modState().points??0,gs=['myth','genesis'].filter(gid=>MODS.BY_GRADE[gid].length);if(!gs.length)return '<p class="mod-empty">비어 있음</p>';return gs.map(gid=>{const g=MODS.GRADE[gid];return `<div class="section-label" style="color:${g.color}"><span${isOpal(g)?' class="opal"':''}>${g.name} · ${g.swap.toLocaleString('en-US')} 포인트</span></div><div class="mod-items">${MODS.BY_GRADE[gid].map(m=>`<div class="mod-item mod-shop-item${isOpal(g)?' opal':''}" style="--g:${g.color}"><img class="mod-row-art" src="${pieceImage(m.id)}" alt=""><span class="mod-item-text"><strong>${m.name}</strong><small>${modText(m)}</small></span>${button('shop-buy','교환','',`data-kind="${m.id}"${pts>=g.swap?'':' disabled'}`)}</div>`).join('')}</div>`;}).join('');}
 function shopDialog(){openDialog(`포인트 교환 · ${(modState().points??0).toLocaleString('en-US')} 포인트`,`<div class="scroll mod-shop">${shopRows()}</div>`,button('close-dialog','닫기'));}
 function buyWithPoints(id){const st=modState(),g=gradeOf(id);if(!g.swap||(st.points??0)<g.swap)return;st.points-=g.swap;st.owned[id]=(st.owned[id]??0)+1;sound('unlock');save();refreshModules();shopDialog();}
 function pullModules(){const n=pullCount,cost=n*MODS.PULL_COST*100;if(!profile.cheats.coins&&profile.coins<cost){warn('크레딧이 부족합니다.');return;}
  if(!profile.cheats.coins)profile.coins-=cost;const st=modState(),got={};for(let i=0;i<n;i++){const id=MODS.draw();got[id]=(got[id]??0)+1;}
  const fresh=new Set(Object.keys(got).filter(id=>!(st.owned[id]>0)));for(const [id,c] of Object.entries(got))st.owned[id]=(st.owned[id]??0)+c;save();refreshModules();
  const rows=Object.entries(got).sort((a,b)=>gradeOf(b[0]).rank-gradeOf(a[0]).rank||b[1]-a[1]);
- openDialog('뽑기 결과',`<div class="mod-results">${rows.map(([id,c])=>{const g=gradeOf(id);return `<div class="mod-result" style="--g:${g.color}"><img class="mod-row-art" src="${pieceImage(id)}" alt=""><span class="mod-result-name">${MODS.MODULE[id].name}</span><span class="mod-grade">${g.name}</span>${fresh.has(id)?'<em>NEW</em>':''}<b>×${c}</b></div>`;}).join('')}</div>`,button('close-dialog','확인','primary'));
+ openDialog('뽑기 결과',`<div class="mod-results">${rows.map(([id,c])=>{const g=gradeOf(id);return `<div class="mod-result${isOpal(g)?' opal':''}" style="--g:${g.color}"><img class="mod-row-art" src="${pieceImage(id)}" alt=""><span class="mod-result-name">${MODS.MODULE[id].name}</span><span class="mod-grade">${g.name}</span>${fresh.has(id)?'<em>NEW</em>':''}<b>×${c}</b></div>`;}).join('')}</div>`,button('close-dialog','확인','primary'));
  if(rows.some(([id])=>gradeOf(id).rank>=2))sound('unlock');}
 const syncClear=()=>{const b=$('[data-action="mod-clear"]');if(b)b.disabled=!modState().placed.length;};
 // Presets: five saved layouts. Loading puts back every piece still owned that still fits.
