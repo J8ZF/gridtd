@@ -635,9 +635,9 @@ button[data-skin]:active:not(:disabled){filter:none}
 .screen[data-grid] .inv-cell .inv-name{position:absolute;left:0;right:0;bottom:0;padding:5px 0 1px;text-align:center;font-weight:400;color:#fff;-webkit-text-stroke:0;
  background:linear-gradient(to top,rgba(8,30,86,.9),rgba(8,30,86,.86) 20%,rgba(8,30,86,.74) 40%,rgba(8,30,86,.58) 55%,rgba(8,30,86,.38) 70%,rgba(8,30,86,.2) 82%,rgba(8,30,86,.07) 92%,rgba(8,30,86,0))}
 .screen[data-grid] .inv-cell.locked .inv-name{color:rgba(255,255,255,.78)}
-.screen[data-grid] .inv-cell .inv-name{left:4px;right:4px;bottom:4px} /* inside the tile's frame */
+.screen[data-grid] .inv-cell .inv-name{left:6px;right:6px;bottom:6px} /* inside the tile's frame */
 /* its marks on the tile's navy well: the lock pale, the equipped check the dark card's light blue, inside the frame */
-.screen[data-grid] .inv-badge{top:7px;right:7px;color:rgba(255,255,255,.72)}
+.screen[data-grid] .inv-badge{top:9px;right:9px;color:rgba(255,255,255,.72)}
 .screen[data-grid] .inv-badge.eq{color:#8fc1ff}
 .screen.inventory .inv-slot.empty{color:#7a808c}
 .screen.inventory .inv-slot.empty svg{width:30%;height:30%}
@@ -5670,9 +5670,11 @@ const GLASS={
  ridge:['rgba(255,255,255,.85)','#c9d5e6','#a9b7cd'], // the thin raised ridge under a card docked over a scrolling list, a line each, top to bottom: dark bluish whites
  darkGloss:[[0,'rgba(95,145,225,.42)'],[.5,'rgba(65,110,200,.18)'],[1,'rgba(50,90,180,.06)']],darkEdge:'rgba(0,18,60,.6)', // a dark card's rim: a dim blue gloss, a deep edge
  stand:{floor:'#dde7f1',shade:'#ccd6e4',line:'#bfcddf'}, // the inventory's stand, solid: what its glass, shadow and lines showed
- // a tower in the inventory's lists, on the grid: its frame (white down to a pale blue), how far in its well starts, the
- // well's fill (top to bottom) and the line round it
- tile:{frame:[[0,'rgba(255,255,255,.97)'],[1,'rgba(192,211,239,.96)']],inset:4,edge:'rgba(30,60,120,.32)',
+ // a tower in the inventory's lists, on the grid: a double frame of polished silver - an outer band lit from the top left,
+ // a groove, an inner band lit from the bottom right, so it reads as two raised rims - each line dark and sharp; how far
+ // in the well starts, its fill (top to bottom) and the line round it
+ tile:{metal:{outer:[[0,'#ffffff'],[.22,'#d3d9e1'],[.48,'#f5f7fa'],[.74,'#a3adba'],[1,'#e2e6ec']],inner:[[0,'#9ba5b3'],[.45,'#e9edf2'],[.7,'#c3cad4'],[1,'#ffffff']],
+  line:'#4c5769',groove:'#5c6779',band:3},inset:6,edge:'#1f2a3f',
   well:(g,el,y0,y1)=>grad(g,0,y0,0,y1,[[0,'#2a4f9c'],[1,'#0c2360']])}, // a blue deepening to the slots' navy
 };
 const grad=(g,x0,y0,x1,y1,stops)=>{const gr=g.createLinearGradient(x0,y0,x1,y1);for(const [o,c] of stops)gr.addColorStop(o,c);return gr;};
@@ -5770,11 +5772,12 @@ const SKINS={
   g.beginPath();for(let x=o;x<w;x+=s)if(x>0){g.moveTo(x,0);g.lineTo(x,h);}for(let y=o;y<h;y+=s)if(y>0){g.moveTo(0,y);g.lineTo(w,y);}g.strokeStyle=GLASS.stand.line;g.lineWidth=1;g.stroke();g.restore();
   rim(g,0,0,w,h,c);}},
  // a tower in the inventory's lists: a square with its rim (no cut, no shadow), a blue ring round the picked one. On the
- // grid a frame lit white at the top and bluer down it, round a well filled with GLASS.tile.well, edged inside
- tile:{draw(g,w,h,el){const c=all(0),T=GLASS.tile,i=T.inset;
-  if(el.closest('[data-grid]')){g.fillStyle=grad(g,0,0,0,h,T.frame);g.fillRect(0,0,w,h);g.fillStyle=T.well(g,el,i,h-i);g.fillRect(i,i,w-2*i,h-2*i);g.strokeStyle=T.edge;g.lineWidth=1;g.strokeRect(i+.5,i+.5,w-2*i-1,h-2*i-1);}
+ // grid its double silver frame (GLASS.tile.metal) round a well filled with GLASS.tile.well, every line drawn sharp
+ tile:{draw(g,w,h,el){const c=all(0),T=GLASS.tile,M=T.metal,i=T.inset,o=M.band,grid=el.closest('[data-grid]');
+  if(grid){g.fillStyle=grad(g,0,0,w,h,M.outer);g.fillRect(0,0,w,h);g.fillStyle=grad(g,0,0,w,h,M.inner);g.fillRect(o+1,o+1,w-2*o-2,h-2*o-2);g.fillStyle=T.well(g,el,i,h-i);g.fillRect(i,i,w-2*i,h-2*i);
+   g.lineWidth=1;for(const [d,col] of [[0,M.line],[o,M.groove],[i,T.edge]]){g.strokeStyle=col;g.strokeRect(d+.5,d+.5,w-2*d-1,h-2*d-1);}}
   else{g.fillStyle=grad(g,0,0,0,h,GLASS.card);g.fillRect(0,0,w,h);}
-  if(state(el)==='pressed'){g.fillStyle='rgba(10,40,110,.1)';g.fillRect(0,0,w,h);}rim(g,0,0,w,h,c);
+  if(state(el)==='pressed'){g.fillStyle='rgba(10,40,110,.1)';g.fillRect(0,0,w,h);}if(!grid)rim(g,0,0,w,h,c);
   if(el.classList.contains('on')){g.strokeStyle=GLASS.blue;g.lineWidth=1.5;g.strokeRect(.75,.75,w-1.5,h-1.5);}}},
  // a tab: the chosen one brighter, with a blue line along its top
  tab:{draw(g,w,h,el){const on=el.classList.contains('active');shape(g,.5,.5,w-1,h-1,[3,3,0,0]);
