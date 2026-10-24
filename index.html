@@ -789,7 +789,7 @@ button[data-skin]:active:not(:disabled){filter:none}
 .screen.modules .card.banded>.section-label{margin:0 -12px;padding:0 12px;font-size:13px;font-weight:400}
 .screen.modules .card.banded>.section-label>span{display:flex;align-items:center;gap:4px}
 .screen.modules .mod-price svg.icon{width:14px;height:14px}
-.screen.modules .mod-kinds,.screen.modules .mod-price{font-size:12px;color:rgba(255,255,255,.88)}
+.screen.modules .mod-price{font-size:12px;color:rgba(255,255,255,.88)}
 .screen.modules .mod-rates{display:flex;flex-wrap:nowrap;justify-content:space-between;gap:4px;font-size:11px;color:var(--text);white-space:nowrap}
 .screen.modules .mod-rates .mod-swatch{width:8px;height:8px;margin-right:4px}
 .screen.modules .mod-rates>span{display:flex;align-items:center}
@@ -816,17 +816,12 @@ button[data-skin]:active:not(:disabled){filter:none}
 .screen.modules .mod-sell-name strong{min-width:0;font-size:14px;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .screen.modules .mod-sell-info small{color:#45526b}
 .screen.modules .mod-sellbar button{height:36px;min-height:36px;padding:0 12px;font-size:13px}
-/* the presets: each picture on the board's navy (an empty one a dashed outline only), a bar of its cells by grade, its first
-   two effects; 불러오기 over 저장 */
+/* the presets: each picture on the board's navy (an empty one a dashed outline only); 불러오기 over 저장 */
 #modal-root .mod-preset{grid-template-columns:64px minmax(0,1fr) auto;gap:10px;padding:6px;background:rgba(255,255,255,.72);border:1px solid rgba(30,60,120,.2)}
 #modal-root .mod-preset-art{display:block;width:64px;height:64px;image-rendering:auto;background:#0a1f55;box-shadow:inset 0 0 0 1px rgba(0,8,40,.5)}
 #modal-root .mod-preset.empty .mod-preset-art{background:none;box-shadow:none;border:1px dashed rgba(30,60,120,.38)}
 #modal-root .mod-preset-text strong{font-size:14px}
 #modal-root .mod-preset-text small{font-size:11.5px;color:var(--muted)}
-#modal-root .mod-preset-fx{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mod-preset-bar{display:flex;gap:1px;height:4px;margin:2px 0;max-width:150px}
-.mod-preset-bar i{min-width:2px;background:var(--g)}
-.mod-preset-bar i.opal{background:var(--opal-mark)}
 #modal-root .mod-preset-acts{display:flex;flex-direction:column;gap:5px}
 #modal-root .mod-preset-acts button{height:30px;min-height:30px;padding:0 12px;font-size:13px}
 /* the points shop and the draw's results write the grades' names dark beside their squares */
@@ -1567,7 +1562,7 @@ function refreshGacha(){const pull=$('.mod-pull');if(!pull)return;const cost=pul
  const sb=$('.mod-shopbar');if(sb)sb.innerHTML=button('mod-shop',`<span>포인트 교환</span><span class="button-value">${(modState().points??0).toLocaleString('en-US')} 포인트</span>`,'mod-shop-btn');
  const st=modState(),list=$('.mod-list'),sc=list.scrollTop,ids=Object.keys(st.owned).filter(id=>st.owned[id]>0);
  list.innerHTML=!ids.length?'<p class="mod-empty">비어 있음</p>':[...MODS.GRADES].reverse().map(g=>{const ms=MODS.BY_GRADE[g.id].filter(m=>st.owned[m.id]>0);if(!ms.length)return '';
-  return `<section class="card banded mod-grade-card"><div class="section-label"><span>${swatch(g)}${g.name}</span><span class="mod-kinds">${ms.length}종</span></div><div class="mod-items">${ms.map(m=>button('mod-row',`<span class="mod-well"><img class="mod-row-art" src="${pieceImage(m.id)}" alt=""></span><span class="mod-item-text"><strong>${m.name}</strong><small>${modText(m)}</small></span><span class="mod-count"><b>×${st.owned[m.id]}</b></span>`,`mod-item${sellSel===m.id?' on':''}${isOpal(g)?' opal':''}`,`data-kind="${m.id}" style="--g:${g.color}"`)).join('')}</div></section>`;}).join('');
+  return `<section class="card banded mod-grade-card"><div class="section-label"><span>${swatch(g)}${g.name}</span></div><div class="mod-items">${ms.map(m=>button('mod-row',`<span class="mod-well"><img class="mod-row-art" src="${pieceImage(m.id)}" alt=""></span><span class="mod-item-text"><strong>${m.name}</strong><small>${modText(m)}</small></span><span class="mod-count"><b>×${st.owned[m.id]}</b></span>`,`mod-item${sellSel===m.id?' on':''}${isOpal(g)?' opal':''}`,`data-kind="${m.id}" style="--g:${g.color}"`)).join('')}</div></section>`;}).join('');
  list.scrollTop=sc;
  const bar=$('.mod-sellbar');if(sellSel&&st.owned[sellSel]>0){const g=gradeOf(sellSel),spare=spareCount(sellSel);bar.hidden=false;bar.innerHTML=`<div class="mod-sell-info"><span class="mod-sell-name"><strong>${MODS.MODULE[sellSel].name}</strong>${gradeChip(g)}</span><small>판매 ${g.points} 포인트 · 남은 ${Math.max(0,spare)}개</small></div>${button('mod-sell','1개 판매','',spare>0?'':'disabled')}${button('mod-sell-all','모두 판매','',spare>1?'':'disabled')}`;}else{bar.hidden=true;bar.innerHTML='';}
  syncClear();const w=$('.xp-status .wallet');if(w)w.innerHTML=icon('coin')+wallet();}
@@ -1593,12 +1588,9 @@ function presetThumb(p){const N=MODS.BOARD,px=8,c=document.createElement('canvas
  for(const i of modState().cells){const X=i%N*px,Y=Math.floor(i/N)*px;g.fillStyle=lin(g,0,Y,0,Y+px,[[0,'#24478f'],[1,'#0c2360']]);g.fillRect(X,Y,px,px);g.fillStyle='rgba(0,8,40,.6)';g.fillRect(X,Y,px,1);g.fillRect(X,Y,1,px);}
  for(const q of p?.placed??[])if(MODS.MODULE[q.id])drawPiece(g,q.id,MODS.cells(q.id,q.r).map(([dx,dy])=>[q.x+dx,q.y+dy]),px);return c.toDataURL();}
 // Each preset: its picture on a navy plate (an empty one only a dashed outline, so the saved ones are what stands out), its
-// name, how many pieces and cells over a bar of those cells by grade, and its first two effects; 불러오기 the blue button
-// (there only when there is something to load), 저장 glass under it
+// name, how many pieces and cells; 불러오기 the blue button (there only when there is something to load), 저장 glass under it
 function presetRows(){const st=modState();return modPresets().map((p,i)=>{const list=(p?.placed??[]).filter(q=>MODS.MODULE[q.id]),n=list.length,cells=list.reduce((a,q)=>a+MODS.size(q.id),0);
- const by={};for(const q of list){const k=MODS.MODULE[q.id].grade;by[k]=(by[k]??0)+MODS.size(q.id);}
- const bar=[...MODS.GRADES].reverse().filter(g=>by[g.id]).map(g=>`<i class="${isOpal(g)?'opal':''}" style="--g:${g.color};flex:${by[g.id]}"></i>`).join(''),fx=n?effectLines(MODS.effects(list,{raw:true})).slice(0,2).map(l=>l.replace(/^모든 타워 /,'')).join(' · '):'';
- return `<div class="mod-preset${n?'':' empty'}">${n?`<img class="mod-preset-art" src="${presetThumb(p)}" alt="">`:'<span class="mod-preset-art"></span>'}<div class="mod-preset-text"><strong>프리셋 ${i+1}</strong>${n?`<small>모듈 ${n}개 · ${cells}칸</small><span class="mod-preset-bar">${bar}</span>${fx?`<small class="mod-preset-fx">${fx}</small>`:''}`:'<small>비어 있음</small>'}</div><div class="mod-preset-acts">${n?button('preset-load','불러오기','primary',`data-i="${i}"`):''}${button('preset-save','저장','',`data-i="${i}"${st.placed.length?'':' disabled'}`)}</div></div>`;}).join('');}
+ return `<div class="mod-preset${n?'':' empty'}">${n?`<img class="mod-preset-art" src="${presetThumb(p)}" alt="">`:'<span class="mod-preset-art"></span>'}<div class="mod-preset-text"><strong>프리셋 ${i+1}</strong><small>${n?`모듈 ${n}개 · ${cells}칸`:'비어 있음'}</small></div><div class="mod-preset-acts">${n?button('preset-load','불러오기','primary',`data-i="${i}"`):''}${button('preset-save','저장','',`data-i="${i}"${st.placed.length?'':' disabled'}`)}</div></div>`;}).join('');}
 function presetDialog(){openDialog('프리셋',`<div class="mod-presets">${presetRows()}</div>`,button('close-dialog','닫기'));}
 function savePreset(i){modPresets()[i]={placed:modState().placed.map(({id,x,y,r})=>({id,x,y,r}))};save();const box=$('.mod-presets');if(box)box.innerHTML=presetRows();}
 function loadPreset(i){closeDialog();const p=modPresets()[i];if(!p?.placed?.length)return;if(modSel?.keep)restoreHand();modSel=null;sellSel=null;const st=modState(),used={};let miss=0;st.placed=[];
