@@ -654,12 +654,14 @@ button[data-skin]:active:not(:disabled){filter:none}
 /* the picked tower stands on a grid (painted by ui-parts.js); its tags white on the dark bar's navy */
 .screen.inventory .inv-hero{background:none;border:0;overflow:visible}
 /* its picture is drawn with room round the square (art.js's HERO_REACH, 1.12: 6% of the square each way, the square's
-   edges 5.36% in from the picture's) and fades out toward the four sides as the stand's grid does: whole from 6 px within
-   the square to nothing 8 px past it, short of the slots, the name and the card's edge; it takes no taps (it lies over
-   their edges) */
+   edges 5.36% in from the picture's) and fades out toward the four sides as the stand's grid does, softly (eased in and
+   out): whole from 16% of the square within it (14.29% of the picture; a tower of the usual size keeps clear of that) to
+   nothing 8 px past it, short of the slots, the name and the card's edge; it takes no taps (it lies over their edges) */
 .screen.inventory .inv-pick .inv-hero .inv-hero-art{position:absolute;left:-6%;top:-6%;width:112%;height:112%;max-width:none;pointer-events:none;
- -webkit-mask-image:linear-gradient(90deg,transparent calc(5.36% - 8px),#000 calc(5.36% + 6px),#000 calc(94.64% - 6px),transparent calc(94.64% + 8px)),linear-gradient(transparent calc(5.36% - 8px),#000 calc(5.36% + 6px),#000 calc(94.64% - 6px),transparent calc(94.64% + 8px));-webkit-mask-composite:source-in;
- mask-image:linear-gradient(90deg,transparent calc(5.36% - 8px),#000 calc(5.36% + 6px),#000 calc(94.64% - 6px),transparent calc(94.64% + 8px)),linear-gradient(transparent calc(5.36% - 8px),#000 calc(5.36% + 6px),#000 calc(94.64% - 6px),transparent calc(94.64% + 8px));mask-composite:intersect}
+ --fade:transparent calc(5.36% - 8px),rgba(0,0,0,.16) calc(8.93% - 6px),rgba(0,0,0,.5) calc(12.5% - 4px),rgba(0,0,0,.84) calc(16.07% - 2px),#000 19.64%,
+  #000 80.36%,rgba(0,0,0,.84) calc(83.93% + 2px),rgba(0,0,0,.5) calc(87.5% + 4px),rgba(0,0,0,.16) calc(91.07% + 6px),transparent calc(94.64% + 8px);
+ -webkit-mask-image:linear-gradient(90deg,var(--fade)),linear-gradient(var(--fade));-webkit-mask-composite:source-in;
+ mask-image:linear-gradient(90deg,var(--fade)),linear-gradient(var(--fade));mask-composite:intersect}
 .screen.inventory .inv-tags{left:10px;top:6px}
 .screen.inventory .inv-tags span{font-size:12px;color:#fff;background:#0b2a6b;border:0;padding:3px 5px}
 /* its buttons: the big size (40 px), side by side at one width, one cut; 더보기 glass, the actions in the main menu's
@@ -5691,7 +5693,7 @@ const GLASS={
  doom:'rgba(220,52,104,.9)', // the hardest difficulty's mark, the close button's raspberry
  ridge:['rgba(255,255,255,.85)','#c9d5e6','#a9b7cd'], // the thin raised ridge under a card docked over a scrolling list, a line each, top to bottom: dark bluish whites
  darkGloss:[[0,'rgba(95,145,225,.42)'],[.5,'rgba(65,110,200,.18)'],[1,'rgba(50,90,180,.06)']],darkEdge:'rgba(0,18,60,.6)', // a dark card's rim: a dim blue gloss, a deep edge
- stand:{cell:.22,line:'rgba(255,255,255,.55)',shade:'rgba(0,12,50,.32)',reach:8,inside:6}, // the inventory's stand on the blue card: its grid's cell (of the square's width), white lines, the tower's shadow a navy; how far past the square it reaches and how far within it the fade starts (px)
+ stand:{cell:.22,line:'rgba(255,255,255,.55)',shade:'rgba(0,12,50,.32)',reach:8,inside:.3}, // the inventory's stand on the blue card: its grid's cell (of the square's width), white lines, the tower's shadow a navy; how far past the square it reaches (px) and how far within it the fade starts (of its width)
  // a tower in the inventory's lists, on the grid: made as the blue card's slots are (a see-through frame under the
  // glass rim, a navy well edged inside), turned for a light card - where they lay a pale wash on the blue, it lays a
  // steel shade on the light glass, so under the rim it reads as silver; how far in the well starts, its fill (top to
@@ -5786,12 +5788,14 @@ const SKINS={
   corner(g,el,c[0]);if(el.classList.contains('on')){shape(g,.75,.75,w-1.5,h-1.5,c);g.strokeStyle=blue?'#fff':GLASS.blue;g.lineWidth=1.5;g.stroke();}}},
  // the picked tower's stand, no frame or floor: on the card itself the tower's shadow (its own shape, cut away where the
  // tower stands) and a white grid whose cells do not fit the square, both reaching S.reach px past it - short of the
- // slots above, the name beside and the card's edge, all 12 px off - and fading out toward the four sides, from S.inside
- // px within the square to nothing there (the picture fades the same way, see the CSS)
+ // slots above, the name beside and the card's edge, all 12 px off - and fading out toward the four sides, softly (eased
+ // in and out) from S.inside of the square's width within it to nothing there, so only the grid's middle shows whole (the
+ // picture fades the same way, less far in, see the CSS)
  stand:{pad:10,draw(g,w,h,el){const S=GLASS.stand,s=w*S.cell,o=-s*.35,r=S.reach,e=w*(require('art.js').HERO_REACH-1)/2;
   const t=shadowOf(el);if(t)g.drawImage(t,-e,-e,w+2*e,h+2*e);
   g.beginPath();for(let x=o-s;x<w+r;x+=s)if(x>-r){g.moveTo(x,-r);g.lineTo(x,h+r);}for(let y=o-s;y<h+r;y+=s)if(y>-r){g.moveTo(-r,y);g.lineTo(w+r,y);}g.strokeStyle=S.line;g.lineWidth=1;g.stroke();
-  g.globalCompositeOperation='destination-in';for(const [x1,y1,L] of [[w+2*r,0,w+2*r],[0,h+2*r,h+2*r]]){const a=(r+S.inside)/L;g.fillStyle=grad(g,-r,-r,-r+x1,-r+y1,[[0,'rgba(0,0,0,0)'],[a,'#000'],[1-a,'#000'],[1,'rgba(0,0,0,0)']]);g.fillRect(-r,-r,w+2*r,h+2*r);}
+  const ease=[0,.16,.5,.84,1],fade=L=>{const a=(r+w*S.inside)/L;return [...ease.map((v,i)=>[a*i/4,v]),...ease.slice().reverse().map((v,i)=>[1-a*(4-i)/4,v])].map(([o,v])=>[o,`rgba(0,0,0,${v})`]);};
+  g.globalCompositeOperation='destination-in';for(const [x1,y1,L] of [[w+2*r,0,w+2*r],[0,h+2*r,h+2*r]]){g.fillStyle=grad(g,-r,-r,-r+x1,-r+y1,fade(L));g.fillRect(-r,-r,w+2*r,h+2*r);}
   g.globalCompositeOperation='source-over';}},
  // a tower in the inventory's lists: a square with its rim (no cut, no shadow), a blue ring round the picked one. On the
  // grid its steel frame round a navy well (GLASS.tile), under the same rim
